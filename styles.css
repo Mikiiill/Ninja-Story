@@ -3,14 +3,13 @@ body {
     background-color: #f0f0f0;
     margin: 0;
     padding: 10px;
-    touch-action: manipulation;
 }
 
 .game-container {
-    max-width: 100%;
+    max-width: 600px;
     margin: 0 auto;
     background-color: white;
-    padding: 10px;
+    padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
@@ -18,183 +17,36 @@ body {
 h1 {
     text-align: center;
     color: #333;
-    font-size: 24px;
 }
 
 .status {
-    margin-bottom: 10px;
-    font-size: 16px;
-    color: #333;
-}
-
-.player-hp {
-    color: #1E90FF; /* Naruto chakra blue */
-}
-
-.enemy-hp {
-    color: #FF0000; /* Enemy red */
+    margin-bottom: 20px;
 }
 
 .output {
-    height: 50vh;
+    height: 300px;
     overflow-y: auto;
     border: 1px solid #ccc;
     padding: 10px;
     background-color: #f9f9f9;
-    font-size: 14px;
-    white-space: pre-wrap;
+    margin-bottom: 20px;
 }
 
 .controls {
-    margin-top: 10px;
     text-align: center;
 }
 
 button {
-    padding: 12px 24px;
+    padding: 10px 20px;
     margin: 5px;
     font-size: 16px;
     cursor: pointer;
-    border: none;
-    border-radius: 5px;
-    touch-action: manipulation;
-    color: white;
-}
-
-button:hover {
-    filter: brightness(90%);
-}
-
-button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-}
-
-/* Jutsu button colors */
-button.fire {
-    background-color: #FF4500; /* Fire red */
-}
-
-button.lightning {
-    background-color: #FFFF00; /* Lightning yellow */
-}
-
-button.illusion {
-    background-color: #800080; /* Illusion purple */
-}
-
-button.earth {
-    background-color: #8B4513; /* Earth brown */
-}
-
-button.feral {
-    background-color: #808080; /* Feral gray */
-}
-
-button.neutral {
-    background-color: #1E90FF; /* Neutral chakra blue */
-}
-
-/* Status effect colors */
-.status-trauma { color: #800080; } /* Purple */
-.status-burned { color: #FFA500; } /* Orange */
-.status-healing { color: #00FF00; } /* Green */
-.status-stunned { color: #808080; } /* Gray */
-.status-shadowcloneeffect { color: #00FFFF; } /* Cyan */
-.status-kawarami { color: #FFFFFF; background-color: #333; } /* White on dark */
-.status-rockbarrier { color: #8B4513; } /* Brown */
-.output {
-    height: 50vh;
-    overflow-y: auto;
-    border: 1px solid #ccc;
-    padding: 10px;
-    background-color: #f9f9f9;
-    font-size: 14px;
-    white-space: pre-wrap;
-}
-
-.controls {
-    margin-top: 10px;
-    text-align: center;
-}
-
-button {
-    padding: 12px 24px;
-    margin: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    border: none;
-    border-radius: 5px;
-    touch-action: manipulation;
-    color: white;
-}
-
-button:hover {
-    filter: brightness(90%);
-}
-
-button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-}
-
-/* Jutsu button colors */
-button.fire {
-    background-color: #FF4500; /* Fire red */
-}
-
-button.lightning {
-    background-color: #FFFF00; /* Lightning yellow */
-}
-
-button.illusion {
-    background-color: #800080; /* Illusion purple */
-}
-
-button.earth {
-    background-color: #8B4513; /* Earth brown */
-}
-
-button.feral {
-    background-color: #808080; /* Feral gray */
-}
-
-button.neutral {
-    background-color: #1E90FF; /* Neutral chakra blue */
-}
-
-/* Status effect colors */
-.status-trauma { color: #800080; } /* Purple */
-.status-burned { color: #FFA500; } /* Orange */
-.status-healing { color: #00FF00; } /* Green */
-.status-stunned { color: #808080; } /* Gray */
-.status-shadowclone { color: #00FFFF; } /* Cyan */
-.status-kawarami { color: #FFFFFF; background-color: #333; } /* White on dark */
-.status-rockbarrier { color: #8B4513; } /* Brown */    white-space: pre-wrap;
-}
-
-.controls {
-    margin-top: 10px;
-    text-align: center;
-}
-
-button {
-    padding: 12px 24px;
-    margin: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    background-color: #4CAF50;
+    background-color: #007BFF;
     color: white;
     border: none;
     border-radius: 5px;
-    touch-action: manipulation; /* Prevents double-tap zoom */
 }
 
 button:hover {
-    background-color: #45a049;
-}
-
-button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
+    background-color: #0056b3;
 }
