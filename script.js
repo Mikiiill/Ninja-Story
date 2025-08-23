@@ -218,15 +218,22 @@ class BattleScene {
         game.enemy.hp = Math.round(Math.random() * 5) + 15;
         game.enemy.maxHp = game.enemy.hp;
         game.enemy.ninjaStyles = { Fire: "C-Rank", Lightning: "C-Rank", Illusion: "C-Rank", Earth: "C-Rank", Feral: "C-Rank" };
-        game.enemy.skills = this.skills.skills.filter(s => this.skills.canUseSkill(game.enemy, s)).sort(() => Math.random() - 0.5).slice(0, 5);
+        game.enemy.skills = this.generateEnemySkills(game.enemy);
         this.updateOutput(`\nBattle ${game.battleNum}: ${game.player.name} vs. ${game.enemy.name}!`);
         setTimeout(() => this.playerTurn(), 1000);
     }
 
     generateEnemy() {
-        let names = ["Rogue Ninja", "Wild Dog", "Enemy Shinobi", "Bandit", "Shadow Clone"];
+        let names = game.player.skills.length < 10 ? ["Wild Dog", "Training Dummy"] : ["Genin"];
         let name = names[Math.floor(Math.random() * names.length)];
         return new Mob(name, 0, 0, {}, [], []);
+    }
+
+    generateEnemySkills(enemy) {
+        if (enemy.name === "Wild Dog") {
+            return [this.skills.findSkill("Bite")];
+        }
+        return this.skills.skills.filter(s => this.skills.canUseSkill(enemy, s)).sort(() => Math.random() - 0.5).slice(0, 5);
     }
 
     rankUpBStyle(player) {
@@ -343,7 +350,7 @@ class BattleScene {
         game.enemy.hp = Math.round(Math.random() * 5) + 15;
         game.enemy.maxHp = game.enemy.hp;
         game.enemy.ninjaStyles = { Fire: "C-Rank", Lightning: "C-Rank", Illusion: "C-Rank", Earth: "C-Rank", Feral: "C-Rank" };
-        game.enemy.skills = this.skills.skills.filter(s => this.skills.canUseSkill(game.enemy, s)).sort(() => Math.random() - 0.5).slice(0, 5);
+        game.enemy.skills = this.generateEnemySkills(game.enemy);
         this.updateOutput(`\nBattle ${game.battleNum}: ${game.player.name} vs. ${game.enemy.name}!`);
         setTimeout(() => this.playerTurn(), 1000);
         this.updateStatus();
@@ -424,9 +431,9 @@ function selectSkillCard(skillName) {
         game.enemy.hp = 20;
         game.enemy.maxHp = 20;
         game.enemy.ninjaStyles = { Fire: "C-Rank", Lightning: "C-Rank", Illusion: "C-Rank", Earth: "C-Rank", Feral: "C-Rank" };
-        game.enemy.skills = game.battleScene.skills.skills.filter(s => game.battleScene.skills.canUseSkill(game.enemy, s)).sort(() => Math.random() - 0.5).slice(0, 5);
+        game.enemy.skills = game.battleScene.generateEnemySkills(game.enemy);
         setTimeout(() => game.battleScene.startBattle(), 1000);
     } else {
         setTimeout(() => game.battleScene.continueGame(), 1000);
     }
-            }
+}
