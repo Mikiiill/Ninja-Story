@@ -213,6 +213,22 @@ class BattleScene {
         this.updateStatus();
     }
 
+    chooseRankUpStyle() {
+        game.gameState = "chooseRankUpStyle";
+        let cRankStyles = Object.keys(game.player.ninjaStyles).filter(style => game.player.ninjaStyles[style] === "C-Rank");
+        this.updateOutput("You are a Genin Shinobi! Choose a Ninja Style to rank up to B-Rank:");
+        let controls = document.getElementById("controls");
+        controls.innerHTML = "";
+        cRankStyles.forEach((style) => {
+            let button = document.createElement("button");
+            button.innerText = style;
+            button.className = style.toLowerCase();
+            button.setAttribute("onclick", `selectRankUpStyle('${style}')`);
+            controls.appendChild(button);
+        });
+        this.updateStatus();
+    }
+
     startBattle() {
         game.enemy = this.generateEnemy();
         game.enemy.hp = Math.round(Math.random() * 5) + 15;
@@ -224,7 +240,12 @@ class BattleScene {
     }
 
     generateEnemy() {
-        let names = game.player.skills.length < 10 ? ["Wild Dog", "Training Dummy"] : ["Genin"];
+        let names;
+        if (game.player.skills.length < 10) {
+            names = ["Wild Dog", "Training Dummy"];
+        } else {
+            names = ["Illusionist Genin", "Fire Genin", "Lightning Genin", "Earth Genin", "Feral Genin"];
+        }
         let name = names[Math.floor(Math.random() * names.length)];
         return new Mob(name, 0, 0, {}, [], []);
     }
@@ -233,17 +254,9 @@ class BattleScene {
         if (enemy.name === "Wild Dog") {
             return [this.skills.findSkill("Bite")];
         }
-        return this.skills.skills.filter(s => this.skills.canUseSkill(enemy, s)).sort(() => Math.random() - 0.5).slice(0, 5);
-    }
-
-    rankUpBStyle(player) {
-        let cRankStyles = Object.keys(player.ninjaStyles).filter(style => player.ninjaStyles[style] === "C-Rank");
-        if (cRankStyles.length >= 2) {
-            let style = cRankStyles[Math.floor(Math.random() * cRankStyles.length)];
-            player.ninjaStyles[style] = "B-Rank";
-            return `Shinobi ranks up ${style} to B-Rank!`;
-        }
-        return null;
+        let style = enemy.name.split(" ")[0].toLowerCase();
+        if (style === "illusionist") style = "illusion";
+        return this.skills.skills.filter(s => s.attributes.includes(style.charAt(0).toUpperCase() + style.slice(1)) && this.skills.canUseSkill(enemy, s)).sort(() => Math.random() - 0.5).slice(0, 5);
     }
 
     applyStatusEffects(mob, scene) {
@@ -425,15 +438,23 @@ function selectSkillCard(skillName) {
     document.getElementById("controls").innerHTML = "";
     if (game.player.skills.length === 10) {
         game.battleScene.updateOutput("Congratulations, Shinobi! You are a Genin Shinobi!");
-        let rankUpMessage = game.battleScene.rankUpBStyle(game.player);
-        if (rankUpMessage) game.battleScene.updateOutput(rankUpMessage);
-        game.enemy = game.battleScene.generateEnemy();
-        game.enemy.hp = 20;
-        game.enemy.maxHp = 20;
-        game.enemy.ninjaStyles = { Fire: "C-Rank", Lightning: "C-Rank", Illusion: "C-Rank", Earth: "C-Rank", Feral: "C-Rank" };
-        game.enemy.skills = game.battleScene.generateEnemySkills(game.enemy);
-        setTimeout(() => game.battleScene.startBattle(), 1000);
+        setTimeout(() => game.battleScene.chooseRankUpStyle(), 1000);
     } else {
         setTimeout(() => game.battleScene.continueGame(), 1000);
     }
 }
+
+function selectRankUpStyle(style) {
+    let now = Date.now();
+    if (now - lastClickTime < 1000) return;
+    lastClickTime = now;
+    game.player.ninjaStyles[style] = "B-Rank";
+    game.battleScene.updateOutput(`Shinobi ranks up ${style} to B-Rank!`);
+    document.getElementById("controls").innerHTML = "";
+    game.enemy = game.battleScene.generateEnemy();
+    game.enemy.hp = 20;
+    game.enemy.maxHp = 20;
+    game.enemy.ninjaStyles = { Fire: "C-Rank", Lightning: "C-Rank", Illusion: "C-Rank", Earth: "C-Rank", Feral: "C-Rank" };
+    game.enemy.skills = game.battleScene.generateEnemySkills(game.enemy);
+    setTimeout(() => game.battleScene.startBattle(), 1000);
+            }
