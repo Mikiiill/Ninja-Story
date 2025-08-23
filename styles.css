@@ -7,10 +7,10 @@ body {
 }
 
 .game-container {
-    max-width: 600px;
+    max-width: 100%;
     margin: 0 auto;
     background-color: white;
-    padding: 20px;
+    padding: 10px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
@@ -18,37 +18,81 @@ body {
 h1 {
     text-align: center;
     color: #333;
+    font-size: 24px;
 }
 
 .status {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: #333;
+}
+
+.player-hp {
+    color: #1E90FF;
+}
+
+.enemy-hp {
+    color: #FF0000;
 }
 
 .output {
-    height: 300px;
+    height: 50vh;
     overflow-y: auto;
     border: 1px solid #ccc;
     padding: 10px;
     background-color: #f9f9f9;
-    margin-bottom: 20px;
+    font-size: 14px;
+    white-space: pre-wrap;
 }
 
 .controls {
+    margin-top: 10px;
     text-align: center;
 }
 
 button {
-    padding: 10px 20px;
+    padding: 12px 24px;
     margin: 5px;
     font-size: 16px;
     cursor: pointer;
-    background-color: #007BFF;
-    color: white;
     border: none;
     border-radius: 5px;
     touch-action: manipulation;
+    color: white;
 }
 
 button:hover {
-    background-color: #0056b3;
+    filter: brightness(90%);
 }
+
+button.fire {
+    background-color: #FF4500;
+}
+
+button.lightning {
+    background-color: #FFFF00;
+}
+
+button.illusion {
+    background-color: #800080;
+}
+
+button.earth {
+    background-color: #8B4513;
+}
+
+button.feral {
+    background-color: #808080;
+}
+
+button.neutral {
+    background-color: #1E90FF;
+}
+
+.status-trauma { color: #800080; }
+.status-burned { color: #FFA500; }
+.status-healing { color: #00FF00; }
+.status-stunned { color: #808080; }
+.status-shadowcloneeffect { color: #00FFFF; }
+.status-kawarami { color: #FFFFFF; background-color: #333; }
+.status-rockbarrier { color: #8B4513; }
