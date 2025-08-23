@@ -96,3 +96,12 @@ button.neutral {
 .status-shadowcloneeffect { color: #00FFFF; }
 .status-kawarami { color: #FFFFFF; background-color: #333; }
 .status-rockbarrier { color: #8B4513; }
+
+.output-text-fire { color: #FF4500; }
+.output-text-lightning { color: #FFFF00; }
+.output-text-illusion { color: #800080; }
+.output-text-earth { color: #8B4513; }
+.output-text-feral { color: #808080; }
+.output-text-neutral { color: #1E90FF; }
+.output-text-player { color: #1E90FF; }
+.output-text-enemy { color: #FF0000; }
