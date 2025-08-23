@@ -1,6 +1,6 @@
 let game = {
     player: {
-        name: "Player",
+        name: "Shinobi",
         hp: 10,
         maxHp: 10,
         ninjaStyles: { Fire: "D-Rank", Lightning: "D-Rank", Illusion: "D-Rank", Earth: "D-Rank", Feral: "D-Rank" },
@@ -23,11 +23,12 @@ class StatusEffect {
 }
 
 class BattleSkill {
-    constructor(name, attributes, requirements, skillFunction) {
+    constructor(name, attributes, requirements, skillFunction, style) {
         this.name = name;
         this.attributes = attributes;
         this.requirements = requirements;
         this.skillFunction = skillFunction;
+        this.style = style;
     }
 }
 
@@ -50,18 +51,18 @@ class Skills {
 
     initializeSkills() {
         this.skills = [
-            new BattleSkill("Barrage", [], {}, this.barrage.bind(this)),
-            new BattleSkill("Demon Mind Jutsu", ["Illusion"], { Illusion: "C-Rank" }, this.demonMindJutsu.bind(this)),
-            new BattleSkill("Fireball Jutsu", ["Fire"], { Fire: "C-Rank" }, this.fireballJutsu.bind(this)),
-            new BattleSkill("Flame Throw Jutsu", ["Fire"], { Fire: "B-Rank" }, this.flameThrowJutsu.bind(this)),
-            new BattleSkill("Healing Stance", [], {}, this.healingStance.bind(this)),
-            new BattleSkill("Raikiri", ["Lightning"], { Lightning: "C-Rank" }, this.raikiri.bind(this)),
-            new BattleSkill("Shadow Clone Jutsu", ["Illusion"], { Illusion: "C-Rank" }, this.shadowCloneJutsu.bind(this)),
-            new BattleSkill("Bite", ["Feral"], { Feral: "C-Rank" }, this.bite.bind(this)),
-            new BattleSkill("Kawarami", [], {}, this.kawarami.bind(this)),
-            new BattleSkill("Rock Barrier Jutsu", ["Earth"], { Earth: "C-Rank" }, this.rockBarrierJutsu.bind(this)),
-            new BattleSkill("Impending Doom", ["Illusion"], { Illusion: "B-Rank" }, this.impendingDoom.bind(this)),
-            new BattleSkill("Boulder Crush", ["Earth"], { Earth: "B-Rank" }, this.boulderCrush.bind(this))
+            new BattleSkill("Barrage", [], {}, this.barrage.bind(this), "neutral"),
+            new BattleSkill("Demon Mind Jutsu", ["Illusion"], { Illusion: "C-Rank" }, this.demonMindJutsu.bind(this), "illusion"),
+            new BattleSkill("Fireball Jutsu", ["Fire"], { Fire: "C-Rank" }, this.fireballJutsu.bind(this), "fire"),
+            new BattleSkill("Flame Throw Jutsu", ["Fire"], { Fire: "B-Rank" }, this.flameThrowJutsu.bind(this), "fire"),
+            new BattleSkill("Healing Stance", [], {}, this.healingStance.bind(this), "neutral"),
+            new BattleSkill("Raikiri", ["Lightning"], { Lightning: "C-Rank" }, this.raikiri.bind(this), "lightning"),
+            new BattleSkill("Shadow Clone Jutsu", ["Illusion"], { Illusion: "C-Rank" }, this.shadowCloneJutsu.bind(this), "illusion"),
+            new BattleSkill("Bite", ["Feral"], { Feral: "C-Rank" }, this.bite.bind(this), "feral"),
+            new BattleSkill("Kawarami", [], {}, this.kawarami.bind(this), "neutral"),
+            new BattleSkill("Rock Barrier Jutsu", ["Earth"], { Earth: "C-Rank" }, this.rockBarrierJutsu.bind(this), "earth"),
+            new BattleSkill("Impending Doom", ["Illusion"], { Illusion: "B-Rank" }, this.impendingDoom.bind(this), "illusion"),
+            new BattleSkill("Boulder Crush", ["Earth"], { Earth: "B-Rank" }, this.boulderCrush.bind(this), "earth")
         ];
     }
 
@@ -153,6 +154,15 @@ class Skills {
 class BattleScene {
     constructor() {
         this.skills = new Skills();
+        this.asciiMap = {
+            Trauma: "😵",
+            Burned: "🔥",
+            Healing: "🌿",
+            Stunned: "⚡️",
+            ShadowCloneEffect: "👥",
+            Kawarami: "🪵",
+            "Rock Barrier": "🪨"
+        };
         this.chosenStyles = [];
         this.chosenSkills = [];
     }
@@ -164,10 +174,10 @@ class BattleScene {
     }
 
     updateStatus() {
-        let playerEffects = game.player.statusEffects.map(e => e.name[0]).join("");
-        let enemyEffects = game.enemy ? game.enemy.statusEffects.map(e => e.name[0]).join("") : "";
-        document.getElementById("player-status").innerText = `Player: ${game.player.hp}/${game.player.maxHp}${playerEffects ? " (" + playerEffects + ")" : ""}`;
-        document.getElementById("enemy-status").innerText = game.enemy ? `${game.enemy.name}: ${game.enemy.hp}/${game.enemy.maxHp}${enemyEffects ? " (" + enemyEffects + ")" : ""}` : "Enemy: 0/0";
+        let playerEffects = game.player.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${this.asciiMap[e.name] || ""}</span>`).join("");
+        let enemyEffects = game.enemy ? game.enemy.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${this.asciiMap[e.name] || ""}</span>`).join("") : "";
+        document.getElementById("player-status").innerHTML = `Shinobi [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] ${playerEffects}`;
+        document.getElementById("enemy-status").innerHTML = game.enemy ? `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>] ${enemyEffects}` : "Enemy [HP: <span class='enemy-hp'>0/0</span>]";
         document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length}`;
     }
 
@@ -180,6 +190,7 @@ class BattleScene {
         styles.forEach((style) => {
             let button = document.createElement("button");
             button.innerText = style;
+            button.className = style.toLowerCase();
             button.setAttribute("onclick", `selectStyle('${style}')`);
             controls.appendChild(button);
         });
@@ -195,6 +206,7 @@ class BattleScene {
         availableSkills.forEach((skill) => {
             let button = document.createElement("button");
             button.innerText = skill.name;
+            button.className = skill.style;
             button.setAttribute("onclick", `selectSkill('${skill.name}')`);
             controls.appendChild(button);
         });
@@ -222,7 +234,7 @@ class BattleScene {
         if (cRankStyles.length >= 2) {
             let style = cRankStyles[Math.floor(Math.random() * cRankStyles.length)];
             player.ninjaStyles[style] = "B-Rank";
-            return `Player ranks up ${style} to B-Rank!`;
+            return `Shinobi ranks up ${style} to B-Rank!`;
         }
         return null;
     }
@@ -247,7 +259,7 @@ class BattleScene {
     playerTurn() {
         this.applyStatusEffects(game.player, this);
         if (game.player.hp <= 0) {
-            this.updateOutput("Player has been defeated! Game Over!");
+            this.updateOutput("Shinobi has been defeated! Game Over!");
             document.getElementById("controls").innerHTML = `<button onclick="startGame()">Restart Game</button>`;
             return;
         }
@@ -294,7 +306,7 @@ class BattleScene {
 
     endBattle() {
         if (game.player.hp <= 0) {
-            this.updateOutput("Player has been defeated! Game Over!");
+            this.updateOutput("Shinobi has been defeated! Game Over!");
             document.getElementById("controls").innerHTML = `<button onclick="startGame()">Restart Game</button>`;
             return;
         }
@@ -319,6 +331,7 @@ class BattleScene {
         choices.forEach((skill) => {
             let button = document.createElement("button");
             button.innerText = skill.name;
+            button.className = skill.style;
             button.setAttribute("onclick", `selectSkillCard('${skill.name}')`);
             controls.appendChild(button);
         });
@@ -365,7 +378,7 @@ function selectStyle(style) {
     if (game.battleScene.chosenStyles.length < 2) {
         game.battleScene.chosenStyles.push(style);
         game.player.ninjaStyles[style] = "C-Rank";
-        game.battleScene.updateOutput(`Player trains Ninja Style ${style} to C-Rank!`);
+        game.battleScene.updateOutput(`Shinobi trains Ninja Style ${style} to C-Rank!`);
         if (game.battleScene.chosenStyles.length === 2) {
             setTimeout(() => game.battleScene.chooseStartingSkills(), 1000);
         } else {
@@ -399,9 +412,9 @@ function selectSkillCard(skillName) {
     let skill = game.battleScene.skills.findSkill(skillName);
     game.player.skills = game.player.skills.filter(s => game.player.skills.filter(skill => skill.name === s.name).length < 4 || s.name !== skill.name);
     game.player.skills.push(skill);
-    game.battleScene.updateOutput(`Player gains new skill card: ${skill.name}!`);
+    game.battleScene.updateOutput(`Shinobi gains new skill card: ${skill.name}!`);
     if (game.player.skills.length === 10) {
-        game.battleScene.updateOutput("Congratulations, Player! You are a Genin Shinobi!");
+        game.battleScene.updateOutput("Congratulations, Shinobi! You are a Genin Shinobi!");
         let rankUpMessage = game.battleScene.rankUpBStyle(game.player);
         if (rankUpMessage) game.battleScene.updateOutput(rankUpMessage);
         game.enemy = game.battleScene.generateEnemy();
@@ -413,4 +426,4 @@ function selectSkillCard(skillName) {
     } else {
         setTimeout(() => game.battleScene.continueGame(), 1000);
     }
-                                    }
+            }
