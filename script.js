@@ -379,6 +379,7 @@ function selectStyle(style) {
         game.battleScene.chosenStyles.push(style);
         game.player.ninjaStyles[style] = "C-Rank";
         game.battleScene.updateOutput(`Shinobi trains Ninja Style ${style} to C-Rank!`);
+        document.getElementById("controls").innerHTML = "";
         if (game.battleScene.chosenStyles.length === 2) {
             setTimeout(() => game.battleScene.chooseStartingSkills(), 1000);
         } else {
@@ -396,6 +397,7 @@ function selectSkill(skillName) {
         game.battleScene.chosenSkills.push(skill);
         game.player.skills.push(skill);
         game.battleScene.updateOutput(`Selected skill card: ${skill.name}`);
+        document.getElementById("controls").innerHTML = "";
         if (game.battleScene.chosenSkills.length === 3) {
             game.battleScene.updateOutput(`Skill cards: ${game.player.skills.length}`);
             setTimeout(() => game.battleScene.startBattle(), 1000);
@@ -413,6 +415,7 @@ function selectSkillCard(skillName) {
     game.player.skills = game.player.skills.filter(s => game.player.skills.filter(skill => skill.name === s.name).length < 4 || s.name !== skill.name);
     game.player.skills.push(skill);
     game.battleScene.updateOutput(`Shinobi gains new skill card: ${skill.name}!`);
+    document.getElementById("controls").innerHTML = "";
     if (game.player.skills.length === 10) {
         game.battleScene.updateOutput("Congratulations, Shinobi! You are a Genin Shinobi!");
         let rankUpMessage = game.battleScene.rankUpBStyle(game.player);
