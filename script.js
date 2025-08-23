@@ -11,7 +11,8 @@ let game = {
     enemy: null,
     battleNum: 1,
     output: [],
-    gameState: "start"
+    gameState: "start",
+    battleScene: null
 };
 
 class StatusEffect {
@@ -166,7 +167,7 @@ class BattleScene {
         let playerEffects = game.player.statusEffects.map(e => e.name[0]).join("");
         let enemyEffects = game.enemy ? game.enemy.statusEffects.map(e => e.name[0]).join("") : "";
         document.getElementById("player-status").innerText = `Player: ${game.player.hp}/${game.player.maxHp}${playerEffects ? " (" + playerEffects + ")" : ""}`;
-        document.getElementById("enemy-status").innerText = game.enemy ? `${game.enemy.name}: ${game.player.hp}/${game.enemy.maxHp}${enemyEffects ? " (" + enemyEffects + ")" : ""}` : "Enemy: 0/0";
+        document.getElementById("enemy-status").innerText = game.enemy ? `${game.enemy.name}: ${game.enemy.hp}/${game.enemy.maxHp}${enemyEffects ? " (" + enemyEffects + ")" : ""}` : "Enemy: 0/0";
         document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length}`;
     }
 
@@ -176,26 +177,13 @@ class BattleScene {
         this.updateOutput("Choose two Ninja Styles to rank up to C-Rank:");
         let controls = document.getElementById("controls");
         controls.innerHTML = "";
-        styles.forEach((style, index) => {
+        styles.forEach((style) => {
             let button = document.createElement("button");
             button.innerText = style;
-            button.setAttribute("onclick", `game.battleScene.selectStyle('${style}')`);
+            button.setAttribute("onclick", `selectStyle('${style}')`);
             controls.appendChild(button);
         });
         this.updateStatus();
-    }
-
-    selectStyle(style) {
-        if (this.chosenStyles.length < 2) {
-            this.chosenStyles.push(style);
-            game.player.ninjaStyles[style] = "C-Rank";
-            this.updateOutput(`Player trains Ninja Style ${style} to C-Rank!`);
-            if (this.chosenStyles.length === 2) {
-                setTimeout(() => this.chooseStartingSkills(), 1000);
-            } else {
-                setTimeout(() => this.chooseNinjaStyles(), 1000);
-            }
-        }
     }
 
     chooseStartingSkills() {
@@ -204,28 +192,13 @@ class BattleScene {
         this.updateOutput("\nChoose three starting skill cards:");
         let controls = document.getElementById("controls");
         controls.innerHTML = "";
-        availableSkills.forEach((skill, index) => {
+        availableSkills.forEach((skill) => {
             let button = document.createElement("button");
             button.innerText = skill.name;
-            button.setAttribute("onclick", `game.battleScene.selectSkill('${skill.name}')`);
+            button.setAttribute("onclick", `selectSkill('${skill.name}')`);
             controls.appendChild(button);
         });
         this.updateStatus();
-    }
-
-    selectSkill(skillName) {
-        let skill = this.skills.findSkill(skillName);
-        if (this.chosenSkills.length < 3) {
-            this.chosenSkills.push(skill);
-            game.player.skills.push(skill);
-            this.updateOutput(`Selected skill card: ${skill.name}`);
-            if (this.chosenSkills.length === 3) {
-                this.updateOutput(`Skill cards: ${game.player.skills.length}`);
-                setTimeout(() => this.startBattle(), 1000);
-            } else {
-                setTimeout(() => this.chooseStartingSkills(), 1000);
-            }
-        }
     }
 
     startBattle() {
@@ -346,30 +319,10 @@ class BattleScene {
         choices.forEach((skill) => {
             let button = document.createElement("button");
             button.innerText = skill.name;
-            button.setAttribute("onclick", `game.battleScene.selectSkillCard('${skill.name}')`);
+            button.setAttribute("onclick", `selectSkillCard('${skill.name}')`);
             controls.appendChild(button);
         });
         this.updateStatus();
-    }
-
-    selectSkillCard(skillName) {
-        let skill = this.skills.findSkill(skillName);
-        game.player.skills = game.player.skills.filter(s => game.player.skills.filter(skill => skill.name === s.name).length < 4 || s.name !== skill.name);
-        game.player.skills.push(skill);
-        this.updateOutput(`Player gains new skill card: ${skill.name}!`);
-        if (game.player.skills.length === 10) {
-            this.updateOutput("Congratulations, Player! You are a Genin Shinobi!");
-            let rankUpMessage = this.rankUpBStyle(game.player);
-            if (rankUpMessage) this.updateOutput(rankUpMessage);
-            game.enemy = this.generateEnemy();
-            game.enemy.hp = 20;
-            game.enemy.maxHp = 20;
-            game.enemy.ninjaStyles = { Fire: "C-Rank", Lightning: "C-Rank", Illusion: "C-Rank", Earth: "C-Rank", Feral: "C-Rank" };
-            game.enemy.skills = this.skills.skills.filter(s => this.skills.canUseSkill(game.enemy, s)).sort(() => Math.random() - 0.5).slice(0, 5);
-            setTimeout(() => this.startBattle(), 1000);
-        } else {
-            setTimeout(() => this.continueGame(), 1000);
-        }
     }
 
     continueGame() {
@@ -403,4 +356,61 @@ function startGame() {
     }
     game.battleScene = new BattleScene();
     setTimeout(() => game.battleScene.chooseNinjaStyles(), 1000);
-                            }
+}
+
+function selectStyle(style) {
+    let now = Date.now();
+    if (now - lastClickTime < 1000) return;
+    lastClickTime = now;
+    if (game.battleScene.chosenStyles.length < 2) {
+        game.battleScene.chosenStyles.push(style);
+        game.player.ninjaStyles[style] = "C-Rank";
+        game.battleScene.updateOutput(`Player trains Ninja Style ${style} to C-Rank!`);
+        if (game.battleScene.chosenStyles.length === 2) {
+            setTimeout(() => game.battleScene.chooseStartingSkills(), 1000);
+        } else {
+            setTimeout(() => game.battleScene.chooseNinjaStyles(), 1000);
+        }
+    }
+}
+
+function selectSkill(skillName) {
+    let now = Date.now();
+    if (now - lastClickTime < 1000) return;
+    lastClickTime = now;
+    let skill = game.battleScene.skills.findSkill(skillName);
+    if (game.battleScene.chosenSkills.length < 3) {
+        game.battleScene.chosenSkills.push(skill);
+        game.player.skills.push(skill);
+        game.battleScene.updateOutput(`Selected skill card: ${skill.name}`);
+        if (game.battleScene.chosenSkills.length === 3) {
+            game.battleScene.updateOutput(`Skill cards: ${game.player.skills.length}`);
+            setTimeout(() => game.battleScene.startBattle(), 1000);
+        } else {
+            setTimeout(() => game.battleScene.chooseStartingSkills(), 1000);
+        }
+    }
+}
+
+function selectSkillCard(skillName) {
+    let now = Date.now();
+    if (now - lastClickTime < 1000) return;
+    lastClickTime = now;
+    let skill = game.battleScene.skills.findSkill(skillName);
+    game.player.skills = game.player.skills.filter(s => game.player.skills.filter(skill => skill.name === s.name).length < 4 || s.name !== skill.name);
+    game.player.skills.push(skill);
+    game.battleScene.updateOutput(`Player gains new skill card: ${skill.name}!`);
+    if (game.player.skills.length === 10) {
+        game.battleScene.updateOutput("Congratulations, Player! You are a Genin Shinobi!");
+        let rankUpMessage = game.battleScene.rankUpBStyle(game.player);
+        if (rankUpMessage) game.battleScene.updateOutput(rankUpMessage);
+        game.enemy = game.battleScene.generateEnemy();
+        game.enemy.hp = 20;
+        game.enemy.maxHp = 20;
+        game.enemy.ninjaStyles = { Fire: "C-Rank", Lightning: "C-Rank", Illusion: "C-Rank", Earth: "C-Rank", Feral: "C-Rank" };
+        game.enemy.skills = game.battleScene.skills.skills.filter(s => game.battleScene.skills.canUseSkill(game.enemy, s)).sort(() => Math.random() - 0.5).slice(0, 5);
+        setTimeout(() => game.battleScene.startBattle(), 1000);
+    } else {
+        setTimeout(() => game.battleScene.continueGame(), 1000);
+    }
+                                    }
