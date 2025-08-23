@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ShinobiWay</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>ShinobiWay</h1>
+        <div class="status">
+            <p id="player-status">Shinobi [HP: 10/10]</p>
+            <p id="enemy-status">Enemy [HP: 0/0]</p>
+            <p id="skill-count">Skill cards: 0</p>
+        </div>
+        <div class="output" id="output"></div>
+        <div class="controls" id="controls">
+            <button onclick="startGame()" ontouchstart="startGame()">Start Game</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
