@@ -3,7 +3,7 @@ body {
     background-color: #f0f0f0;
     margin: 0;
     padding: 10px;
-    touch-action: manipulation; /* Improves touch responsiveness */
+    touch-action: manipulation;
 }
 
 .game-container {
@@ -27,14 +27,82 @@ h1 {
     color: #333;
 }
 
+.player-hp {
+    color: #1E90FF; /* Naruto chakra blue */
+}
+
+.enemy-hp {
+    color: #FF0000; /* Enemy red */
+}
+
 .output {
-    height: 50vh; /* Adjust for mobile screens */
+    height: 50vh;
     overflow-y: auto;
     border: 1px solid #ccc;
     padding: 10px;
     background-color: #f9f9f9;
     font-size: 14px;
     white-space: pre-wrap;
+}
+
+.controls {
+    margin-top: 10px;
+    text-align: center;
+}
+
+button {
+    padding: 12px 24px;
+    margin: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    touch-action: manipulation;
+    color: white;
+}
+
+button:hover {
+    filter: brightness(90%);
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Jutsu button colors */
+button.fire {
+    background-color: #FF4500; /* Fire red */
+}
+
+button.lightning {
+    background-color: #FFFF00; /* Lightning yellow */
+}
+
+button.illusion {
+    background-color: #800080; /* Illusion purple */
+}
+
+button.earth {
+    background-color: #8B4513; /* Earth brown */
+}
+
+button.feral {
+    background-color: #808080; /* Feral gray */
+}
+
+button.neutral {
+    background-color: #1E90FF; /* Neutral chakra blue */
+}
+
+/* Status effect colors */
+.status-trauma { color: #800080; } /* Purple */
+.status-burned { color: #FFA500; } /* Orange */
+.status-healing { color: #00FF00; } /* Green */
+.status-stunned { color: #808080; } /* Gray */
+.status-shadowclone { color: #00FFFF; } /* Cyan */
+.status-kawarami { color: #FFFFFF; background-color: #333; } /* White on dark */
+.status-rockbarrier { color: #8B4513; } /* Brown */    white-space: pre-wrap;
 }
 
 .controls {
