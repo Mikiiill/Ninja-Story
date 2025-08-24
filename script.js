@@ -29,7 +29,7 @@ class BattleSkill {
         this.requirements = requirements;
         this.skillFunction = skillFunction;
         this.style = style;
-        this.support = support;
+        this.support = support || false;
     }
 }
 
@@ -83,7 +83,9 @@ class Skills {
         scene.updateOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> attacks <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> with <span class="output-text-neutral">Barrage</span> for ${damage} damage!`);
         if (target.hp <= 0) {
             setTimeout(() => scene.endBattle(), 1000);
+            return true;
         }
+        return false;
     }
 
     demonMindJutsu(user, target, scene) {
@@ -99,7 +101,9 @@ class Skills {
         scene.updateOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Fireball Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burned">Burned 🔥</span>!`);
         if (target.hp <= 0) {
             setTimeout(() => scene.endBattle(), 1000);
+            return true;
         }
+        return false;
     }
 
     flameThrowJutsu(user, target, scene) {
@@ -110,7 +114,9 @@ class Skills {
         scene.updateOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Flame Throw Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burned">Burned 🔥</span>!`);
         if (target.hp <= 0) {
             setTimeout(() => scene.endBattle(), 1000);
+            return true;
         }
+        return false;
     }
 
     healingStance(user, target, scene) {
@@ -126,7 +132,9 @@ class Skills {
         scene.updateOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-lightning">Raikiri</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-stunned">Stunned ⚡️</span>!`);
         if (target.hp <= 0) {
             setTimeout(() => scene.endBattle(), 1000);
+            return true;
         }
+        return false;
     }
 
     shadowCloneJutsu(user, target, scene) {
@@ -148,7 +156,9 @@ class Skills {
         scene.updateOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-feral">Wild Dog Bite</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-bleed">Bleed 🩸</span>!`);
         if (target.hp <= 0) {
             setTimeout(() => scene.endBattle(), 1000);
+            return true;
         }
+        return false;
     }
 
     kawarami(user, target, scene) {
@@ -173,7 +183,9 @@ class Skills {
         scene.updateOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-earth">Boulder Crush</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage!`);
         if (target.hp <= 0) {
             setTimeout(() => scene.endBattle(), 1000);
+            return true;
         }
+        return false;
     }
 }
 
@@ -201,8 +213,8 @@ class BattleScene {
     }
 
     updateStatus() {
-        let playerEffects = game.player.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${this.asciiMap[e.name] || ""}</span>`).join("");
-        let enemyEffects = game.enemy ? game.enemy.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${this.asciiMap[e.name] || ""}</span>`).join("") : "";
+        let playerEffects = [...new Set(game.player.statusEffects.map(e => e.name))].map(name => `<span class="status-${name.toLowerCase().replace(" ", "")}">${this.asciiMap[name] || ""}</span>`).join("");
+        let enemyEffects = game.enemy ? [...new Set(game.enemy.statusEffects.map(e => e.name))].map(name => `<span class="status-${name.toLowerCase().replace(" ", "")}">${this.asciiMap[name] || ""}</span>`).join("") : "";
         document.getElementById("player-status").innerHTML = `Shinobi [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] ${playerEffects}`;
         document.getElementById("enemy-status").innerHTML = game.enemy ? `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>] ${enemyEffects}` : "Enemy [HP: <span class='enemy-hp'>0/0</span>]";
         document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length}`;
@@ -242,8 +254,7 @@ class BattleScene {
 
     chooseRankUpStyle() {
         game.gameState = "chooseRankUpStyle";
-        let rankStages = { "D-Rank": "C-Rank", "C-Rank": "B-Rank", "B-Rank": "A-Rank", "A-Rank": "S-Rank" };
-        let upgradableStyles = Object.keys(game.player.ninjaStyles).filter(style => rankStages[game.player.ninjaStyles[style]]);
+        let upgradableStyles = Object.keys(game.player.ninjaStyles).filter(style => this.rankUpStages[game.player.ninjaStyles[style]]);
         if (upgradableStyles.length > 0) {
             this.updateOutput("You are a Genin Shinobi! Choose one Ninja Style to rank up:");
             let controls = document.getElementById("controls");
@@ -251,16 +262,23 @@ class BattleScene {
             upgradableStyles.forEach((style) => {
                 let button = document.createElement("button");
                 button.innerText = style;
-                button.className = style.toLowerCase();
+                button.className = style.toLowercase();
                 button.setAttribute("onclick", `selectRankUpStyle('${style}')`);
                 controls.appendChild(button);
             });
             this.updateStatus();
         } else {
             this.updateOutput("No styles to rank up!");
-            setTimeout(() => this.continueGame(), 1000);
+            setTimeout(() => this.chooseSkillCard(), 1000);
         }
     }
+
+    rankUpStages = {
+        "D-Rank": "C-Rank",
+        "C-Rank": "B-Rank",
+        "B-Rank": "A-Rank",
+        "A-Rank": "S-Rank"
+    };
 
     startBattle() {
         game.enemy = this.generateEnemy();
@@ -322,12 +340,13 @@ class BattleScene {
             if (!stunned) {
                 let skill = game.player.skills[Math.floor(Math.random() * game.player.skills.length)];
                 if (skill.name === "Shadow Clone Jutsu") {
-                    this.shadowCloneJutsu(game.player, game.enemy, this);
+                    this.shadowCloneJutsu(game.player, game.player, this);
                     let nextSkill = game.player.skills.filter(s => s.name !== "Shadow Clone Jutsu")[Math.floor(Math.random() * (game.player.skills.length - 1))];
                     if (nextSkill) {
                         for (let i = 0; i < game.player.shadowCloneMultiplier; i++) {
                             setTimeout(() => {
-                                nextSkill.skillFunction(game.player, game.enemy, this);
+                                let blocked = nextSkill.skillFunction(game.player, game.enemy, this);
+                                if (blocked) return;
                                 this.updateStatus();
                                 if (game.enemy.hp <= 0) {
                                     this.endBattle();
@@ -341,7 +360,8 @@ class BattleScene {
                 } else {
                     for (let i = 0; i < game.player.shadowCloneMultiplier; i++) {
                         setTimeout(() => {
-                            skill.skillFunction(game.player, game.enemy, this);
+                            let blocked = skill.skillFunction(game.player, game.enemy, this);
+                            if (blocked) return;
                             this.updateStatus();
                             if (game.enemy.hp <= 0) {
                                 this.endBattle();
@@ -358,6 +378,7 @@ class BattleScene {
         } else {
             setTimeout(() => this.endBattle(), 1000);
         }
+        this.updateStatus();
     }
 
     enemyTurn() {
@@ -368,28 +389,32 @@ class BattleScene {
         }
         let kawarami = game.player.statusEffects.some(e => e.name === "Kawarami");
         if (kawarami) {
-            this.updateOutput(`<span class="output-text-player">${game.player.name}</span> uses <span class="status-kawarami">Kawarami 🪵</span> to evade!`);
+            this.updateOutput(`<span class="output-text-player">${game.player.name}</span> uses <span class="status-kawarami">Kawarami 🪵</span> to evade! POOF!`);
             game.player.statusEffects = game.player.statusEffects.filter(e => e.name !== "Kawarami");
             setTimeout(() => this.playerTurn(), 1000);
-        } else {
-            let stunned = game.enemy.statusEffects.some(e => e.name === "Stunned");
-            if (!stunned) {
-                let skill = game.enemy.skills[Math.floor(Math.random() * game.enemy.skills.length)];
-                for (let i = 0; i < (game.enemy.shadowCloneMultiplier || 1); i++) {
-                    setTimeout(() => {
-                        skill.skillFunction(game.enemy, game.player, this);
-                        this.updateStatus();
-                        if (game.player.hp <= 0) {
-                            this.endBattle();
-                        }
-                    }, 1000 * (i + 1));
-                }
-                setTimeout(() => this.playerTurn(), 1000 * ((game.enemy.shadowCloneMultiplier || 1) + 1));
+            return;
+        }
+        let rockBarrier = game.player.statusEffects.some(e => e.name === "Rock Barrier");
+        let stunned = game.enemy.statusEffects.some(e => e.name === "Stunned");
+        if (!stunned) {
+            let skill = game.enemy.skills[Math.floor(Math.random() * game.enemy.skills.length)];
+            if (rockBarrier && !skill.support && !skill.attributes.includes("Illusion")) {
+                this.updateOutput(`<span class="output-text-enemy">${game.enemy.name}</span> attacks, but <span class="output-text-player">${game.player.name}</span> blocks with <span class="status-rockbarrier">Rock Barrier 🪨</span>!`);
+                setTimeout(() => this.playerTurn(), 1000);
             } else {
-                this.updateOutput(`<span class="output-text-enemy">${game.enemy.name}</span> is <span class="status-stunned">Stunned ⚡️</span> and cannot act!`);
-                game.enemy.statusEffects = game.enemy.statusEffects.filter(e => e.name !== "Stunned");
+                let damage = skill.skillFunction(game.enemy, game.player, this);
+                if (damage) {
+                    if (game.player.hp <= 0) {
+                        setTimeout(() => this.endBattle(), 1000);
+                        return;
+                    }
+                }
                 setTimeout(() => this.playerTurn(), 1000);
             }
+        } else {
+            this.updateOutput(`<span class="output-text-enemy">${game.enemy.name}</span> is <span class="status-stunned">Stunned ⚡️</span> and cannot act!`);
+            game.enemy.statusEffects = game.enemy.statusEffects.filter(e => e.name !== "Stunned");
+            setTimeout(() => this.playerTurn(), 1000);
         }
     }
 
@@ -420,7 +445,7 @@ class BattleScene {
             setTimeout(() => this.continueGame(), 1000);
             return;
         }
-        let choices = availableSkills.sort(() => Math.random() - 0.5).slice(0, 1); // Only one new card choice
+        let choices = availableSkills.sort(() => Math.random() - 0.5).slice(0, 1); // One new card
         this.updateOutput("\nChoose a new skill card:");
         let controls = document.getElementById("controls");
         controls.innerHTML = "";
@@ -526,7 +551,7 @@ function selectSkillCard(skillName) {
             setTimeout(() => game.battleScene.chooseRankUpStyle(), 1000);
         }, 1000);
     } else {
-        setTimeout(() => game.battleScene.continueGame(), 1000);
+        setTimeout(() => game.battleScene.chooseSkillCard(), 1000);
     }
 }
 
@@ -534,12 +559,9 @@ function selectRankUpStyle(style) {
     let now = Date.now();
     if (now - lastClickTime < 1000) return;
     lastClickTime = now;
-    let rankStages = { "D-Rank": "C-Rank", "C-Rank": "B-Rank", "B-Rank": "A-Rank", "A-Rank": "S-Rank" };
-    if (rankStages[game.player.ninjaStyles[style]]) {
-        game.player.ninjaStyles[style] = rankStages[game.player.ninjaStyles[style]];
-        game.battleScene.updateOutput(`Shinobi ranks up <span class="output-text-${style.toLowerCase()}">${style}</span> to ${game.player.ninjaStyles[style]}!`);
-        document.getElementById("controls").innerHTML = "";
-        game.gameState = "rankedUp";
-        setTimeout(() => game.battleScene.chooseSkillCard(), 1000);
-    }
-    }
+    game.player.ninjaStyles[style] = "B-Rank";
+    game.battleScene.updateOutput(`Shinobi ranks up <span class="output-text-${style.toLowerCase()}">${style}</span> to B-Rank!`);
+    document.getElementById("controls").innerHTML = "";
+    game.gameState = "rankedUp";
+    setTimeout(() => game.battleScene.chooseSkillCard(), 1000);
+            }
