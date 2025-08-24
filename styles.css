@@ -10,7 +10,7 @@ body {
     max-width: 100%;
     margin: 0 auto;
     background-color: white;
-    padding: 15px;
+    padding: 10px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
@@ -18,15 +18,13 @@ body {
 h1 {
     text-align: center;
     color: #333;
-    font-size: 28px;
-    margin-bottom: 10px;
+    font-size: 24px;
 }
 
 .status {
     margin-bottom: 10px;
     font-size: 16px;
     color: #333;
-    text-align: center;
 }
 
 .player-hp {
@@ -45,7 +43,6 @@ h1 {
     background-color: #f9f9f9;
     font-size: 14px;
     white-space: pre-wrap;
-    text-align: left;
 }
 
 .controls {
@@ -66,17 +63,6 @@ button {
 
 button:hover {
     filter: brightness(90%);
-}
-
-button.start-button {
-    background-color: #007BFF;
-    font-size: 18px;
-    padding: 15px 30px;
-    transition: transform 0.2s;
-}
-
-button.start-button:hover {
-    transform: scale(1.05);
 }
 
 button.fire {
@@ -103,7 +89,7 @@ button.neutral {
     background-color: #1E90FF;
 }
 
-.status-trauma { color: #800080; }
+.status-doom { color: #800080; }
 .status-burned { color: #FFA500; }
 .status-bleed { color: #FF0000; }
 .status-healing { color: #00FF00; }
