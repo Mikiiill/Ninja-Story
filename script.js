@@ -40,6 +40,7 @@ class Mob {
         this.ninjaStyles = ninjaStyles;
         this.skills = skills;
         this.statusEffects = statusEffects;
+        this.shadowCloneMultiplier = 1; // Initialize for enemies
     }
 }
 
@@ -282,6 +283,7 @@ class BattleScene {
             else if (effect.name === "ShadowCloneEffect") mob.shadowCloneMultiplier = 1;
         });
         mob.statusEffects = newEffects;
+        scene.updateStatus();
     }
 
     playerTurn() {
@@ -302,6 +304,7 @@ class BattleScene {
                         for (let i = 0; i < game.player.shadowCloneMultiplier; i++) {
                             setTimeout(() => {
                                 nextSkill.skillFunction(game.player, game.enemy, this);
+                                this.updateStatus();
                             }, 1000 * (i + 1));
                         }
                         setTimeout(() => this.enemyTurn(), 1000 * (game.player.shadowCloneMultiplier + 1));
@@ -312,6 +315,7 @@ class BattleScene {
                     for (let i = 0; i < game.player.shadowCloneMultiplier; i++) {
                         setTimeout(() => {
                             skill.skillFunction(game.player, game.enemy, this);
+                            this.updateStatus();
                         }, 1000 * (i + 1));
                     }
                     setTimeout(() => this.enemyTurn(), 1000 * (game.player.shadowCloneMultiplier + 1));
@@ -324,7 +328,6 @@ class BattleScene {
         } else {
             setTimeout(() => this.endBattle(), 1000);
         }
-        this.updateStatus();
     }
 
     enemyTurn() {
@@ -342,19 +345,19 @@ class BattleScene {
             let stunned = game.enemy.statusEffects.some(e => e.name === "Stunned");
             if (!stunned) {
                 let skill = game.enemy.skills[Math.floor(Math.random() * game.enemy.skills.length)];
-                for (let i = 0; i < (game.enemy.shadowCloneMultiplier || 1); i++) {
+                for (let i = 0; i < game.enemy.shadowCloneMultiplier; i++) {
                     setTimeout(() => {
                         skill.skillFunction(game.enemy, game.player, this);
+                        this.updateStatus();
                     }, 1000 * (i + 1));
                 }
-                setTimeout(() => this.playerTurn(), 1000 * ((game.enemy.shadowCloneMultiplier || 1) + 1));
+                setTimeout(() => this.playerTurn(), 1000 * (game.enemy.shadowCloneMultiplier + 1));
             } else {
                 this.updateOutput(`<span class="output-text-enemy">${game.enemy.name}</span> is <span class="status-stunned">Stunned ⚡️</span> and cannot act!`);
                 game.enemy.statusEffects = game.enemy.statusEffects.filter(e => e.name !== "Stunned");
                 setTimeout(() => this.playerTurn(), 1000);
             }
         }
-        this.updateStatus();
     }
 
     endBattle() {
@@ -503,4 +506,4 @@ function selectRankUpStyle(style) {
     document.getElementById("controls").innerHTML = "";
     game.gameState = "rankedUp";
     setTimeout(() => game.battleScene.chooseSkillCard(), 1000);
-        }
+                                                     }
