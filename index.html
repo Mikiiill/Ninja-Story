@@ -1,103 +1,20 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>ShinobiWay</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            background-color: darkgrey;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 10px;
-            box-sizing: border-box;
-            min-height: 100vh;
-        }
-        #output {
-            background-color: lightgrey;
-            border: 1px solid black;
-            padding: 15px;
-            min-height: 50vh; /* Reduced from 60vh */
-            max-height: 70vh; /* Reduced from 80vh */
-            overflow-y: auto;
-            margin-bottom: 20px;
-            font-size: 1.2rem;
-            line-height: 1.5;
-        }
-        #player-status, #enemy-status, #skill-count {
-            font-size: 1.3rem;
-            margin: 10px 0;
-        }
-        #controls {
-            margin-top: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .sprite {
-            width: 48px;
-            height: 48px;
-            vertical-align: middle;
-            margin-right: 10px;
-        }
-        .output-text-player { color: blue; }
-        .output-text-enemy { color: red; }
-        .output-text-neutral { color: black; }
-        .output-text-fire { color: #ff0000; }
-        .output-text-lightning { color: #ffa500; }
-        .output-text-illusion { color: purple; }
-        .output-text-earth { color: brown; }
-        .output-text-feral { color: darkgreen; }
-        .status-doom { color: black; }
-        .status-burned { color: #ff0000; }
-        .status-bleed { color: red; }
-        .status-healing { color: green; }
-        .status-stunned { color: #ffa500; }
-        .status-shadowcloneeffect { color: purple; }
-        .status-substitution { color: grey; }
-        .status-rockbarrier { color: brown; }
-        button {
-            margin: 10px;
-            padding: 15px 20px;
-            font-size: 1.3rem;
-            cursor: pointer;
-            border-radius: 5px;
-            min-width: 120px;
-        }
-        .start-button { background-color: green; color: white; }
-        .fire { background-color: #ff0000; color: white; }
-        .lightning { background-color: #ffa500; color: black; }
-        .illusion { background-color: purple; color: white; }
-        .earth { background-color: brown; color: white; }
-        .feral { background-color: darkgreen; color: white; }
-        .neutral { background-color: grey; color: white; }
-        @media (max-width: 600px) {
-            #output {
-                font-size: 1rem;
-                min-height: 40vh; /* Reduced from 50vh */
-                max-height: 60vh; /* Reduced from 80vh */
-            }
-            #player-status, #enemy-status, #skill-count {
-                font-size: 1.1rem;
-            }
-            button {
-                font-size: 1.1rem;
-                padding: 10px 15px;
-                min-width: 100px;
-            }
-            .sprite {
-                width: 36px;
-                height: 36px;
-            }
-        }
-    </style>
+    <title>ShinobiWay</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="player-status">Shinobi [HP: <span class="player-hp">10/10</span>]</div>
-    <div id="enemy-status">Enemy [HP: <span class="enemy-hp">0/0</span>]</div>
-    <div id="skill-count">Skill cards: 0</div>
-    <div id="output">Welcome to ShinobiWay! Click Start to begin!</div>
-    <div id="controls">
-        <button class="start-button" onclick="startGame()">Start Game</button>
+    <div id="game-container">
+        <div id="player-status">Shinobi [HP: 10/10]</div>
+        <div id="enemy-status">Enemy [HP: 0/0]</div>
+        <div id="output"></div>
+        <div id="skill-count">Skill cards: 0</div>
+        <div id="controls">
+            <button class="start-button" onclick="startGame()">Start Game</button>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
