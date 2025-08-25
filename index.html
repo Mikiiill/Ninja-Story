@@ -85,7 +85,11 @@
         }
 
         function updateSkillCount() {
-            document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length + game.player.skillInventory.length} | Gold: ${game.player.gold}`;
+            let totalCards = 0;
+            for (let skill in game.player.skillCounts) {
+                totalCards += game.player.skillCounts[skill];
+            }
+            document.getElementById("skill-count").innerText = `Skill cards: ${totalCards} | Gold: ${game.player.gold}`;
         }
 
         function startGame() {
@@ -96,7 +100,7 @@
                 game.gameState = "chooseStyles";
                 log('Setting up style selection...');
                 setupStyleButtons();
-                updateSkillCount(); // Update initial skill count with Barrage
+                updateSkillCount(); // Update with initial Barrage
                 document.getElementById("start-button").style.display = "none";
             } else {
                 log('Game already started, state: ' + game.gameState);
@@ -119,15 +123,19 @@
         function selectStyle(style) {
             log('Selecting ' + style + '...');
             if (game.player.styles.length < 2 && game.gameState === "chooseStyles") {
-                game.player.styles.push(style);
-                game.player.styleRanks[style] = upgradeRank(game.player.styleRanks[style]); // Increase to C-Rank
-                log(style + ' added as a style with rank upgraded to ' + game.player.styleRanks[style] + '!');
-                if (game.player.styles.length === 2) {
-                    log('Both styles selected, proceeding to initial jutsu selection...');
-                    document.getElementById("style-controls").innerHTML = "";
-                    setupInitialJutsuSelection();
+                if (confirm("Select " + style + "?")) {
+                    game.player.styles.push(style);
+                    game.player.styleRanks[style] = upgradeRank(game.player.styleRanks[style]); // Upgrade to C-Rank
+                    log(style + ' added as a style with rank upgraded to ' + game.player.styleRanks[style] + '!');
+                    if (game.player.styles.length === 2) {
+                        log('Both styles selected, proceeding to initial jutsu selection...');
+                        document.getElementById("style-controls").innerHTML = "";
+                        setupInitialJutsuSelection();
+                    } else {
+                        setupStyleButtons(); // Refresh
+                    }
                 } else {
-                    setupStyleButtons(); // Refresh to show remaining styles
+                    log(style + ' selection canceled.');
                 }
             } else {
                 log('Style selection invalid or complete, state: ' + game.gameState);
@@ -182,12 +190,23 @@
         function selectJutsu(jutsu, callback) {
             log('Selecting ' + jutsu + '...');
             if (game.gameState === "chooseInitialJutsu") {
-                game.player.skillInventory.push(jutsu);
-                game.player.skillCounts[jutsu]++;
-                log(jutsu + ' added to skill inventory!');
-                document.getElementById("jutsu-controls").innerHTML = "";
-                updateSkillCount();
-                if (callback) callback();
+                let count = game.player.skillCounts[jutsu] || 0;
+                if (count < 4) {
+                    game.player.skillInventory.push(jutsu);
+                    game.player.skillCounts[jutsu] = count + 1;
+                    log(jutsu + ' added to skill inventory!');
+                    updateSkillCount();
+                    document.getElementById("jutsu-controls").innerHTML = "";
+                    if (callback) callback();
+                } else {
+                    let rank = game.skillRanks[jutsu] || "D-Rank";
+                    let goldGain = game.goldValues[rank];
+                    game.player.gold += goldGain;
+                    log(`5th ${jutsu} converted to ${goldGain} gold!`);
+                    updateSkillCount();
+                    document.getElementById("jutsu-controls").innerHTML = "";
+                    if (callback) callback();
+                }
             }
         }
 
@@ -222,27 +241,26 @@
                 for (let skill in game.player.skillCounts) {
                     for (let i = 0; i < game.player.skillCounts[skill]; i++) {
                         let button = document.createElement("button");
-                        button.innerText = `Move ${skill} (${i + 1}) to Active`;
-                        button.onclick = function() { moveToActiveSkills(skill, i); };
+                        button.innerText = `Move ${skill} (${i + 1}) to Inventory`;
+                        button.onclick = function() { moveToInventory(skill, i); };
                         controls.appendChild(button);
-                        log(`Added button to move ${skill} (${i + 1}) to active skills`);
+                        log(`Added button to move ${skill} (${i + 1}) to inventory`);
                     }
                 }
                 game.player.skillInventory.forEach((skill, index) => {
                     let button = document.createElement("button");
-                    button.innerText = `Move ${skill} (${index + 1}) to Inventory`;
-                    button.onclick = function() { moveToInventory(skill, index); };
+                    button.innerText = `Add ${skill} (${index + 1}) to Active`;
+                    button.onclick = function() { moveToActiveSkills(skill, index); };
                     controls.appendChild(button);
-                    log(`Added button to move ${skill} (${index + 1}) to inventory`);
+                    log(`Added button to move ${skill} (${index + 1}) to active skills`);
                 });
             }
         }
 
-        function moveToActiveSkills(skill, countIndex) {
+        function moveToActiveSkills(skill, index) {
             if (game.player.skills.length < game.rankLimits[game.player.rank]) {
                 game.player.skills.push(skill);
-                game.player.skillCounts[skill]++;
-                game.player.skillInventory = game.player.skillInventory.filter((s, i) => i !== countIndex);
+                game.player.skillInventory.splice(index, 1);
                 log(`${skill} moved to active skills!`);
                 updateSkillCount();
                 updateSkillControls();
@@ -251,7 +269,7 @@
             }
         }
 
-        function moveToInventory(skill, index) {
+        function moveToInventory(skill, countIndex) {
             game.player.skillInventory.push(skill);
             game.player.skillCounts[skill]--;
             if (game.player.skillCounts[skill] <= 0) {
