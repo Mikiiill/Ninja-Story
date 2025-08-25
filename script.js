@@ -411,7 +411,7 @@ class BattleScene {
                     let skill = game.player.skills[Math.floor(Math.random() * game.player.skills.length)];
                     let blocked = this.checkTargetedEffects(skill, game.player, game.enemy, this);
                     if (!blocked) {
-                        scene.queueOutput(`<span class="output-text-player">${game.player.name}</span> uses <span class="output-text-${skill.style}">${skill.name}</span>!`);
+                        this.queueOutput(`<span class="output-text-player">${game.player.name}</span> uses <span class="output-text-${skill.style}">${skill.name}</span>!`);
                         let killed = skill.skillFunction(game.player, game.enemy, this);
                         this.updateStatus();
                         if (killed) {
@@ -422,7 +422,7 @@ class BattleScene {
                     setTimeout(() => this.enemyTurn(), 1000);
                 } else {
                     this.queueOutput(`<span class="output-text-player">${game.player.name}</span> is <span class="status-stunned">Stunned ⚡️</span> and cannot act!`);
-                    game.player.statusEffects = game.player.statusEffects.filter(e => e.name === "Stunned");
+                    game.player.statusEffects = game.player.statusEffects.filter(e => e.name !== "Stunned");
                     setTimeout(() => this.enemyTurn(), 1000);
                 }
             } else {
@@ -443,7 +443,7 @@ class BattleScene {
                     let skill = game.enemy.skills[Math.floor(Math.random() * game.enemy.skills.length)];
                     let blocked = this.checkTargetedEffects(skill, game.enemy, game.player, this);
                     if (!blocked) {
-                        scene.queueOutput(`<span class="output-text-enemy">${game.enemy.name}</span> uses <span class="output-text-${skill.style}">${skill.name}</span>!`);
+                        this.queueOutput(`<span class="output-text-enemy">${game.enemy.name}</span> uses <span class="output-text-${skill.style}">${skill.name}</span>!`);
                         let killed = skill.skillFunction(game.enemy, game.player, this);
                         this.updateStatus();
                         if (killed) {
@@ -454,7 +454,7 @@ class BattleScene {
                     setTimeout(() => this.playerTurn(), 1000);
                 } else {
                     this.queueOutput(`<span class="output-text-enemy">${game.enemy.name}</span> is <span class="status-stunned">Stunned ⚡️</span> and cannot act!`);
-                    game.player.statusEffects = game.player.statusEffects.filter(e => e.name === "Stunned");
+                    game.enemy.statusEffects = game.enemy.statusEffects.filter(e => e.name !== "Stunned");
                     setTimeout(() => this.playerTurn(), 1000);
                 }
             } else {
@@ -597,4 +597,4 @@ function selectSkillCard(skillName) {
     game.battleScene.queueOutput(`Shinobi gains new skill card: <span class="output-text-${skill.style}">${skill.name}</span>!`);
     document.getElementById("controls").innerHTML = "";
     setTimeout(() => game.battleScene.continueGame(), 1000);
-                                                      }
+            }
