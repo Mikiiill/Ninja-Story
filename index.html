@@ -21,12 +21,13 @@
         #log { height: 100px; overflow-y: auto; background-color: #2f2f2f; padding: 5px; }
         #output { padding: 5px; }
         .battle-ready { color: #00ff00; } /* Green for battle ready */
+        .genin { color: #ffd700; } /* Gold for Genin rank-up */
     </style>
 </head>
 <body>
     <div id="player-status">Shinobi [HP: <span class="player-hp">10/10</span>]</div>
     <div id="enemy-status">Enemy [HP: <span class="enemy-hp">0/0</span>]</div>
-    <div id="skill-count">Skill cards: 0</div>
+    <div id="skill-count">Skill cards: 0 | Gold: 0</div>
     <div id="output">Welcome to ShinobiWay!</div>
     <div id="start-controls">
         <button id="start-button" onclick="startGame()">Start Game</button>
@@ -36,8 +37,12 @@
 
     <script>
         let game = {
-            player: { name: "Shinobi", hp: 10, maxHp: 10, Rank: "Student", skills: [], skillInventory: [] },
+            player: { name: "Shinobi", hp: 10, maxHp: 10, skills: [], skillInventory: [], gold: 0, rank: "Student" },
             gameState: "start",
+            skillRanks: {
+                "Fire": "D-Rank", "Illusion": "D-Rank", "Earth": "D-Rank", "Lightning": "D-Rank", "Feral": "D-Rank"
+            },
+            goldValues: { "D-Rank": 5, "C-Rank": 10, "B-Rank": 50, "A-Rank": 100, "S-Rank": 500 },
             asciiArt: {
                 battleStart: "👊💥 BATTLE BEGINS! 👊💥\nShinobi vs. Enemy!",
                 fire: "🔥 Fire Strike!",
@@ -53,7 +58,7 @@
         function startGame() {
             log('Starting game at ' + new Date().toLocaleTimeString() + '...');
             if (game.gameState === "start") {
-                game.output = ["Train to become a Shinobi!"];
+                game.output = ["Train to earn gold and skills! Aim for 10 skills to become a Genin!"];
                 document.getElementById("output").innerHTML = game.output.join("<br>");
                 game.gameState = "chooseStyles";
                 log('Setting up style selection...');
@@ -83,16 +88,32 @@
 
         function selectStyle(style) {
             log('Selecting ' + style + '...');
-            if (game.player.skills.length < 2 && game.gameState === "chooseStyles") {
-                game.player.skills.push(style);
-                log(style + ' added to skills!');
-                document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length}`;
-                setupStyleButtons();
+            if (game.player.skills.length < 10 && game.gameState === "chooseStyles") {
+                let count = game.player.skills.filter(s => s === style).length;
+                if (count < 4) {
+                    game.player.skills.push(style);
+                    log(style + ' added to skills!');
+                    document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length} | Gold: ${game.player.gold}`;
+                    setupStyleButtons();
+                } else if (count === 4) {
+                    game.player.skills = game.player.skills.filter(s => s !== style); // Remove 4th copy
+                    let rank = game.skillRanks[style] || "D-Rank";
+                    let goldGain = game.goldValues[rank];
+                    game.player.gold += goldGain;
+                    log(`5th ${style} converted to ${goldGain} gold!`);
+                    document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length} | Gold: ${game.player.gold}`;
+                    setupStyleButtons();
+                }
                 if (game.player.skills.length === 2) {
                     log('Both styles selected, ready to play!');
                     game.gameState = "battle";
                     document.getElementById("output").innerHTML += `<br><span class="battle-ready">Battle ready!</span><br>${game.asciiArt.battleStart}`;
                     document.getElementById("style-controls").innerHTML = "";
+                }
+                if (game.player.skills.length === 10) {
+                    game.player.rank = "Genin";
+                    document.getElementById("output").innerHTML += `<br><span class="genin">Promoted to Genin!</span>`;
+                    log('Promoted to Genin with 10 skill cards!');
                 }
             } else {
                 log('Selection invalid or complete, state: ' + game.gameState);
