@@ -53,18 +53,19 @@ class BattleScene {
         log(`Available styles: ${styles.join(', ')}`);
         this.queueOutput("Choose two Ninja Styles to rank up to C-Rank:");
         let controls = document.getElementById("controls");
-        controls.innerHTML = "";
+        controls.innerHTML = ""; // Clear controls
         if (styles.length === 0) {
             log('No styles left to choose, forcing next step...');
             game.gameState = "chooseSkills";
             setTimeout(() => this.chooseStartingSkills(), 1000);
             return;
         }
+        // Simplified button creation
         styles.forEach((style) => {
             let button = document.createElement("button");
             button.innerText = style;
             button.className = style.toLowerCase();
-            button.setAttribute("onclick", `selectStyle('${style}')`);
+            button.onclick = () => selectStyle(style); // Use function reference
             controls.appendChild(button);
             log(`Added button for ${style}`);
         });
@@ -82,7 +83,6 @@ class BattleScene {
             }
             return;
         }
-        // Placeholder for skill selection (we'll add skills class later)
         this.queueOutput("Choose four starting skills (placeholder):");
         let controls = document.getElementById("controls");
         controls.innerHTML = "";
@@ -163,4 +163,4 @@ function selectStyle(style) {
             setTimeout(() => game.battleScene.chooseNinjaStyles(), 1000);
         }
     }
-}
+                                                                                       }
