@@ -14,9 +14,7 @@
     <div id="enemy-status">Enemy [HP: <span class="enemy-hp">0/0</span>]</div>
     <div id="skill-count">Skill cards: 0</div>
     <div id="output">Welcome to ShinobiWay! Click Start to begin!</div>
-    <div id="controls">
-        <button class="start-button" onclick="startGame()">Start Game</button>
-    </div>
+    <div id="controls"></div>
     <div id="log">Log started...</div>
 
     <script>
@@ -37,9 +35,18 @@
                 document.getElementById("output").innerHTML = game.output.join("<br>");
                 game.gameState = "chooseStyles";
                 log('Setting up style selection...');
-                let controls = document.getElementById("controls");
-                controls.innerHTML = "";
-                ["Fire", "Illusion"].forEach(style => {
+                setupStyleButtons();
+            } else {
+                log('Game already started, state: ' + game.gameState);
+            }
+        }
+
+        function setupStyleButtons() {
+            let controls = document.getElementById("controls");
+            controls.innerHTML = "";
+            let remainingStyles = ["Fire", "Illusion"].filter(s => !game.player.skills.includes(s));
+            if (remainingStyles.length > 0) {
+                remainingStyles.forEach(style => {
                     let button = document.createElement("button");
                     button.innerText = style;
                     button.onclick = function() { selectStyle(style); };
@@ -47,7 +54,7 @@
                     log('Added ' + style + ' button');
                 });
             } else {
-                log('Game already started, state: ' + game.gameState);
+                log('No styles left to choose.');
             }
         }
 
@@ -57,14 +64,12 @@
                 game.player.skills.push(style);
                 log(style + ' added to skills!');
                 document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length}`;
+                setupStyleButtons(); // Refresh buttons
                 if (game.player.skills.length === 2) {
                     log('Both styles selected, ready to play!');
                     game.gameState = "battle";
                     document.getElementById("output").innerHTML += "<br>Battle ready!";
-                    let controls = document.getElementById("controls");
-                    controls.innerHTML = ""; // Clear buttons after selection
-                } else {
-                    startGame(); // Refresh with remaining style
+                    document.getElementById("controls").innerHTML = ""; // Clear after both selected
                 }
             } else {
                 log('Selection invalid or complete, state: ' + game.gameState);
