@@ -114,8 +114,10 @@ class Skills {
     }
 
     healingStance(user, target, scene) {
+        let heal = 1;
+        user.hp = Math.max(0, Math.min(10, user.hp + heal));
         user.statusEffects.push(new StatusEffect("Healing", 3));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> enters <span class="output-text-neutral">Healing Stance</span> <span class="status-healing">🌿</span>!`);
+        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> enters <span class="output-text-neutral">Healing Stance</span>, healing ${heal} HP <span class="status-healing">🌿</span>!`);
     }
 
     raikiri(user, target, scene) {
@@ -132,13 +134,14 @@ class Skills {
             scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> does not have enough HP to cast <span class="output-text-illusion">Shadow Clone Jutsu</span>!`);
             return;
         }
-        user.hp = Math.max(0, Math.min(10, user.hp - 3));
-        if (!user.statusEffects.some(e => e.name === "ShadowCloneEffect")) {
-            user.statusEffects.push(new StatusEffect("ShadowCloneEffect", 3));
-            scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-illusion">Shadow Clone Jutsu</span>, adding a clone <span class="status-shadowcloneeffect">👥</span>!`);
-        } else {
-            scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> already has a shadow clone!`);
+        let cloneCount = user.statusEffects.filter(e => e.name === "ShadowCloneEffect").length;
+        if (cloneCount >= 3) {
+            scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> already has the maximum of 3 shadow clones!`);
+            return;
         }
+        user.hp = Math.max(0, Math.min(10, user.hp - 3));
+        user.statusEffects.push(new StatusEffect("ShadowCloneEffect", 3));
+        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-illusion">Shadow Clone Jutsu</span>, adding a clone <span class="status-shadowcloneeffect">👥</span>!`);
     }
 
     bite(user, target, scene) {
@@ -348,7 +351,7 @@ class BattleScene {
         let healingEffects = mob.statusEffects.filter(e => !e.new && e.name === "Healing");
         let totalHeal = 0;
         healingEffects.forEach(effect => {
-            totalHeal += 2;
+            totalHeal += 1; // Changed to +1 HP per turn for Healing status
         });
         if (totalHeal > 0) {
             mob.hp = Math.max(0, Math.min(10, mob.hp + totalHeal));
@@ -400,6 +403,20 @@ class BattleScene {
         return false;
     }
 
+    handleShadowCloneAction(skill, user, target, scene) {
+        if (skill.support) return false;
+        let clones = user.statusEffects.filter(e => e.name === "ShadowCloneEffect");
+        if (clones.length === 0) return false;
+        clones.forEach(() => {
+            scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span>'s shadow clone uses <span class="output-text-${skill.style}">${skill.name}</span>!`);
+            let killed = skill.skillFunction(user, target, scene);
+            scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span>'s shadow clone disappears! 💨`);
+            if (killed) return true;
+        });
+        user.statusEffects = user.statusEffects.filter(e => e.name !== "ShadowCloneEffect");
+        return target.hp <= 0;
+    }
+
     playerTurn() {
         this.queueOutput(`\n✴ ${game.player.name.toUpperCase()}'S TURN! ✴`);
         setTimeout(() => {
@@ -411,9 +428,15 @@ class BattleScene {
                     let skill = game.player.skills[Math.floor(Math.random() * game.player.skills.length)];
                     let blocked = this.checkTargetedEffects(skill, game.player, game.enemy, this);
                     if (!blocked) {
-                        let killed = skill.skillFunction(game.player, game.enemy, this);
-                        this.updateStatus();
-                        if (killed) {
+                        let cloneKilled = this.handleShadowCloneAction(skill, game.player, game.enemy, this);
+                        if (!cloneKilled) {
+                            let killed = skill.skillFunction(game.player, game.enemy, this);
+                            this.updateStatus();
+                            if (killed) {
+                                setTimeout(() => this.endBattle(), 1000);
+                                return;
+                            }
+                        } else {
                             setTimeout(() => this.endBattle(), 1000);
                             return;
                         }
@@ -444,9 +467,15 @@ class BattleScene {
                     let skill = game.enemy.skills[Math.floor(Math.random() * game.enemy.skills.length)];
                     let blocked = this.checkTargetedEffects(skill, game.enemy, game.player, this);
                     if (!blocked) {
-                        let killed = skill.skillFunction(game.enemy, game.player, this);
-                        this.updateStatus();
-                        if (killed) {
+                        let cloneKilled = this.handleShadowCloneAction(skill, game.enemy, game.player, this);
+                        if (!cloneKilled) {
+                            let killed = skill.skillFunction(game.enemy, game.player, this);
+                            this.updateStatus();
+                            if (killed) {
+                                setTimeout(() => this.endBattle(), 1000);
+                                return;
+                            }
+                        } else {
                             setTimeout(() => this.endBattle(), 1000);
                             return;
                         }
@@ -599,4 +628,4 @@ function selectSkillCard(skillName) {
     game.battleScene.queueOutput(`Shinobi gains new skill card: <span class="output-text-${skill.style}">${skill.name}</span>!`);
     document.getElementById("controls").innerHTML = "";
     setTimeout(() => game.battleScene.continueGame(), 1000);
-                }
+            }
