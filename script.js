@@ -5,8 +5,8 @@ let game = {
         maxHp: 10,
         Rank: "Student",
         ninjaStyles: { Fire: "D-Rank", Lightning: "D-Rank", Illusion: "D-Rank", Earth: "D-Rank", Feral: "D-Rank" },
-        skills: [], // Active skills, limited by inventory
-        skillInventory: [], // All collected skills
+        skills: [],
+        skillInventory: [],
         statusEffects: []
     },
     enemy: null,
@@ -115,7 +115,7 @@ class Skills {
     }
 
     flameThrowJutsu(user, target, scene) {
-        let damage = Math.round(Math.random()) + 5; // 5-6 damage
+        let damage = Math.round(Math.random()) + 5;
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         target.statusEffects.push(new StatusEffect("Burn", 3, 2));
         scene.queueOutput(`<span class="output-text-fire">Flame Throw Jutsu</span> deals ${damage} damage to <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span>, inflicting <span class="status-burn">Burn 🔥</span>!`);
@@ -627,14 +627,22 @@ class BattleScene {
     }
 }
 
-let lastClickTime = 0;
+function log(msg) {
+    const el = document.getElementById('log');
+    el.innerHTML += '<br>' + msg;
+}
+
 function startGame() {
+    log('Attempting to start game...');
     let now = Date.now();
-    if (now - lastClickTime < 1500) return;
+    if (now - lastClickTime < 1500) {
+        log('Click too fast, ignoring...');
+        return;
+    }
     lastClickTime = now;
 
     if (!document.getElementById("output") || !document.getElementById("controls") || !document.getElementById("player-status") || !document.getElementById("enemy-status") || !document.getElementById("skill-count")) {
-        console.error("Error: Missing DOM elements");
+        log('Error: Missing DOM elements');
         document.getElementById("output").innerHTML = "Error: Missing game elements. Check index.html!";
         return;
     }
@@ -648,19 +656,26 @@ function startGame() {
     game.outputQueue = [];
     game.isOutputting = false;
     document.getElementById("output").innerHTML = game.output.join("<br>");
+    log('Game initialized, creating BattleScene...');
     game.battleScene = new BattleScene();
     let barrageSkill = game.battleScene.skills.findSkill("Barrage");
     if (barrageSkill) {
         game.player.skillInventory.push(barrageSkill);
         game.player.skills.push(barrageSkill);
+        log('Barrage skill added, starting game flow...');
     } else {
-        console.error("Error: Barrage skill not found!");
+        log('Error: Barrage skill not found!');
         game.output.push("Error: Barrage skill not found!");
         document.getElementById("output").innerHTML = game.output.join("<br>");
         return;
     }
-    setTimeout(() => game.battleScene.chooseNinjaStyles(), 1000);
+    setTimeout(() => {
+        log('Triggering chooseNinjaStyles...');
+        game.battleScene.chooseNinjaStyles();
+    }, 1000);
 }
+
+let lastClickTime = 0;
 
 function selectStyle(style) {
     let now = Date.now();
@@ -733,4 +748,33 @@ function addSkillToActive(skillName) {
     let skill = game.battleScene.skills.findSkill(skillName);
     if (!skill) return;
     let inventoryCounts = {};
-    game.player.skillInventory.forEach(s => inventoryCounts[s.name] = (inventoryCounts[s.name] || 0) + 1
+    game.player.skillInventory.forEach(s => inventoryCounts[s.name] = (inventoryCounts[s.name] || 0) + 1);
+    let activeCount = game.player.skills.filter(s => s.name === skillName).length;
+    if (inventoryCounts[skillName] > activeCount) {
+        let limits = game.player.Rank === "Student" ? { "C-Rank": 4, "B-Rank": 1, "A-Rank": 0, "S-Rank": 0 } : { "C-Rank": 6, "B-Rank": 2, "A-Rank": 1, "S-Rank": 0 };
+        let rankCounts = {
+            "C-Rank": game.player.skills.filter(s => s.rank === "C-Rank").length,
+            "B-Rank": game.player.skills.filter(s => s.rank === "B-Rank").length,
+            "A-Rank": game.player.skills.filter(s => s.rank === "A-Rank").length,
+            "S-Rank": game.player.skills.filter(s => s.rank === "S-Rank").length
+        };
+        if (rankCounts[skill.rank] < limits[skill.rank]) {
+            game.player.skills.push(skill);
+            game.battleScene.queueOutput(`Added <span class="output-text-${skill.style}">${skillName}</span> to active skills!`);
+        } else {
+            game.battleScene.queueOutput(`Cannot add <span class="output-text-${skill.style}">${skillName}</span>: Reached ${skill.rank} limit!`);
+        }
+    }
+    game.battleScene.showSkillsPopup();
+}
+
+function removeSkillFromActive(skillName) {
+    let index = game.player.skills.findIndex(s => s.name === skillName);
+    if (index !== -1) {
+        game.player.skills.splice(index, 1);
+        game.battleScene.queueOutput(`Removed <span class="output-text-${game.battleScene.skills.findSkill(skillName).style}">${skillName}</span> from active skills!`);
+    }
+    game.battleScene.showSkillsPopup();
+}
+
+log('Script loaded at ' + new Date().toLocaleTimeString());
