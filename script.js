@@ -396,14 +396,14 @@ class BattleScene {
             target.statusEffects = target.statusEffects.filter(e => e.name !== "Rock Barrier");
             scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-${skill.style}">${skill.name}</span>!`);
             scene.queueOutput(`<span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span>'s <span class="status-rockbarrier">Rock Barrier 🪨</span> blocks the attack! The rock barrier cracks in half!`);
-            return true;
+            return true; // Block skill execution
         }
         let substitution = target.statusEffects.some(e => e.name === "Substitution");
         if (substitution && !skill.support) {
             target.statusEffects = target.statusEffects.filter(e => e.name !== "Substitution");
             scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-${skill.style}">${skill.name}</span>!`);
             scene.queueOutput(`<span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> uses <span class="status-substitution">Substitution 🪵</span> to dodge! 💨`);
-            return true;
+            return true; // Block skill execution
         }
         let shadowClone = target.statusEffects.some(e => e.name === "ShadowCloneEffect");
         if (shadowClone && !skill.support) {
@@ -413,7 +413,7 @@ class BattleScene {
                 target.statusEffects.splice(index, 1); // Remove one clone
                 scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-${skill.style}">${skill.name}</span>!`);
                 scene.queueOutput(`<span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span>'s shadow clone takes the hit and disappears! 💨`);
-                return false; // Changed to false to continue turn
+                return true; // Block skill execution
             }
         }
         return false;
@@ -658,4 +658,4 @@ function selectRankUpStyle(style) {
         document.getElementById("controls").innerHTML = "";
         setTimeout(() => game.battleScene.chooseSkillCard(), 1000);
     }
-                                  }
+        }
