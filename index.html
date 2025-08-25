@@ -13,8 +13,10 @@
     <div id="player-status">Shinobi [HP: <span class="player-hp">10/10</span>]</div>
     <div id="enemy-status">Enemy [HP: <span class="enemy-hp">0/0</span>]</div>
     <div id="skill-count">Skill cards: 0</div>
-    <div id="output">Welcome to ShinobiWay! Click Start to begin!</div>
-    <div id="controls"></div>
+    <div id="output">Welcome to ShinobiWay!</div>
+    <div id="controls">
+        <button id="start-button" onclick="startGame()">Start Game</button>
+    </div>
     <div id="log">Log started...</div>
 
     <script>
@@ -43,7 +45,9 @@
 
         function setupStyleButtons() {
             let controls = document.getElementById("controls");
-            controls.innerHTML = "";
+            let startButton = document.getElementById("start-button");
+            if (startButton) startButton.style.display = "none"; // Hide start button during selection
+            controls.innerHTML = ""; // Clear other content
             let remainingStyles = ["Fire", "Illusion"].filter(s => !game.player.skills.includes(s));
             if (remainingStyles.length > 0) {
                 remainingStyles.forEach(style => {
@@ -64,12 +68,15 @@
                 game.player.skills.push(style);
                 log(style + ' added to skills!');
                 document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length}`;
-                setupStyleButtons(); // Refresh buttons
+                setupStyleButtons(); // Refresh with remaining styles
                 if (game.player.skills.length === 2) {
                     log('Both styles selected, ready to play!');
                     game.gameState = "battle";
                     document.getElementById("output").innerHTML += "<br>Battle ready!";
-                    document.getElementById("controls").innerHTML = ""; // Clear after both selected
+                    let controls = document.getElementById("controls");
+                    controls.innerHTML = ""; // Clear after selection
+                    let startButton = document.getElementById("start-button");
+                    if (startButton) startButton.style.display = "block"; // Show start button again
                 }
             } else {
                 log('Selection invalid or complete, state: ' + game.gameState);
