@@ -14,9 +14,10 @@
     <div id="enemy-status">Enemy [HP: <span class="enemy-hp">0/0</span>]</div>
     <div id="skill-count">Skill cards: 0</div>
     <div id="output">Welcome to ShinobiWay!</div>
-    <div id="controls">
+    <div id="start-controls">
         <button id="start-button" onclick="startGame()">Start Game</button>
     </div>
+    <div id="style-controls"></div> <!-- Separate div for style buttons -->
     <div id="log">Log started...</div>
 
     <script>
@@ -38,16 +39,15 @@
                 game.gameState = "chooseStyles";
                 log('Setting up style selection...');
                 setupStyleButtons();
+                document.getElementById("start-button").style.display = "none"; // Hide only after starting
             } else {
                 log('Game already started, state: ' + game.gameState);
             }
         }
 
         function setupStyleButtons() {
-            let controls = document.getElementById("controls");
-            let startButton = document.getElementById("start-button");
-            if (startButton) startButton.style.display = "none"; // Hide start button during selection
-            controls.innerHTML = ""; // Clear other content
+            let controls = document.getElementById("style-controls");
+            controls.innerHTML = "";
             let remainingStyles = ["Fire", "Illusion"].filter(s => !game.player.skills.includes(s));
             if (remainingStyles.length > 0) {
                 remainingStyles.forEach(style => {
@@ -73,10 +73,7 @@
                     log('Both styles selected, ready to play!');
                     game.gameState = "battle";
                     document.getElementById("output").innerHTML += "<br>Battle ready!";
-                    let controls = document.getElementById("controls");
-                    controls.innerHTML = ""; // Clear after selection
-                    let startButton = document.getElementById("start-button");
-                    if (startButton) startButton.style.display = "block"; // Show start button again
+                    document.getElementById("style-controls").innerHTML = ""; // Clear style buttons
                 }
             } else {
                 log('Selection invalid or complete, state: ' + game.gameState);
