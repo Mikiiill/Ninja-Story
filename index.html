@@ -53,19 +53,21 @@
 
         function selectStyle(style) {
             log('Selecting ' + style + '...');
-            if (game.player.skills.length < 2) {
+            if (game.player.skills.length < 2 && game.gameState === "chooseStyles") {
                 game.player.skills.push(style);
                 log(style + ' added to skills!');
                 document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length}`;
-                let controls = document.getElementById("controls");
-                controls.innerHTML = "";
                 if (game.player.skills.length === 2) {
                     log('Both styles selected, ready to play!');
                     game.gameState = "battle";
                     document.getElementById("output").innerHTML += "<br>Battle ready!";
+                    let controls = document.getElementById("controls");
+                    controls.innerHTML = ""; // Clear buttons after selection
                 } else {
                     startGame(); // Refresh with remaining style
                 }
+            } else {
+                log('Selection invalid or complete, state: ' + game.gameState);
             }
         }
     </script>
