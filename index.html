@@ -29,36 +29,32 @@
 
     <script>
         let game = {
-            player: { name: "Shinobi", hp: 10, maxHp: 10, skills: [], skillInventory: ["Barrage"], gold: 0, rank: "Student", styles: [], styleRanks: { Fire: "D-Rank", Genjutsu: "D-Rank", Earth: "D-Rank", Lightning: "D-Rank", Feral: "D-Rank", Ninjutsu: "D-Rank", Taijutsu: "D-Rank" }, skillCounts: { "Barrage": 1, "Shock Field Jutsu": 0, "Lightning Blade Jutsu": 0, "Fireball Jutsu": 0, "Flame Throw Jutsu": 0, "Rock Barrier Jutsu": 0, "Rock Smash Jutsu": 0, "Demonic Vision Jutsu": 0, "Genjutsu Release Jutsu": 0, "Shadow Clone Jutsu": 0, "Dynamic Entry Jutsu": 0, "Falcon Drop Jutsu": 0, "Substitution Jutsu": 0, "Clone Jutsu": 0 } },
+            player: { name: "Shinobi", hp: 10, maxHp: 10, skills: [], skillInventory: ["Barrage"], gold: 0, rank: "Student", styles: [], styleRanks: { Fire: "D-Rank", Genjutsu: "D-Rank", Earth: "D-Rank", Lightning: "D-Rank", Feral: "D-Rank", Ninjutsu: "D-Rank", Taijutsu: "D-Rank" }, skillCounts: { "Barrage": 1, "Shock Field Jutsu": 0, "Lightning Blade Jutsu": 0, "Fireball Jutsu": 0, "Flame Throw Jutsu": 0, "Rock Barrier Jutsu": 0, "Rock Smash Jutsu": 0, "Demonic Vision Jutsu": 0, "Genjutsu Release Jutsu": 0, "Shadow Clone Jutsu": 0, "Dynamic Entry Jutsu": 0, "Falcon Drop Jutsu": 0, "Substitution Jutsu": 0, "Clone Jutsu": 0 }, statusEffects: [] },
+            enemy: { name: "", hp: 0, maxHp: 0, skills: [], statusEffects: [] },
             gameState: "start",
             skillRanks: {
                 "Shock Field Jutsu": "C-Rank", "Lightning Blade Jutsu": "B-Rank", "Fireball Jutsu": "C-Rank",
                 "Flame Throw Jutsu": "B-Rank", "Rock Barrier Jutsu": "C-Rank", "Rock Smash Jutsu": "B-Rank",
                 "Demonic Vision Jutsu": "C-Rank", "Genjutsu Release Jutsu": "B-Rank", "Shadow Clone Jutsu": "C-Rank",
                 "Dynamic Entry Jutsu": "C-Rank", "Falcon Drop Jutsu": "B-Rank", "Substitution Jutsu": "D-Rank",
-                "Clone Jutsu": "D-Rank", "Barrage": "D-Rank"
+                "Clone Jutsu": "D-Rank", "Barrage": "D-Rank", "Bite": "D-Rank", "Healing Stance": "D-Rank"
             },
             goldValues: { "D-Rank": 5, "C-Rank": 10, "B-Rank": 50, "A-Rank": 100, "S-Rank": 500 },
             asciiArt: {
                 battleStart: "👊💥 BATTLE BEGINS! 👊💥\nShinobi vs. Enemy!",
-                "Shock Field Jutsu": "⚡️ Shock Field!",
-                "Lightning Blade Jutsu": "⚡ Blade Strike!",
-                "Fireball Jutsu": "🔥 Fireball Strike!",
-                "Flame Throw Jutsu": "🔥🔥 Flame Burst!",
-                "Rock Barrier Jutsu": "🪨 Rock Shield!",
-                "Rock Smash Jutsu": "🪨💥 Rock Smash!",
-                "Demonic Vision Jutsu": "💀 Doom Strikes!",
-                "Genjutsu Release Jutsu": "🌫️ Mind Freed!",
-                "Shadow Clone Jutsu": "🌫️ Clone Appears!",
-                "Dynamic Entry Jutsu": "💥 Dynamic Kick!",
-                "Falcon Drop Jutsu": "🦅 Falcon Strike!",
-                "Substitution Jutsu": "🌫️ Substitution!",
-                "Clone Jutsu": "🌫️ Illusion Clone!",
-                "Barrage": "💥 Rapid Assault!"
+                "Shock Field Jutsu": "⚡️ Shock Field!", "Lightning Blade Jutsu": "⚡ Blade Strike!",
+                "Fireball Jutsu": "🔥 Fireball Strike!", "Flame Throw Jutsu": "🔥🔥 Flame Burst!",
+                "Rock Barrier Jutsu": "🪨 Rock Shield!", "Rock Smash Jutsu": "🪨💥 Rock Smash!",
+                "Demonic Vision Jutsu": "💀 Doom Strikes!", "Genjutsu Release Jutsu": "🌫️ Mind Freed!",
+                "Shadow Clone Jutsu": "🌫️ Clone Appears!", "Dynamic Entry Jutsu": "💥 Dynamic Kick!",
+                "Falcon Drop Jutsu": "🦅 Falcon Strike!", "Substitution Jutsu": "🌫️ Substitution!",
+                "Clone Jutsu": "🌫️ Illusion Clone!", "Barrage": "💥 Rapid Assault!",
+                "Bite": "😡 Savage Bite!", "Healing Stance": "🩺 Healing Aura!"
             },
             dotEffects: {
                 "Flame Throw Jutsu": { baseDamage: 2, duration: 3 },
-                "Demonic Vision Jutsu": { baseDamage: 1, duration: 5 }
+                "Demonic Vision Jutsu": { baseDamage: 1, duration: 5 },
+                "Healing Stance": { heal: 1, duration: 3 }
             },
             jutsuRequirements: {
                 "Shock Field Jutsu": { styles: ["Lightning"], minRank: "C-Rank" },
@@ -74,9 +70,13 @@
                 "Falcon Drop Jutsu": { styles: ["Taijutsu"], minRank: "B-Rank" },
                 "Substitution Jutsu": { styles: ["Ninjutsu", "Taijutsu"], attributes: ["Support"] },
                 "Clone Jutsu": { styles: ["Genjutsu"], attributes: ["Support"] },
-                "Barrage": {}
+                "Barrage": {}, "Bite": {}, "Healing Stance": {}
             },
-            rankLimits: { "Student": 5, "Genin": 10, "Chunin": 15, "Jonin": 20, "Kage": 25 }
+            rankLimits: { "Student": 5, "Genin": 10, "Chunin": 15, "Jonin": 20, "Kage": 25 },
+            enemies: {
+                "Wild Dog": { hp: 8, maxHp: 8, skills: ["Bite"] },
+                "Training Dummy": { hp: 6, maxHp: 6, skills: ["Healing Stance"] }
+            }
         };
 
         function log(msg) {
@@ -92,6 +92,11 @@
             document.getElementById("skill-count").innerText = `Skill cards: ${totalCards} | Gold: ${game.player.gold}`;
         }
 
+        function updateStatus() {
+            document.getElementById("player-status").innerHTML = `Shinobi [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>]`;
+            document.getElementById("enemy-status").innerHTML = `Enemy [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>]`;
+        }
+
         function startGame() {
             log('Starting game at ' + new Date().toLocaleTimeString() + '...');
             if (game.gameState === "start") {
@@ -100,7 +105,7 @@
                 game.gameState = "chooseStyles";
                 log('Setting up style selection...');
                 setupStyleButtons();
-                updateSkillCount(); // Update with initial Barrage
+                updateSkillCount();
                 document.getElementById("start-button").style.display = "none";
             } else {
                 log('Game already started, state: ' + game.gameState);
@@ -125,14 +130,14 @@
             if (game.player.styles.length < 2 && game.gameState === "chooseStyles") {
                 if (confirm("Select " + style + "?")) {
                     game.player.styles.push(style);
-                    game.player.styleRanks[style] = upgradeRank(game.player.styleRanks[style]); // Upgrade to C-Rank
+                    game.player.styleRanks[style] = upgradeRank(game.player.styleRanks[style]);
                     log(style + ' added as a style with rank upgraded to ' + game.player.styleRanks[style] + '!');
                     if (game.player.styles.length === 2) {
                         log('Both styles selected, proceeding to initial jutsu selection...');
                         document.getElementById("style-controls").innerHTML = "";
                         setupInitialJutsuSelection();
                     } else {
-                        setupStyleButtons(); // Refresh
+                        setupStyleButtons();
                     }
                 } else {
                     log(style + ' selection canceled.');
@@ -150,7 +155,7 @@
 
         function setupInitialJutsuSelection() {
             game.gameState = "chooseInitialJutsu";
-            performJutsuSelection(3); // Trigger 3 times for initial 4 cards
+            performJutsuSelection(3);
         }
 
         function performJutsuSelection(times) {
@@ -226,11 +231,14 @@
         function handleMainOption(option) {
             log('Selected option: ' + option);
             if (option === "Train") {
-                log('Entering battle...');
-                document.getElementById("output").innerHTML += `<br><span class="battle-ready">Battle ended!</span>`;
-                performJutsuSelection(1); // Post-battle: 1 selection of 3
+                startBattle();
             } else if (option === "Manage Skills") {
-                updateSkillControls();
+                if (document.getElementById("skill-controls").innerHTML === "") {
+                    updateSkillControls();
+                } else {
+                    document.getElementById("skill-controls").innerHTML = "";
+                    log('Manage Skills menu closed.');
+                }
             }
         }
 
@@ -238,15 +246,19 @@
             let controls = document.getElementById("skill-controls");
             controls.innerHTML = "";
             if (game.gameState === "main") {
+                let activeSkills = [];
                 for (let skill in game.player.skillCounts) {
                     for (let i = 0; i < game.player.skillCounts[skill]; i++) {
-                        let button = document.createElement("button");
-                        button.innerText = `Move ${skill} (${i + 1}) to Inventory`;
-                        button.onclick = function() { moveToInventory(skill, i); };
-                        controls.appendChild(button);
-                        log(`Added button to move ${skill} (${i + 1}) to inventory`);
+                        activeSkills.push({ name: skill, index: i });
                     }
                 }
+                activeSkills.forEach((skillObj, index) => {
+                    let button = document.createElement("button");
+                    button.innerText = `Move ${skillObj.name} (${index + 1}) to Inventory`;
+                    button.onclick = function() { moveToInventory(skillObj.name, skillObj.index, index); };
+                    controls.appendChild(button);
+                    log(`Added button to move ${skillObj.name} (${index + 1}) to inventory`);
+                });
                 game.player.skillInventory.forEach((skill, index) => {
                     let button = document.createElement("button");
                     button.innerText = `Add ${skill} (${index + 1}) to Active`;
@@ -261,6 +273,7 @@
             if (game.player.skills.length < game.rankLimits[game.player.rank]) {
                 game.player.skills.push(skill);
                 game.player.skillInventory.splice(index, 1);
+                game.player.skillCounts[skill] = (game.player.skillCounts[skill] || 0) + 1;
                 log(`${skill} moved to active skills!`);
                 updateSkillCount();
                 updateSkillControls();
@@ -269,15 +282,113 @@
             }
         }
 
-        function moveToInventory(skill, countIndex) {
-            game.player.skillInventory.push(skill);
-            game.player.skillCounts[skill]--;
-            if (game.player.skillCounts[skill] <= 0) {
-                game.player.skills = game.player.skills.filter(s => s !== skill);
+        function moveToInventory(skill, countIndex, buttonIndex) {
+            let activeSkills = [];
+            for (let s in game.player.skillCounts) {
+                for (let i = 0; i < game.player.skillCounts[s]; i++) {
+                    activeSkills.push(s);
+                }
             }
-            log(`${skill} moved to inventory!`);
-            updateSkillCount();
-            updateSkillControls();
+            if (countIndex < activeSkills.length) {
+                game.player.skillInventory.push(skill);
+                game.player.skillCounts[skill]--;
+                if (game.player.skillCounts[skill] <= 0) {
+                    game.player.skills = game.player.skills.filter(s => s !== skill);
+                }
+                log(`${skill} moved to inventory!`);
+                updateSkillCount();
+                updateSkillControls();
+            }
+        }
+
+        function startBattle() {
+            let enemyType = Math.random() < 0.5 ? "Wild Dog" : "Training Dummy";
+            game.enemy = { ...game.enemies[enemyType], name: enemyType };
+            updateStatus();
+            log('Entering battle...');
+            document.getElementById("output").innerHTML += `<br><span class="battle-ready">${game.asciiArt.battleStart}</span>`;
+            setTimeout(() => determineTurnOrder(), 1000);
+        }
+
+        function determineTurnOrder() {
+            let coinFlip = Math.random() < 0.5;
+            let first = coinFlip ? game.player.name : game.enemy.name;
+            let second = coinFlip ? game.enemy.name : game.player.name;
+            document.getElementById("output").innerHTML += `<br>${second} is off guard!`;
+            setTimeout(() => takeTurn(first), 2000);
+        }
+
+        function takeTurn(name) {
+            document.getElementById("output").innerHTML += `<br> ${name}'s turn`;
+            setTimeout(() => {
+                if (name === game.player.name) {
+                    applyStatusEffects(game.player);
+                    let skill = game.player.skills.length > 0 ? game.player.skills[Math.floor(Math.random() * game.player.skills.length)] : null;
+                    if (skill) {
+                        useSkill(skill, game.enemy);
+                    }
+                    setTimeout(() => takeTurn(game.enemy.name), 3000);
+                } else {
+                    applyStatusEffects(game.enemy);
+                    let skill = game.enemy.skills.length > 0 ? game.enemy.skills[Math.floor(Math.random() * game.enemy.skills.length)] : null;
+                    if (skill) {
+                        useSkill(skill, game.player);
+                    }
+                    if (game.player.hp > 0 && game.enemy.hp > 0) {
+                        setTimeout(() => takeTurn(game.player.name), 3000);
+                    } else {
+                        endBattle();
+                    }
+                }
+            }, 3000);
+        }
+
+        function applyStatusEffects(entity) {
+            entity.statusEffects = entity.statusEffects.filter(effect => {
+                if (effect.type === "dot") {
+                    entity.hp -= effect.damage;
+                    effect.duration--;
+                    document.getElementById("output").innerHTML += `<br>${entity.name} takes ${effect.damage} damage from ${effect.source}!`;
+                    updateStatus();
+                } else if (effect.type === "heal") {
+                    entity.hp = Math.min(entity.maxHp, entity.hp + effect.heal);
+                    effect.duration--;
+                    document.getElementById("output").innerHTML += `<br>${entity.name} heals ${effect.heal} HP from ${effect.source}!`;
+                    updateStatus();
+                }
+                return effect.duration > 0;
+            });
+        }
+
+        function useSkill(skill, target) {
+            document.getElementById("output").innerHTML += `<br>${game.player.name} uses ${skill}! ${game.asciiArt[skill] || ""}`;
+            setTimeout(() => {
+                if (target.statusEffects.some(e => e.name === "Substitution" && !game.jutsuRequirements[skill].attributes?.includes("Support"))) {
+                    target.statusEffects = target.statusEffects.filter(e => e.name !== "Substitution");
+                    document.getElementById("output").innerHTML += `<br>Substitution blocks ${skill}!`;
+                } else if (target.statusEffects.some(e => e.name === "Clone" && !game.jutsuRequirements[skill].attributes?.includes("Support"))) {
+                    target.statusEffects = target.statusEffects.filter(e => e.name !== "Clone");
+                    document.getElementById("output").innerHTML += `<br>Clone blocks ${skill}! Turn ends.`;
+                    return;
+                }
+                if (game.player.statusEffects.some(e => e.name === "Shadow Clone" && !game.jutsuRequirements[skill].attributes?.includes("Support"))) {
+                    game.player.statusEffects = game.player.statusEffects.filter(e => e.name !== "Shadow Clone");
+                    document.getElementById("output").innerHTML += `<br>Shadow Clone uses Barrage!`;
+                    useSkill("Barrage", target);
+                }
+                let damage = 2; // Placeholder damage
+                target.hp -= damage;
+                document.getElementById("output").innerHTML += `<br>${target.name} takes ${damage} damage!`;
+                updateStatus();
+                if (game.dotEffects[skill]) {
+                    target.statusEffects.push({ name: skill, type: "dot", damage: game.dotEffects[skill].baseDamage, duration: game.dotEffects[skill].duration, source: skill });
+                }
+            }, 1000);
+        }
+
+        function endBattle() {
+            document.getElementById("output").innerHTML += `<br><span class="battle-ready">Battle ended!</span>`;
+            performJutsuSelection(1);
         }
     </script>
 </body>
