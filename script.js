@@ -44,7 +44,7 @@ class BattleScene {
             log(`Exiting chooseNinjaStyles: gameState=${game.gameState}, chosenStyles.length=${this.chosenStyles.length}`);
             if (this.chosenStyles.length >= 2) {
                 game.gameState = "chooseSkills";
-                setTimeout(() => this.chooseStartingSkills(), 1000);
+                this.chooseStartingSkills();
             }
             return;
         }
@@ -53,19 +53,18 @@ class BattleScene {
         log(`Available styles: ${styles.join(', ')}`);
         this.queueOutput("Choose two Ninja Styles to rank up to C-Rank:");
         let controls = document.getElementById("controls");
-        controls.innerHTML = ""; // Clear controls
+        controls.innerHTML = "";
         if (styles.length === 0) {
             log('No styles left to choose, forcing next step...');
             game.gameState = "chooseSkills";
-            setTimeout(() => this.chooseStartingSkills(), 1000);
+            this.chooseStartingSkills();
             return;
         }
-        // Simplified button creation
         styles.forEach((style) => {
             let button = document.createElement("button");
             button.innerText = style;
             button.className = style.toLowerCase();
-            button.onclick = () => selectStyle(style); // Use function reference
+            button.onclick = () => selectStyle(style);
             controls.appendChild(button);
             log(`Added button for ${style}`);
         });
@@ -79,14 +78,14 @@ class BattleScene {
             log(`Exiting chooseStartingSkills: gameState=${game.gameState}, chosenSkills.length=${this.chosenSkills.length}`);
             if (this.chosenSkills.length >= 4) {
                 game.gameState = "battle";
-                setTimeout(() => this.startBattle(), 1000);
+                this.startBattle();
             }
             return;
         }
         this.queueOutput("Choose four starting skills (placeholder):");
         let controls = document.getElementById("controls");
         controls.innerHTML = "";
-        setTimeout(() => log('chooseStartingSkills completed, waiting for user input...'), 1000);
+        log('chooseStartingSkills completed, waiting for user input...');
     }
 
     startBattle() {
@@ -141,10 +140,7 @@ function startGame() {
     game.battleScene = new BattleScene();
 
     log('Scheduling chooseNinjaStyles...');
-    setTimeout(() => {
-        log('Executing chooseNinjaStyles...');
-        game.battleScene.chooseNinjaStyles();
-    }, 1000);
+    game.battleScene.chooseNinjaStyles(); // Immediate call instead of setTimeout
 }
 
 function selectStyle(style) {
@@ -158,9 +154,9 @@ function selectStyle(style) {
         document.getElementById("controls").innerHTML = "";
         if (game.battleScene.chosenStyles.length === 2) {
             game.gameState = "chooseSkills";
-            setTimeout(() => game.battleScene.chooseStartingSkills(), 1000);
+            game.battleScene.chooseStartingSkills();
         } else {
-            setTimeout(() => game.battleScene.chooseNinjaStyles(), 1000);
+            game.battleScene.chooseNinjaStyles();
         }
     }
-                                                                                       }
+}
