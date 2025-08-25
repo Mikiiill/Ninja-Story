@@ -5,7 +5,8 @@ let game = {
         maxHp: 10,
         Rank: "Student",
         ninjaStyles: { Fire: "D-Rank", Lightning: "D-Rank", Illusion: "D-Rank", Earth: "D-Rank", Feral: "D-Rank" },
-        skills: [],
+        skills: [], // Active skills
+        skillInventory: [], // All collected skills
         statusEffects: []
     },
     enemy: null,
@@ -18,21 +19,23 @@ let game = {
 };
 
 class StatusEffect {
-    constructor(name, duration) {
+    constructor(name, duration, damage = 0) {
         this.name = name;
         this.duration = duration;
+        this.damage = damage;
         this.new = true;
     }
 }
 
 class BattleSkill {
-    constructor(name, attributes, requirements, skillFunction, style, support) {
+    constructor(name, attributes, requirements, skillFunction, style, support, rank) {
         this.name = name;
         this.attributes = attributes || [];
         this.requirements = requirements;
         this.skillFunction = skillFunction;
         this.style = style;
         this.support = support || false;
+        this.rank = rank;
     }
 }
 
@@ -57,18 +60,20 @@ class Skills {
 
     initializeSkills() {
         this.skills = [
-            new BattleSkill("Barrage", [], {}, this.barrage.bind(this), "neutral", false),
-            new BattleSkill("Demon Mind Jutsu", ["Illusion"], { Illusion: "C-Rank" }, this.demonMindJutsu.bind(this), "illusion", false),
-            new BattleSkill("Fireball Jutsu", ["Fire"], { Fire: "C-Rank" }, this.fireballJutsu.bind(this), "fire", false),
-            new BattleSkill("Flame Throw Jutsu", ["Fire"], { Fire: "B-Rank" }, this.flameThrowJutsu.bind(this), "fire", false),
-            new BattleSkill("Healing Stance", [], {}, this.healingStance.bind(this), "neutral", true),
-            new BattleSkill("Lightning Edge", ["Lightning"], { Lightning: "C-Rank" }, this.lightningEdge.bind(this), "lightning", false),
-            new BattleSkill("Shadow Clone Jutsu", ["Illusion"], { Illusion: "C-Rank" }, this.shadowCloneJutsu.bind(this), "illusion", true),
-            new BattleSkill("Bite", ["Feral"], { Feral: "C-Rank" }, this.bite.bind(this), "feral", false),
-            new BattleSkill("Substitution", [], {}, this.substitution.bind(this), "neutral", true),
-            new BattleSkill("Rock Barrier Jutsu", ["Earth"], { Earth: "C-Rank" }, this.rockBarrierJutsu.bind(this), "earth", true),
-            new BattleSkill("Impending Doom", ["Illusion"], { Illusion: "B-Rank" }, this.impendingDoom.bind(this), "illusion", false),
-            new BattleSkill("Boulder Crush", ["Earth"], { Earth: "B-Rank" }, this.boulderCrush.bind(this), "earth", false)
+            new BattleSkill("Barrage", [], {}, this.barrage.bind(this), "neutral", false, "D-Rank"),
+            new BattleSkill("Demon Mind Jutsu", ["Illusion"], { Illusion: "C-Rank" }, this.demonMindJutsu.bind(this), "illusion", false, "C-Rank"),
+            new BattleSkill("Fireball Jutsu", ["Fire"], { Fire: "C-Rank" }, this.fireballJutsu.bind(this), "fire", false, "C-Rank"),
+            new BattleSkill("Flame Throw Jutsu", ["Fire"], { Fire: "B-Rank" }, this.flameThrowJutsu.bind(this), "fire", false, "B-Rank"),
+            new BattleSkill("Healing Stance", [], {}, this.healingStance.bind(this), "neutral", true, "D-Rank"),
+            new BattleSkill("Shock Field Jutsu", ["Lightning"], { Lightning: "C-Rank" }, this.shockFieldJutsu.bind(this), "lightning", false, "C-Rank"),
+            new BattleSkill("Shadow Clone Jutsu", ["Illusion"], { Illusion: "C-Rank" }, this.shadowCloneJutsu.bind(this), "illusion", true, "C-Rank"),
+            new BattleSkill("Bite", ["Feral"], { Feral: "C-Rank" }, this.bite.bind(this), "feral", false, "C-Rank"),
+            new BattleSkill("Substitution", [], {}, this.substitution.bind(this), "neutral", true, "D-Rank"),
+            new BattleSkill("Rock Barrier Jutsu", ["Earth"], { Earth: "C-Rank" }, this.rockBarrierJutsu.bind(this), "earth", true, "C-Rank"),
+            new BattleSkill("Impending Doom", ["Illusion"], { Illusion: "B-Rank" }, this.impendingDoom.bind(this), "illusion", false, "B-Rank"),
+            new BattleSkill("Rock Smash Jutsu", ["Earth"], { Earth: "B-Rank" }, this.rockSmashJutsu.bind(this), "earth", false, "B-Rank"),
+            new BattleSkill("Storm Release Jutsu", ["Lightning"], { Lightning: "A-Rank" }, this.stormReleaseJutsu.bind(this), "lightning", false, "A-Rank"),
+            new BattleSkill("Ultimate Shadow Clone", ["Illusion"], { Illusion: "S-Rank" }, this.ultimateShadowClone.bind(this), "illusion", true, "S-Rank")
         ];
     }
 
@@ -81,12 +86,12 @@ class Skills {
     }
 
     barrage(user, target, scene) {
-        let baseDamage = 1;
-        let comboDamage = Math.round(Math.random()) + 1; // 1 or 2
-        target.hp = Math.max(0, Math.min(10, target.hp - baseDamage));
+        let baseDamage = Math.round(Math.random()) + 1; // 1–2
+        let comboDamage = Math.round(Math.random()) + 1; // 1–2
+        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - baseDamage));
         scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> attacks <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> with <span class="output-text-neutral">Barrage</span> and hits for ${baseDamage} damage!`);
         if (target.hp > 0) {
-            target.hp = Math.max(0, Math.min(10, target.hp - comboDamage));
+            target.hp = Math.max(0, Math.min(target.maxHp, target.hp - comboDamage));
             scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> combos for ${comboDamage} damage!`);
         }
         if (target.hp <= 0) return true;
@@ -94,51 +99,53 @@ class Skills {
     }
 
     demonMindJutsu(user, target, scene) {
-        let damage = 1;
-        target.hp = Math.max(0, Math.min(10, target.hp - damage));
-        target.statusEffects.push(new StatusEffect("Doom", 3));
+        let damage = 2;
+        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+        target.statusEffects.push(new StatusEffect("Doom", 3, 2));
         scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-illusion">Demon Mind Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-doom">Doom 💀</span>!`);
         if (target.hp <= 0) return true;
         return false;
     }
 
     fireballJutsu(user, target, scene) {
-        let damage = Math.round(Math.random() * 4) + 3;
-        target.hp = Math.max(0, Math.min(10, target.hp - damage));
-        target.statusEffects.push(new StatusEffect("Burned", 3));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Fireball Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burned">Burned 🔥</span>!`);
+        let damage = Math.round(Math.random()) + 3; // 3–4
+        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+        target.statusEffects.push(new StatusEffect("Burn", 3));
+        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Fireball Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burn">Burn 🔥</span>!`);
         if (target.hp <= 0) return true;
         return false;
     }
 
     flameThrowJutsu(user, target, scene) {
-        let damage = Math.round(Math.random() * 5) + 5;
-        target.hp = Math.max(0, Math.min(10, target.hp - damage));
-        target.statusEffects.push(new StatusEffect("Burned", 3));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Flame Throw Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burned">Burned 🔥</span>!`);
+        let damage = Math.round(Math.random()) + 5; // 5–6
+        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+        target.statusEffects.push(new StatusEffect("Burn", 3));
+        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Flame Throw Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burn">Burn 🔥</span>!`);
         if (target.hp <= 0) return true;
         return false;
     }
 
     healingStance(user, target, scene) {
-        let heal = user.hp < user.maxHp ? 1 : 0; // Only heal upfront if not at max HP
+        let heal = user.hp < user.maxHp ? 1 : 0;
         user.hp = Math.max(0, Math.min(user.maxHp, user.hp + heal));
         user.statusEffects.push(new StatusEffect("Healing", 3));
         scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> enters <span class="output-text-neutral">Healing Stance</span>${heal > 0 ? `, healing ${heal} HP` : ""} <span class="status-healing">🌿</span>!`);
-        return true; // Always return true to indicate successful action
+        return true;
     }
 
-    lightningEdge(user, target, scene) {
-        let damage = Math.round(Math.random() * 4) + 4;
-        target.hp = Math.max(0, Math.min(10, target.hp - damage));
-        target.statusEffects.push(new StatusEffect("Stunned", 1));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-lightning">Lightning Edge</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-stunned">Stunned ⚡️</span>!`);
-        if (target.hp <= 0) return true;
-        return false;
+    shockFieldJutsu(user, target, scene) {
+    shockFieldJutsu(user, target, scene) {
+    let damage = Math.round(Math.random() * 2) + 2; // 2–4
+    target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+    user.statusEffects.push(new StatusEffect("Numb", 1));
+    target.statusEffects.push(new StatusEffect("Numb", 1));
+    scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-lightning">Shock Field Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-numb">Numb ⚡️</span> on both!`);
+    if (target.hp <= 0) return true;
+    return false;
     }
 
     shadowCloneJutsu(user, target, scene) {
-        if (user.hp < 3) {
+        if (user.hp < 2) {
             scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> does not have enough HP to cast <span class="output-text-illusion">Shadow Clone Jutsu</span>!`);
             return false;
         }
@@ -147,7 +154,7 @@ class Skills {
             scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> already has the maximum of 3 shadow clones!`);
             return false;
         }
-        user.hp = Math.max(0, Math.min(10, user.hp - 3));
+        user.hp = Math.max(0, Math.min(user.maxHp, user.hp - 2)); // -2 HP
         user.statusEffects.push(new StatusEffect("ShadowCloneEffect", 3));
         scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-illusion">Shadow Clone Jutsu</span>, adding a clone <span class="status-shadowcloneeffect">👥</span>!`);
         return true;
@@ -155,9 +162,11 @@ class Skills {
 
     bite(user, target, scene) {
         let damage = 1;
-        target.hp = Math.max(0, Math.min(10, target.hp - damage));
-        target.statusEffects.push(new StatusEffect("Bleed", 3));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-feral">Bite</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-bleed">Bleed 🩸</span>!`);
+        let heal = user.hp < user.maxHp ? 1 : 0;
+        user.hp = Math.max(0, Math.min(user.maxHp, user.hp + heal));
+        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+        target.statusEffects.push(new StatusEffect("Bleed", 3, 2));
+        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-feral">Bite</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage${heal > 0 ? `, healing ${heal} HP` : ""}, inflicting <span class="status-bleed">Bleed 🩸</span>!`);
         if (target.hp <= 0) return true;
         return false;
     }
@@ -176,19 +185,50 @@ class Skills {
 
     impendingDoom(user, target, scene) {
         let damage = 3;
-        target.hp = Math.max(0, Math.min(10, target.hp - damage));
-        target.statusEffects.push(new StatusEffect("Doom", 3));
+        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+        target.statusEffects.push(new StatusEffect("Doom", 3, 3));
         scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-illusion">Impending Doom</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-doom">Doom 💀</span>!`);
         if (target.hp <= 0) return true;
         return false;
     }
 
-    boulderCrush(user, target, scene) {
-        let damage = Math.round(Math.random() * 5) + 5;
-        target.hp = Math.max(0, Math.min(10, target.hp - damage));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-earth">Boulder Crush</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage!`);
+    rockSmashJutsu(user, target, scene) {
+        let damage = Math.round(Math.random() * 2) + 6; // 6–8
+        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-earth">Rock Smash Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage!`);
         if (target.hp <= 0) return true;
         return false;
+    }
+
+    stormReleaseJutsu(user, target, scene) {
+        if (user.hp < 2) {
+            scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> does not have enough HP to use <span class="output-text-lightning">Storm Release Jutsu</span>!`);
+            return false;
+        }
+        user.hp = Math.max(0, Math.min(user.maxHp, user.hp - 2));
+        let damage = Math.round(Math.random() * 3) + 6; // 6–9
+        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+        target.statusEffects.push(new StatusEffect("Numb", 2));
+        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-lightning">Storm Release Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-numb">Numb ⚡️</span>!`);
+        if (target.hp <= 0) return true;
+        return false;
+    }
+
+    ultimateShadowClone(user, target, scene) {
+        if (user.hp < 5) {
+            scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> does not have enough HP to cast <span class="output-text-illusion">Ultimate Shadow Clone</span>!`);
+            return false;
+        }
+        let cloneCount = user.statusEffects.filter(e => e.name === "ShadowCloneEffect").length;
+        if (cloneCount >= 2) {
+            scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> already has the maximum of 2 shadow clones!`);
+            return false;
+        }
+        user.hp = Math.max(0, Math.min(user.maxHp, user.hp - 5));
+        user.statusEffects.push(new StatusEffect("ShadowCloneEffect", 3));
+        user.statusEffects.push(new StatusEffect("ShadowCloneEffect", 3));
+        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-illusion">Ultimate Shadow Clone</span>, adding two clones <span class="status-shadowcloneeffect">👥</span>!`);
+        return true;
     }
 }
 
@@ -197,10 +237,10 @@ class BattleScene {
         this.skills = new Skills();
         this.asciiMap = {
             Doom: "💀",
-            Burned: "🔥",
+            Burn: "🔥",
             Bleed: "🩸",
             Healing: "🌿",
-            Stunned: "⚡️",
+            Numb: "⚡️",
             ShadowCloneEffect: "👥",
             Substitution: "🪵",
             "Rock Barrier": "🪨"
@@ -240,7 +280,58 @@ class BattleScene {
         let enemySprite = game.enemy && game.enemy.sprite ? `<img src="${game.enemy.sprite}" class="sprite" alt="${game.enemy.name} Sprite">` : "";
         document.getElementById("player-status").innerHTML = `${playerSprite} Shinobi [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] ${playerEffects}`;
         document.getElementById("enemy-status").innerHTML = game.enemy ? `${enemySprite} ${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>] ${enemyEffects}` : "Enemy [HP: <span class='enemy-hp'>0/0</span>]";
-        document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length}`;
+        let rankCounts = {
+            "C-Rank": game.player.skills.filter(s => s.rank === "C-Rank").length,
+            "B-Rank": game.player.skills.filter(s => s.rank === "B-Rank").length,
+            "A-Rank": game.player.skills.filter(s => s.rank === "A-Rank").length,
+            "S-Rank": game.player.skills.filter(s => s.rank === "S-Rank").length
+        };
+        let limits = game.player.Rank === "Student" ? { "C-Rank": 4, "B-Rank": 1, "A-Rank": 0, "S-Rank": 0 } : { "C-Rank": 6, "B-Rank": 2, "A-Rank": 1, "S-Rank": 0 };
+        document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length} (C: ${rankCounts["C-Rank"]}/${limits["C-Rank"]}, B: ${rankCounts["B-Rank"]}/${limits["B-Rank"]}, A: ${rankCounts["A-Rank"]}/${limits["A-Rank"]}, S: ${rankCounts["S-Rank"]}/${limits["S-Rank"]})`;
+    }
+
+    showSkillsPopup() {
+        let popup = document.createElement("div");
+        popup.id = "skills-popup";
+        popup.style.position = "fixed";
+        popup.style.top = "20%";
+        popup.style.left = "20%";
+        popup.style.width = "60%";
+        popup.style.background = "#333";
+        popup.style.color = "#fff";
+        popup.style.padding = "20px";
+        popup.style.border = "2px solid #fff";
+        popup.style.zIndex = "1000";
+        popup.style.fontSize = window.innerWidth <= 768 ? "1rem" : "1.2rem";
+
+        let limits = game.player.Rank === "Student" ? { "C-Rank": 4, "B-Rank": 1, "A-Rank": 0, "S-Rank": 0 } : { "C-Rank": 6, "B-Rank": 2, "A-Rank": 1, "S-Rank": 0 };
+        let rankCounts = {
+            "C-Rank": game.player.skills.filter(s => s.rank === "C-Rank").length,
+            "B-Rank": game.player.skills.filter(s => s.rank === "B-Rank").length,
+            "A-Rank": game.player.skills.filter(s => s.rank === "A-Rank").length,
+            "S-Rank": game.player.skills.filter(s => s.rank === "S-Rank").length
+        };
+
+        let inventoryCounts = {};
+        game.player.skillInventory.forEach(s => inventoryCounts[s.name] = (inventoryCounts[s.name] || 0) + 1);
+        let inventoryHtml = "<h3>Skill Inventory</h3><ul>";
+        Object.keys(inventoryCounts).forEach(skillName => {
+            let skill = this.skills.findSkill(skillName);
+            inventoryHtml += `<li><button class="${skill.style}" onclick="swapSkillToActive('${skillName}')">${skillName} (${skill.rank}): ${inventoryCounts[skillName]}</button></li>`;
+        });
+        inventoryHtml += "</ul>";
+
+        let activeHtml = "<h3>Active Skills</h3><ul>";
+        game.player.skills.forEach(skill => {
+            activeHtml += `<li><button class="${skill.style}" onclick="swapSkillToInventory('${skill.name}')">${skill.name} (${skill.rank})</button></li>`;
+        });
+        activeHtml += "</ul>";
+
+        let compositionHtml = `<p>Deck Composition: C: ${rankCounts["C-Rank"]}/${limits["C-Rank"]}, B: ${rankCounts["B-Rank"]}/${limits["B-Rank"]}, A: ${rankCounts["A-Rank"]}/${limits["A-Rank"]}, S: ${rankCounts["S-Rank"]}/${limits["S-Rank"]}</p>`;
+        let limitsHtml = `<p>${game.player.Rank} Limits: C-Rank ${limits["C-Rank"]}, B-Rank ${limits["B-Rank"]}, A-Rank ${limits["A-Rank"]}, S-Rank ${limits["S-Rank"]}</p>`;
+
+        popup.innerHTML = `${inventoryHtml}${activeHtml}${compositionHtml}${limitsHtml}<button onclick="document.getElementById('skills-popup').remove()">Close</button>`;
+        document.body.appendChild(popup);
     }
 
     chooseNinjaStyles() {
@@ -267,7 +358,7 @@ class BattleScene {
         controls.innerHTML = "";
         availableSkills.forEach((skill) => {
             let button = document.createElement("button");
-            button.innerText = skill.name;
+            button.innerText = `${skill.name} (${skill.rank})`;
             button.className = skill.style;
             button.setAttribute("onclick", `selectSkill('${skill.name}')`);
             controls.appendChild(button);
@@ -309,8 +400,7 @@ class BattleScene {
 
     startBattle() {
         game.enemy = this.generateEnemy();
-        game.enemy.hp = 10;
-        game.enemy.maxHp = 10;
+        game.enemy.hp = game.enemy.maxHp = game.enemy.name === "Training Dummy" ? 6 : game.enemy.name === "Wild Dog" ? 8 : 12;
         game.enemy.ninjaStyles = { Fire: "C-Rank", Lightning: "C-Rank", Illusion: "C-Rank", Earth: "C-Rank", Feral: "C-Rank" };
         game.enemy.skills = this.generateEnemySkills(game.enemy);
         this.queueOutput(`\nBattle ${game.battleNum}: <span class="output-text-player">${game.player.name}</span> vs. <span class="output-text-enemy">${game.enemy.name}</span>!`);
@@ -318,10 +408,10 @@ class BattleScene {
     }
 
     generateEnemy() {
-        let names = game.player.skills.length < 10 ? ["Wild Dog", "Training Dummy"] : ["Illusionist Genin", "Fire Genin", "Lightning Genin", "Earth Genin", "Feral Genin"];
+        let names = game.player.skillInventory.length < 10 ? ["Wild Dog", "Training Dummy"] : ["Illusionist Genin", "Fire Genin", "Lightning Genin", "Earth Genin", "Feral Genin"];
         let name = names[Math.floor(Math.random() * names.length)];
         let sprite;
-        let rank = game.player.skills.length < 10 ? "Basic" : "Genin";
+        let rank = game.player.skillInventory.length < 10 ? "Basic" : "Genin";
         switch (name) {
             case "Wild Dog": sprite = "images/wild_dog.png"; break;
             case "Training Dummy": sprite = "images/training_dummy.png"; break;
@@ -349,15 +439,15 @@ class BattleScene {
 
     applyStatusEffects(mob, scene) {
         let newEffects = [];
-        let damageEffects = mob.statusEffects.filter(e => !e.new && (e.name === "Burned" || e.name === "Bleed" || e.name === "Doom"));
+        let damageEffects = mob.statusEffects.filter(e => !e.new && (e.name === "Burn" || e.name === "Bleed" || e.name === "Doom"));
         let totalDamage = 0;
         damageEffects.forEach(effect => {
-            if (effect.name === "Burned") totalDamage += 2;
-            if (effect.name === "Bleed") totalDamage += 1;
-            if (effect.name === "Doom") totalDamage += 3;
+            if (effect.name === "Burn") totalDamage += 2;
+            if (effect.name === "Bleed") totalDamage += effect.damage;
+            if (effect.name === "Doom") totalDamage += effect.damage;
         });
         if (totalDamage > 0) {
-            mob.hp = Math.max(0, Math.min(10, mob.hp - totalDamage));
+            mob.hp = Math.max(0, Math.min(mob.maxHp, mob.hp - totalDamage));
             scene.queueOutput(`<span class="output-text-${mob === game.player ? 'player' : 'enemy'}">${mob.name}</span> takes ${totalDamage} damage from status effects!`);
         }
         let healingEffects = mob.statusEffects.filter(e => !e.new && e.name === "Healing");
@@ -366,7 +456,7 @@ class BattleScene {
             totalHeal += 1;
         });
         if (totalHeal > 0) {
-            mob.hp = Math.max(0, Math.min(10, mob.hp + totalHeal));
+            mob.hp = Math.max(0, Math.min(mob.maxHp, mob.hp + totalHeal));
             scene.queueOutput(`<span class="output-text-${mob === game.player ? 'player' : 'enemy'}">${mob.name}</span> heals ${totalHeal} HP from <span class="status-healing">Healing 🌿</span>!`);
         }
         mob.statusEffects.forEach(effect => {
@@ -436,13 +526,13 @@ class BattleScene {
     }
 
     playerTurn() {
-        this.queueOutput(`\n✴ ${game.player.name.toUpperCase()}'S TURN! ✴`);
+        this.queueOutput(`\n\n✴ ${game.player.name.toUpperCase()}'S TURN! ✴`);
         setTimeout(() => {
             let killed = this.applyStatusEffects(game.player, this);
             if (killed) return;
             if (game.enemy && game.enemy.hp > 0) {
-                let stunned = game.player.statusEffects.some(e => e.name === "Stunned");
-                if (!stunned) {
+                let numbed = game.player.statusEffects.some(e => e.name === "Numb");
+                if (!numbed) {
                     let skill = game.player.skills[Math.floor(Math.random() * game.player.skills.length)];
                     let blocked = this.checkTargetedEffects(skill, game.player, game.enemy, this);
                     if (!blocked) {
@@ -470,25 +560,25 @@ class BattleScene {
                         setTimeout(() => this.enemyTurn(), 1000);
                     }
                 } else {
-                    this.queueOutput(`<span class="output-text-player">${game.player.name}</span> is <span class="status-stunned">Stunned ⚡️</span> and cannot act!`);
-                    game.player.statusEffects = game.player.statusEffects.filter(e => e.name !== "Stunned");
+                    this.queueOutput(`<span class="output-text-player">${game.player.name}</span> is <span class="status-numb">Numb ⚡️</span> and cannot act!`);
+                    game.player.statusEffects = game.player.statusEffects.filter(e => e.name !== "Numb");
                     setTimeout(() => this.enemyTurn(), 1000);
                 }
             } else {
                 setTimeout(() => this.endBattle(), 1000);
             }
             this.updateStatus();
-        }, 2000);
+        }, 3000);
     }
 
     enemyTurn() {
-        this.queueOutput(`\n✴ ${game.enemy.name.toUpperCase()}'S TURN! ✴`);
+        this.queueOutput(`\n\n✴ ${game.enemy.name.toUpperCase()}'S TURN! ✴`);
         setTimeout(() => {
             let killed = this.applyStatusEffects(game.enemy, this);
             if (killed) return;
             if (game.enemy.hp > 0) {
-                let stunned = game.enemy.statusEffects.some(e => e.name === "Stunned");
-                if (!stunned) {
+                let numbed = game.enemy.statusEffects.some(e => e.name === "Numb");
+                if (!numbed) {
                     let skill = game.enemy.skills[Math.floor(Math.random() * game.enemy.skills.length)];
                     let blocked = this.checkTargetedEffects(skill, game.enemy, game.player, this);
                     if (!blocked) {
@@ -508,14 +598,14 @@ class BattleScene {
                     }
                     setTimeout(() => this.playerTurn(), 1000);
                 } else {
-                    this.queueOutput(`<span class="output-text-enemy">${game.enemy.name}</span> is <span class="status-stunned">Stunned ⚡️</span> and cannot act!`);
-                    game.enemy.statusEffects = game.enemy.statusEffects.filter(e => e.name !== "Stunned");
+                    this.queueOutput(`<span class="output-text-enemy">${game.enemy.name}</span> is <span class="status-numb">Numb ⚡️</span> and cannot act!`);
+                    game.enemy.statusEffects = game.enemy.statusEffects.filter(e => e.name !== "Numb");
                     setTimeout(() => this.playerTurn(), 1000);
                 }
             } else {
                 setTimeout(() => this.endBattle(), 1000);
             }
-        }, 2000);
+        }, 3000);
     }
 
     endBattle() {
@@ -530,7 +620,7 @@ class BattleScene {
         game.battleNum++;
         game.enemy = null;
         this.updateStatus();
-        if (game.player.skills.length >= 10 && game.player.Rank === "Student") {
+        if (game.player.skillInventory.length >= 10 && game.player.Rank === "Student") {
             setTimeout(() => {
                 this.queueOutput("Congratulations, Shinobi! You are ready to become a Genin Shinobi!");
                 setTimeout(() => this.chooseRankUpStyle(), 1000);
@@ -542,10 +632,20 @@ class BattleScene {
 
     chooseSkillCard() {
         game.gameState = "chooseSkillCard";
-        let availableSkills = this.skills.skills.filter(s => this.skills.canUseSkill(game.player, s));
+        let inventoryCounts = {};
+        game.player.skillInventory.forEach(s => inventoryCounts[s.name] = (inventoryCounts[s.name] || 0) + 1);
+        let availableSkills = this.skills.skills.filter(s => {
+            if (!this.skills.canUseSkill(game.player, s)) return false;
+            if (inventoryCounts[s.name] >= 4) return false;
+            return true;
+        });
         if (!availableSkills.length) {
             this.queueOutput("No skill cards available!");
-            setTimeout(() => this.continueGame(), 1000);
+            document.getElementById("controls").innerHTML = `
+                <button class="skills-button" onclick="game.battleScene.showSkillsPopup()">Skills</button>
+                <button class="train-button" onclick="game.battleScene.continueGame()">Train</button>
+            `;
+            this.updateStatus();
             return;
         }
         let choices = availableSkills.sort(() => Math.random() - 0.5).slice(0, Math.min(4, availableSkills.length));
@@ -554,7 +654,7 @@ class BattleScene {
         controls.innerHTML = "";
         choices.forEach((skill) => {
             let button = document.createElement("button");
-            button.innerText = skill.name;
+            button.innerText = `${skill.name} (${skill.rank})`;
             button.className = skill.style;
             button.setAttribute("onclick", `selectSkillCard('${skill.name}')`);
             controls.appendChild(button);
@@ -563,9 +663,10 @@ class BattleScene {
     }
 
     continueGame() {
+        game.gameState = "battle";
+        document.getElementById("controls").innerHTML = "";
         game.enemy = this.generateEnemy();
-        game.enemy.hp = 10;
-        game.enemy.maxHp = 10;
+        game.enemy.hp = game.enemy.maxHp = game.enemy.name === "Training Dummy" ? 6 : game.enemy.name === "Wild Dog" ? 8 : 12;
         game.enemy.ninjaStyles = { Fire: "C-Rank", Lightning: "C-Rank", Illusion: "C-Rank", Earth: "C-Rank", Feral: "C-Rank" };
         game.enemy.skills = this.generateEnemySkills(game.enemy);
         this.queueOutput(`\nBattle ${game.battleNum}: <span class="output-text-player">${game.player.name}</span> vs. <span class="output-text-enemy">${game.enemy.name}</span>!`);
@@ -582,15 +683,17 @@ function startGame() {
     alert("Starting ShinobiWay!");
     game.output = ["Train to become a Genin Shinobi! Collect 10 skill cards!"];
     game.player = new Mob("Shinobi", 10, 10, "Student", { Fire: "D-Rank", Lightning: "D-Rank", Illusion: "D-Rank", Earth: "D-Rank", Feral: "D-Rank" }, [], [], "images/shinobi.png");
+    game.player.skillInventory = [];
     game.battleNum = 1;
     game.enemy = null;
     game.gameState = "start";
     game.outputQueue = [];
     game.isOutputting = false;
     document.getElementById("output").innerHTML = game.output.join("<br>");
-    game.battleScene = new BattleScene(); // Initialize BattleScene first
+    game.battleScene = new BattleScene();
     let barrageSkill = game.battleScene.skills.findSkill("Barrage");
     if (barrageSkill) {
+        game.player.skillInventory = [barrageSkill];
         game.player.skills = [barrageSkill];
     } else {
         console.error("Error: Barrage skill not found in game.battleScene.skills!");
@@ -599,7 +702,6 @@ function startGame() {
         alert("Error: Barrage skill not found!");
         return;
     }
-    console.log("Starting game, proceeding to chooseNinjaStyles...");
     setTimeout(() => {
         try {
             game.battleScene.chooseNinjaStyles();
@@ -634,13 +736,34 @@ function selectSkill(skillName) {
     if (now - lastClickTime < 1000) return;
     lastClickTime = now;
     let skill = game.battleScene.skills.findSkill(skillName);
+    let inventoryCounts = {};
+    game.player.skillInventory.forEach(s => inventoryCounts[s.name] = (inventoryCounts[s.name] || 0) + 1);
+    if (inventoryCounts[skill.name] >= 4) {
+        game.battleScene.queueOutput(`Cannot add <span class="output-text-${skill.style}">${skill.name}</span> (${skill.rank}): maximum 4 copies in inventory!`);
+        return;
+    }
+    let limits = game.player.Rank === "Student" ? { "C-Rank": 4, "B-Rank": 1, "A-Rank": 0, "S-Rank": 0 } : { "C-Rank": 6, "B-Rank": 2, "A-Rank": 1, "S-Rank": 0 };
+    let rankCounts = {
+        "C-Rank": game.player.skills.filter(s => s.rank === "C-Rank").length,
+        "B-Rank": game.player.skills.filter(s => s.rank === "B-Rank").length,
+        "A-Rank": game.player.skills.filter(s => s.rank === "A-Rank").length,
+        "S-Rank": game.player.skills.filter(s => s.rank === "S-Rank").length
+    };
+    if (skill.rank === "C-Rank" && rankCounts["C-Rank"] >= limits["C-Rank"] ||
+        skill.rank === "B-Rank" && rankCounts["B-Rank"] >= limits["B-Rank"] ||
+        skill.rank === "A-Rank" && rankCounts["A-Rank"] >= limits["A-Rank"] ||
+        skill.rank === "S-Rank" && rankCounts["S-Rank"] >= limits["S-Rank"]) {
+        game.battleScene.queueOutput(`Cannot add <span class="output-text-${skill.style}">${skill.name}</span> (${skill.rank}): rank limit reached!`);
+        return;
+    }
     if (game.battleScene.chosenSkills.length < 3) {
         game.battleScene.chosenSkills.push(skill);
-        game.player.skills.push(skill);
-        game.battleScene.queueOutput(`Selected skill card: <span class="output-text-${skill.style}">${skill.name}</span>`);
+        game.player.skillInventory.push(skill);
+        game.player.skills.push(skill); // Add to active skills for starting selection
+        game.battleScene.queueOutput(`Selected skill card: <span class="output-text-${skill.style}">${skill.name}</span> (${skill.rank})`);
         document.getElementById("controls").innerHTML = "";
         if (game.battleScene.chosenSkills.length === 3) {
-            game.battleScene.queueOutput(`Skill cards: ${game.player.skills.length}`);
+            game.battleScene.queueOutput(`Skill cards: ${game.player.skills.length} (C: ${rankCounts["C-Rank"] + 1}/${limits["C-Rank"]}, B: ${rankCounts["B-Rank"]}/${limits["B-Rank"]}, A: ${rankCounts["A-Rank"]}/${limits["A-Rank"]}, S: ${rankCounts["S-Rank"]}/${limits["S-Rank"]})`);
             setTimeout(() => game.battleScene.startBattle(), 1000);
         } else {
             setTimeout(() => game.battleScene.chooseStartingSkills(), 1000);
@@ -653,17 +776,53 @@ function selectSkillCard(skillName) {
     if (now - lastClickTime < 1000) return;
     lastClickTime = now;
     let skill = game.battleScene.skills.findSkill(skillName);
-    let currentCount = game.player.skills.filter(s => s.name === skill.name).length;
-    if (currentCount >= 4) {
-        game.battleScene.queueOutput(`You already have the maximum of 4 <span class="output-text-${skill.style}">${skill.name}</span>! Moving to next battle.`);
+    let inventoryCounts = {};
+    game.player.skillInventory.forEach(s => inventoryCounts[s.name] = (inventoryCounts[s.name] || 0) + 1);
+    if (inventoryCounts[skill.name] >= 4) {
+        game.battleScene.queueOutput(`Cannot add <span class="output-text-${skill.style}">${skill.name}</span> (${skill.rank}): maximum 4 copies in inventory!`);
         document.getElementById("controls").innerHTML = "";
-        setTimeout(() => game.battleScene.continueGame(), 1000);
+        setTimeout(() => game.battleScene.chooseSkillCard(), 1000);
         return;
     }
-    game.player.skills.push(skill);
-    game.battleScene.queueOutput(`Shinobi gains new skill card: <span class="output-text-${skill.style}">${skill.name}</span>!`);
-    document.getElementById("controls").innerHTML = "";
-    setTimeout(() => game.battleScene.continueGame(), 1000);
+    game.player.skillInventory.push(skill);
+    game.battleScene.queueOutput(`Shinobi gains new skill card: <span class="output-text-${skill.style}">${skill.name}</span> (${skill.rank})!`);
+    document.getElementById("controls").innerHTML = `
+        <button class="skills-button" onclick="game.battleScene.showSkillsPopup()">Skills</button>
+        <button class="train-button" onclick="game.battleScene.continueGame()">Train</button>
+    `;
+    this.updateStatus();
+}
+
+function swapSkillToActive(skillName) {
+    let skill = game.battleScene.skills.findSkill(skillName);
+    let limits = game.player.Rank === "Student" ? { "C-Rank": 4, "B-Rank": 1, "A-Rank": 0, "S-Rank": 0 } : { "C-Rank": 6, "B-Rank": 2, "A-Rank": 1, "S-Rank": 0 };
+    let rankCounts = {
+        "C-Rank": game.player.skills.filter(s => s.rank === "C-Rank").length,
+        "B-Rank": game.player.skills.filter(s => s.rank === "B-Rank").length,
+        "A-Rank": game.player.skills.filter(s => s.rank === "A-Rank").length,
+        "S-Rank": game.player.skills.filter(s => s.rank === "S-Rank").length
+    };
+    if (skill.rank === "C-Rank" && rankCounts["C-Rank"] >= limits["C-Rank"] ||
+        skill.rank === "B-Rank" && rankCounts["B-Rank"] >= limits["B-Rank"] ||
+        skill.rank === "A-Rank" && rankCounts["A-Rank"] >= limits["A-Rank"] ||
+        skill.rank === "S-Rank" && rankCounts["S-Rank"] >= limits["S-Rank"]) {
+        alert(`Cannot add ${skill.name} (${skill.rank}): rank limit reached!`);
+        return;
+    }
+    if (game.player.skillInventory.some(s => s.name === skillName)) {
+        game.player.skills.push(skill);
+        game.battleScene.updateStatus();
+        game.battleScene.showSkillsPopup();
+    }
+}
+
+function swapSkillToInventory(skillName) {
+    let skillIndex = game.player.skills.findIndex(s => s.name === skillName);
+    if (skillIndex !== -1) {
+        game.player.skills.splice(skillIndex, 1);
+        game.battleScene.updateStatus();
+        game.battleScene.showSkillsPopup();
+    }
 }
 
 function selectRankUpStyle(style) {
@@ -673,9 +832,11 @@ function selectRankUpStyle(style) {
     if (game.gameState === "chooseRankUpStyle") {
         game.player.ninjaStyles[style] = game.battleScene.rankUpStages[game.player.ninjaStyles[style]];
         game.player.Rank = "Genin";
+        game.player.maxHp = 12;
+        game.player.hp = 12;
         game.battleScene.queueOutput(`Shinobi ranks up <span class="output-text-${style.toLowerCase()}">${style}</span> to ${game.player.ninjaStyles[style]} and becomes a <span class="output-text-player">Genin</span>!`);
         game.gameState = "rankedUp";
         document.getElementById("controls").innerHTML = "";
         setTimeout(() => game.battleScene.chooseSkillCard(), 1000);
     }
-                                                      }
+            }
