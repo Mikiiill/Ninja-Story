@@ -32,25 +32,30 @@
 
         function startGame() {
             log('Starting game at ' + new Date().toLocaleTimeString() + '...');
-            game.output = ["Train to become a Shinobi!"];
-            document.getElementById("output").innerHTML = game.output.join("<br>");
-            game.gameState = "chooseStyles";
-            log('Setting up style selection...');
-            let controls = document.getElementById("controls");
-            controls.innerHTML = "";
-            ["Fire", "Illusion"].forEach(style => {
-                let button = document.createElement("button");
-                button.innerText = style;
-                button.onclick = () => selectStyle(style);
-                controls.appendChild(button);
-                log('Added ' + style + ' button');
-            });
+            if (game.gameState === "start") {
+                game.output = ["Train to become a Shinobi!"];
+                document.getElementById("output").innerHTML = game.output.join("<br>");
+                game.gameState = "chooseStyles";
+                log('Setting up style selection...');
+                let controls = document.getElementById("controls");
+                controls.innerHTML = "";
+                ["Fire", "Illusion"].forEach(style => {
+                    let button = document.createElement("button");
+                    button.innerText = style;
+                    button.onclick = function() { selectStyle(style); };
+                    controls.appendChild(button);
+                    log('Added ' + style + ' button');
+                });
+            } else {
+                log('Game already started, state: ' + game.gameState);
+            }
         }
 
         function selectStyle(style) {
+            log('Selecting ' + style + '...');
             if (game.player.skills.length < 2) {
                 game.player.skills.push(style);
-                log(style + ' selected!');
+                log(style + ' added to skills!');
                 document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length}`;
                 let controls = document.getElementById("controls");
                 controls.innerHTML = "";
@@ -59,7 +64,7 @@
                     game.gameState = "battle";
                     document.getElementById("output").innerHTML += "<br>Battle ready!";
                 } else {
-                    startGame();
+                    startGame(); // Refresh with remaining style
                 }
             }
         }
