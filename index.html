@@ -16,8 +16,8 @@
             background-color: lightgrey;
             border: 1px solid black;
             padding: 15px;
-            min-height: 60vh;
-            max-height: 80vh;
+            min-height: 50vh; /* Reduced from 60vh */
+            max-height: 70vh; /* Reduced from 80vh */
             overflow-y: auto;
             margin-bottom: 20px;
             font-size: 1.2rem;
@@ -73,7 +73,8 @@
         @media (max-width: 600px) {
             #output {
                 font-size: 1rem;
-                min-height: 50vh;
+                min-height: 40vh; /* Reduced from 50vh */
+                max-height: 60vh; /* Reduced from 80vh */
             }
             #player-status, #enemy-status, #skill-count {
                 font-size: 1.1rem;
