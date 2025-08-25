@@ -22,12 +22,12 @@
         <button id="start-button" onclick="startGame()">Start Game</button>
     </div>
     <div id="style-controls"></div>
-    <div id="skill-controls"></div> <!-- New div for skill management -->
+    <div id="skill-controls"></div>
     <div id="log">Log started...</div>
 
     <script>
         let game = {
-            player: { name: "Shinobi", hp: 10, maxHp: 10, skills: [], skillInventory: [], gold: 0, rank: "Student" },
+            player: { name: "Shinobi", hp: 10, maxHp: 10, skills: [], skillInventory: ["Fire", "Illusion"], gold: 0, rank: "Student" },
             gameState: "start",
             skillRanks: {
                 "Fire": "D-Rank", "Illusion": "D-Rank", "Earth": "D-Rank", "Lightning": "D-Rank", "Feral": "D-Rank"
@@ -39,6 +39,10 @@
                 illusion: "🌫️ Illusion Cast!",
                 shockField: "⚡️ Shock Field!",
                 doom: "💀 Doom Strikes!"
+            },
+            dotEffects: {
+                "Burn": { baseDamage: 2, duration: 3 },
+                "Doom": { baseDamage: 1, duration: 5 }
             }
         };
 
@@ -102,6 +106,7 @@
                     game.gameState = "battle";
                     document.getElementById("output").innerHTML += `<br><span class="battle-ready">Battle ready!</span><br>${game.asciiArt.battleStart}`;
                     document.getElementById("style-controls").innerHTML = "";
+                    updateSkillControls();
                 }
                 if (game.player.skills.length === 10) {
                     game.player.rank = "Genin";
@@ -117,7 +122,7 @@
             let controls = document.getElementById("skill-controls");
             controls.innerHTML = "";
             if (game.gameState === "battle") {
-                // Add active skills from inventory to controls
+                // Add buttons to move from inventory to active skills
                 game.player.skillInventory.forEach(skill => {
                     let button = document.createElement("button");
                     button.innerText = `Add ${skill} to Active`;
