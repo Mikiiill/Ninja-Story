@@ -9,28 +9,45 @@ body {
     align-items: center;
 }
 
-#output {
-    background-color: #333;
-    color: #fff;
+.output {
     width: 80%;
     height: 300px;
+    background-color: #333;
     overflow-y: auto;
+    padding: 10px;
+    margin: 10px;
+    border: 2px solid #fff;
+}
+
+.controls {
+    width: 80%;
+    margin: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.status {
+    width: 80%;
     margin: 10px;
     padding: 10px;
     border: 2px solid #fff;
-    font-size: 1.2rem;
 }
 
-#controls {
+.skill-count {
+    width: 80%;
     margin: 10px;
+    padding: 10px;
+    border: 2px solid #fff;
+    text-align: center;
 }
 
 button {
     background-color: #555;
     color: #fff;
     border: 2px solid #fff;
-    padding: 10px 20px;
-    margin: 5px;
+    padding: 5px 10px;
     font-size: 1.2rem;
     cursor: pointer;
     transition: background-color 0.3s;
@@ -64,12 +81,36 @@ button:hover {
     background-color: #555;
 }
 
+.start-button {
+    background-color: #555;
+    color: #fff;
+    border: 2px solid #fff;
+    font-size: 1.5rem;
+    padding: 10px 20px;
+}
+
+.skills-button {
+    background-color: #555;
+    color: #fff;
+    border: 2px solid #fff;
+    font-size: 1.2rem;
+    padding: 5px 10px;
+}
+
+.train-button {
+    background-color: #555;
+    color: #fff;
+    border: 2px solid #fff;
+    font-size: 1.2rem;
+    padding: 5px 10px;
+}
+
 .output-text-player {
     color: #00ff00;
 }
 
 .output-text-enemy {
-    color: #ff0000;
+    color: #ff00ff;
 }
 
 .output-text-neutral {
@@ -85,7 +126,7 @@ button:hover {
 }
 
 .status-bleed {
-    color: #ff0000;
+    color: #ff00ff;
 }
 
 .status-healing {
@@ -93,11 +134,11 @@ button:hover {
 }
 
 .status-doom {
-    color: #800080;
+    color: #ffffff;
 }
 
 .status-shadowcloneeffect {
-    color: #ccc;
+    color: #800080;
 }
 
 .status-substitution {
@@ -105,20 +146,7 @@ button:hover {
 }
 
 .status-rockbarrier {
-    color: #8b4513;
-}
-
-#player-status, #enemy-status, #skill-count {
-    margin: 10px;
-    font-size: 1.2rem;
-}
-
-.player-hp {
-    color: #00ff00;
-}
-
-.enemy-hp {
-    color: #ff0000;
+    color: #228b22;
 }
 
 .sprite {
@@ -127,14 +155,12 @@ button:hover {
     vertical-align: middle;
 }
 
-.skills-button {
-    background-color: #228b22;
+.player-hp {
+    color: #00ff00;
 }
 
-.train-button {
-    background-color: #555;
-    color: #fff;
-    border: 2px solid #fff;
+.enemy-hp {
+    color: #ff00ff;
 }
 
 .skills-popup {
@@ -142,22 +168,6 @@ button:hover {
     color: #fff;
     padding: 20px;
     border: 2px solid #fff;
-    position: fixed;
-    top: 20%;
-    left: 20%;
-    width: 60%;
-    z-index: 1000;
-    font-size: 1.2rem;
-}
-
-.skills-popup ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-.skills-popup button {
-    margin: 5px 0;
-    padding: 5px 10px;
 }
 
 .close-button {
