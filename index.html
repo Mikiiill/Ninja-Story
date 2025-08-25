@@ -23,7 +23,7 @@
 
         log('HTML fully loaded');
 
-        // Revert to dynamic script loading
+        // Dynamic script loading
         const script = document.createElement('script');
         script.src = 'script.js';
         script.onload = () => log('✅ script.js loaded');
