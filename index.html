@@ -42,19 +42,28 @@
             goldValues: { "D-Rank": 5, "C-Rank": 10, "B-Rank": 50, "A-Rank": 100, "S-Rank": 500 },
             asciiArt: {
                 battleStart: "👊💥 BATTLE BEGINS! 👊💥\nShinobi vs. Enemy!",
-                "Shock Field Jutsu": "⚡️ Shock Field!", "Lightning Blade Jutsu": "⚡ Blade Strike!",
-                "Fireball Jutsu": "🔥 Fireball Strike!", "Flame Throw Jutsu": "🔥🔥 Flame Burst!",
-                "Rock Barrier Jutsu": "🪨 Rock Shield!", "Rock Smash Jutsu": "🪨💥 Rock Smash!",
-                "Demonic Vision Jutsu": "💀 Doom Strikes!", "Genjutsu Release Jutsu": "🌫️ Mind Freed!",
-                "Shadow Clone Jutsu": "🌫️ Clone Appears!", "Dynamic Entry Jutsu": "💥 Dynamic Kick!",
-                "Falcon Drop Jutsu": "🦅 Falcon Strike!", "Substitution Jutsu": "🌫️ Substitution!",
-                "Clone Jutsu": "🌫️ Illusion Clone!", "Barrage": "💥 Rapid Assault!",
-                "Bite": "😡 Savage Bite!", "Healing Stance": "🩺 Healing Aura!"
+                "Shock Field Jutsu": "⚡️ Shock Field!",
+                "Lightning Blade Jutsu": "⚡ Blade Strike!",
+                "Fireball Jutsu": "🔥 Fireball Strike!",
+                "Flame Throw Jutsu": "🔥🔥 Flame Burst!",
+                "Rock Barrier Jutsu": "🪨 Rock Shield!",
+                "Rock Smash Jutsu": "🪨💥 Rock Smash!",
+                "Demonic Vision Jutsu": "💀 Doom Strikes!",
+                "Genjutsu Release Jutsu": "🌫️ Mind Freed!",
+                "Shadow Clone Jutsu": "🌫️ Clone Appears!",
+                "Dynamic Entry Jutsu": "💥 Dynamic Kick!",
+                "Falcon Drop Jutsu": "🦅 Falcon Strike!",
+                "Substitution Jutsu": "🌫️ Substitution!",
+                "Clone Jutsu": "🌫️ Illusion Clone!",
+                "Barrage": "💥 Rapid Assault!",
+                "Bite": "😡 Savage Bite!",
+                "Healing Stance": "🩺 Healing Aura!"
             },
             dotEffects: {
                 "Flame Throw Jutsu": { baseDamage: 2, duration: 3 },
                 "Demonic Vision Jutsu": { baseDamage: 1, duration: 5 },
-                "Healing Stance": { heal: 1, duration: 3 }
+                "Healing Stance": { heal: 1, duration: 3 },
+                "Bite": { baseDamage: 1, duration: 2 }
             },
             jutsuRequirements: {
                 "Shock Field Jutsu": { styles: ["Lightning"], minRank: "C-Rank" },
@@ -70,12 +79,14 @@
                 "Falcon Drop Jutsu": { styles: ["Taijutsu"], minRank: "B-Rank" },
                 "Substitution Jutsu": { styles: ["Ninjutsu", "Taijutsu"], attributes: ["Support"] },
                 "Clone Jutsu": { styles: ["Genjutsu"], attributes: ["Support"] },
-                "Barrage": {}, "Bite": {}, "Healing Stance": {}
+                "Barrage": {},
+                "Bite": {},
+                "Healing Stance": {}
             },
             rankLimits: { "Student": 5, "Genin": 10, "Chunin": 15, "Jonin": 20, "Kage": 25 },
             enemies: {
-                "Wild Dog": { hp: 8, maxHp: 8, skills: ["Bite"] },
-                "Training Dummy": { hp: 6, maxHp: 6, skills: ["Healing Stance"] }
+                "Wild Dog": { hp: 8, maxHp: 8, skills: ["Bite"], statusEffects: [] },
+                "Training Dummy": { hp: 6, maxHp: 6, skills: ["Healing Stance"], statusEffects: [] }
             }
         };
 
@@ -165,7 +176,8 @@
                 let availableJutsu = Object.keys(game.jutsuRequirements).filter(jutsu => {
                     let req = game.jutsuRequirements[jutsu];
                     if (req.minRank) {
-                        return req.styles.some(s => game.player.styles.includes(s) && game.player.styleRanks[s] >= req.minRank);
+                        let matchingStyles = req.styles.filter(s => game.player.styles.includes(s));
+                        return matchingStyles.some(s => compareRanks(game.player.styleRanks[s], req.minRank) >= 0);
                     }
                     return req.styles ? req.styles.some(s => game.player.styles.includes(s)) : true;
                 });
@@ -190,6 +202,11 @@
                 log('Initial jutsu selection complete, returning to main screen...');
                 showMainScreen();
             }
+        }
+
+        function compareRanks(rank1, rank2) {
+            const ranks = ["D-Rank", "C-Rank", "B-Rank", "A-Rank", "S-Rank"];
+            return ranks.indexOf(rank1) - ranks.indexOf(rank2);
         }
 
         function selectJutsu(jutsu, callback) {
@@ -253,18 +270,22 @@
                     }
                 }
                 activeSkills.forEach((skillObj, index) => {
-                    let button = document.createElement("button");
-                    button.innerText = `Move ${skillObj.name} (${index + 1}) to Inventory`;
-                    button.onclick = function() { moveToInventory(skillObj.name, skillObj.index, index); };
-                    controls.appendChild(button);
-                    log(`Added button to move ${skillObj.name} (${index + 1}) to inventory`);
+                    if (!game.player.skillInventory.includes(skillObj.name)) {
+                        let button = document.createElement("button");
+                        button.innerText = `Move ${skillObj.name} (${index + 1}) to Inventory`;
+                        button.onclick = function() { moveToInventory(skillObj.name, index); };
+                        controls.appendChild(button);
+                        log(`Added button to move ${skillObj.name} (${index + 1}) to inventory`);
+                    }
                 });
                 game.player.skillInventory.forEach((skill, index) => {
-                    let button = document.createElement("button");
-                    button.innerText = `Add ${skill} (${index + 1}) to Active`;
-                    button.onclick = function() { moveToActiveSkills(skill, index); };
-                    controls.appendChild(button);
-                    log(`Added button to move ${skill} (${index + 1}) to active skills`);
+                    if (!game.player.skills.includes(skill)) {
+                        let button = document.createElement("button");
+                        button.innerText = `Add ${skill} (${index + 1}) to Active`;
+                        button.onclick = function() { moveToActiveSkills(skill, index); };
+                        controls.appendChild(button);
+                        log(`Added button to move ${skill} (${index + 1}) to active skills`);
+                    }
                 });
             }
         }
@@ -273,7 +294,6 @@
             if (game.player.skills.length < game.rankLimits[game.player.rank]) {
                 game.player.skills.push(skill);
                 game.player.skillInventory.splice(index, 1);
-                game.player.skillCounts[skill] = (game.player.skillCounts[skill] || 0) + 1;
                 log(`${skill} moved to active skills!`);
                 updateSkillCount();
                 updateSkillControls();
@@ -282,32 +302,26 @@
             }
         }
 
-        function moveToInventory(skill, countIndex, buttonIndex) {
-            let activeSkills = [];
-            for (let s in game.player.skillCounts) {
-                for (let i = 0; i < game.player.skillCounts[s]; i++) {
-                    activeSkills.push(s);
-                }
-            }
-            if (countIndex < activeSkills.length) {
-                game.player.skillInventory.push(skill);
-                game.player.skillCounts[skill]--;
-                if (game.player.skillCounts[skill] <= 0) {
-                    game.player.skills = game.player.skills.filter(s => s !== skill);
-                }
-                log(`${skill} moved to inventory!`);
-                updateSkillCount();
-                updateSkillControls();
-            }
+        function moveToInventory(skill, index) {
+            game.player.skillInventory.push(skill);
+            game.player.skills.splice(index, 1);
+            log(`${skill} moved to inventory!`);
+            updateSkillCount();
+            updateSkillControls();
         }
 
         function startBattle() {
-            let enemyType = Math.random() < 0.5 ? "Wild Dog" : "Training Dummy";
-            game.enemy = { ...game.enemies[enemyType], name: enemyType };
-            updateStatus();
-            log('Entering battle...');
-            document.getElementById("output").innerHTML += `<br><span class="battle-ready">${game.asciiArt.battleStart}</span>`;
-            setTimeout(() => determineTurnOrder(), 1000);
+            if (game.gameState !== "battle") {
+                let enemyType = Math.random() < 0.5 ? "Wild Dog" : "Training Dummy";
+                game.enemy = { ...game.enemies[enemyType], name: enemyType };
+                game.gameState = "battle";
+                updateStatus();
+                log('Entering battle...');
+                document.getElementById("output").innerHTML += `<br><span class="battle-ready">${game.asciiArt.battleStart}</span>`;
+                setTimeout(() => determineTurnOrder(), 1000);
+            } else {
+                log('Battle already in progress!');
+            }
         }
 
         function determineTurnOrder() {
@@ -380,6 +394,13 @@
                 target.hp -= damage;
                 document.getElementById("output").innerHTML += `<br>${target.name} takes ${damage} damage!`;
                 updateStatus();
+                if (skill === "Healing Stance") {
+                    target.statusEffects.push({ name: "Regen", type: "heal", heal: 1, duration: 3, source: "Healing Stance" });
+                } else if (skill === "Bite") {
+                    game.player.hp = Math.min(game.player.maxHp, game.player.hp + 1);
+                    target.statusEffects.push({ name: "Bleed", type: "dot", damage: 1, duration: 2, source: "Bite" });
+                    document.getElementById("output").innerHTML += `<br>${game.player.name} heals 1 HP from Bite!`;
+                }
                 if (game.dotEffects[skill]) {
                     target.statusEffects.push({ name: skill, type: "dot", damage: game.dotEffects[skill].baseDamage, duration: game.dotEffects[skill].duration, source: skill });
                 }
@@ -387,6 +408,7 @@
         }
 
         function endBattle() {
+            game.gameState = "main";
             document.getElementById("output").innerHTML += `<br><span class="battle-ready">Battle ended!</span>`;
             performJutsuSelection(1);
         }
