@@ -1,73 +1,33 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>ShinobiWay</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body { background-color: #000; color: #fff; font-family: Arial, sans-serif; }
-        button { background-color: #fff; color: #000; padding: 5px 10px; margin: 5px; }
-        #log { height: 100px; overflow-y: auto; }
-    </style>
-</head>
-<body>
-    <div id="player-status">Shinobi [HP: <span class="player-hp">10/10</span>]</div>
-    <div id="enemy-status">Enemy [HP: <span class="enemy-hp">0/0</span>]</div>
-    <div id="skill-count">Skill cards: 0</div>
-    <div id="output">Welcome to ShinobiWay! Click Start to begin!</div>
-    <div id="controls">
-        <button class="start-button" onclick="startGame()">Start Game</button>
-    </div>
-    <div id="log">Log started...</div>
+let game = {
+    player: { name: "Shinobi", hp: 10, maxHp: 10, Rank: "Student" },
+    gameState: "start"
+};
 
-    <script>
-        let game = {
-            player: { name: "Shinobi", hp: 10, maxHp: 10, Rank: "Student", skills: [], skillInventory: [] },
-            gameState: "start"
-        };
+function log(msg) {
+    const el = document.getElementById('log');
+    el.innerHTML += '<br>' + msg;
+}
 
-        function log(msg) {
-            const el = document.getElementById('log');
-            el.innerHTML += '<br>' + msg;
-        }
-
-        function startGame() {
-            log('Starting game at ' + new Date().toLocaleTimeString() + '...');
-            if (game.gameState === "start") {
-                game.output = ["Train to become a Shinobi!"];
-                document.getElementById("output").innerHTML = game.output.join("<br>");
-                game.gameState = "chooseStyles";
-                log('Setting up style selection...');
-                let controls = document.getElementById("controls");
-                controls.innerHTML = "";
-                ["Fire", "Illusion"].forEach(style => {
-                    let button = document.createElement("button");
-                    button.innerText = style;
-                    button.onclick = function() { selectStyle(style); };
-                    controls.appendChild(button);
-                    log('Added ' + style + ' button');
-                });
-            } else {
-                log('Game already started, state: ' + game.gameState);
-            }
-        }
-
-        function selectStyle(style) {
-            log('Selecting ' + style + '...');
-            if (game.player.skills.length < 2) {
-                game.player.skills.push(style);
-                log(style + ' added to skills!');
-                document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length}`;
-                let controls = document.getElementById("controls");
-                controls.innerHTML = "";
-                if (game.player.skills.length === 2) {
-                    log('Both styles selected, ready to play!');
-                    game.gameState = "battle";
-                    document.getElementById("output").innerHTML += "<br>Battle ready!";
-                } else {
-                    startGame(); // Refresh with remaining style
-                }
-            }
-        }
-    </script>
-</body>
-</html>
+function startGame() {
+    log('Attempting to start game at ' + new Date().toLocaleTimeString() + '...');
+    const requiredElements = {
+        output: document.getElementById("output"),
+        controls: document.getElementById("controls"),
+        log: document.getElementById("log")
+    };
+    log('Checking DOM elements: ' + JSON.stringify(Object.fromEntries(Object.entries(requiredElements).map([k, v]) => [k, !!v]))));
+    if (!requiredElements.output || !requiredElements.controls || !requiredElements.log) {
+        log('Error: Missing required DOM elements!');
+        requiredElements.output.innerHTML = "Error: Missing game elements. Check index.html!";
+        return;
+    }
+    log('Game initialized with state: ' + JSON.stringify({ hp: game.player.hp, Rank: game.player.Rank, gameState: game.gameState }));
+    log('Adding test button...');
+    let controls = document.getElementById("controls");
+    controls.innerHTML = ""; // Clear controls
+    let button = document.createElement("button");
+    button.innerText = "Test Button";
+    button.onclick = () => log('Test button clicked at ' + new Date().toLocaleTimeString() + '...');
+    controls.appendChild(button);
+    log('Test button added, waiting for input...');
+}
