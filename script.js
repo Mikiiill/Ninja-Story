@@ -3,6 +3,7 @@ let game = {
         name: "Shinobi",
         hp: 10,
         maxHp: 10,
+        Rank: "Student", // Added Rank property
         ninjaStyles: { Fire: "D-Rank", Lightning: "D-Rank", Illusion: "D-Rank", Earth: "D-Rank", Feral: "D-Rank" },
         skills: [],
         statusEffects: []
@@ -36,10 +37,11 @@ class BattleSkill {
 }
 
 class Mob {
-    constructor(name, hp, maxHp, ninjaStyles, skills, statusEffects, sprite) {
+    constructor(name, hp, maxHp, Rank, ninjaStyles, skills, statusEffects, sprite) {
         this.name = name;
         this.hp = hp;
         this.maxHp = maxHp;
+        this.Rank = Rank; // Added Rank property
         this.ninjaStyles = ninjaStyles;
         this.skills = skills;
         this.statusEffects = statusEffects;
@@ -79,9 +81,14 @@ class Skills {
     }
 
     barrage(user, target, scene) {
-        let damage = Math.round(Math.random() * 3) + 2;
-        target.hp = Math.max(0, Math.min(10, target.hp - damage));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> attacks <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> with <span class="output-text-neutral">Barrage</span> for ${damage} damage!`);
+        let baseDamage = 1;
+        let comboDamage = Math.round(Math.random()) + 1; // 1 or 2
+        target.hp = Math.max(0, Math.min(10, target.hp - baseDamage));
+        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> attacks <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> with <span class="output-text-neutral">Barrage</span> and hits for ${baseDamage} damage!`);
+        if (target.hp > 0) {
+            target.hp = Math.max(0, Math.min(10, target.hp - comboDamage));
+            scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> combos for ${comboDamage} damage!`);
+        }
         if (target.hp <= 0) return true;
         return false;
     }
@@ -118,6 +125,7 @@ class Skills {
         user.hp = Math.max(0, Math.min(10, user.hp + heal));
         user.statusEffects.push(new StatusEffect("Healing", 3));
         scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> enters <span class="output-text-neutral">Healing Stance</span>, healing ${heal} HP <span class="status-healing">🌿</span>!`);
+        return true;
     }
 
     raikiri(user, target, scene) {
@@ -268,7 +276,7 @@ class BattleScene {
     }
 
     chooseRankUpStyle() {
-        if (game.gameState === "rankedUp") {
+        if (game.gameState === "rankedUp" || game.player.Rank !== "Student") {
             this.chooseSkillCard();
             return;
         }
@@ -313,6 +321,7 @@ class BattleScene {
         let names = game.player.skills.length < 10 ? ["Wild Dog", "Training Dummy"] : ["Illusionist Genin", "Fire Genin", "Lightning Genin", "Earth Genin", "Feral Genin"];
         let name = names[Math.floor(Math.random() * names.length)];
         let sprite;
+        let rank = game.player.skills.length < 10 ? "Basic" : "Genin"; // Assign Rank to enemies
         switch (name) {
             case "Wild Dog": sprite = "images/wild_dog.png"; break;
             case "Training Dummy": sprite = "images/training_dummy.png"; break;
@@ -323,7 +332,7 @@ class BattleScene {
             case "Feral Genin": sprite = "images/feral_genin.png"; break;
             default: sprite = "";
         }
-        return new Mob(name, 0, 0, {}, [], [], sprite);
+        return new Mob(name, 0, 0, rank, {}, [], [], sprite);
     }
 
     generateEnemySkills(enemy) {
@@ -391,14 +400,14 @@ class BattleScene {
         }
         let kawarami = target.statusEffects.some(e => e.name === "Kawarami");
         if (kawarami && !skill.support) {
-            target.statusEffects = target.statusEffects.filter(e => e.name === "Kawarami");
+            target.statusEffects = target.statusEffects.filter(e => e.name !== "Kawarami");
             scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-${skill.style}">${skill.name}</span>!`);
             scene.queueOutput(`<span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> uses <span class="status-kawarami">Kawarami 🪵</span> to dodge! 💨`);
             return true;
         }
         let shadowClone = target.statusEffects.some(e => e.name === "ShadowCloneEffect");
         if (shadowClone && !skill.support) {
-            target.statusEffects = target.statusEffects.filter(e => e.name === "ShadowCloneEffect")[0]; // Remove one clone
+            target.statusEffects = target.statusEffects.filter(e => e.name !== "ShadowCloneEffect")[0]; // Remove one clone
             scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-${skill.style}">${skill.name}</span>!`);
             scene.queueOutput(`<span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span>'s shadow clone takes the hit and disappears! 💨`);
             return true;
@@ -408,11 +417,12 @@ class BattleScene {
 
     handleShadowCloneAction(skill, user, target, scene) {
         if (skill.support) return false;
-        let clones = user.statusEffects.filter(e => e.name === "ShadowCloneEffect");
+        let clones = user.statusEffects.filter(e => e.name === "ShadowCloneEffect" && !e.new); // Only active clones
         if (clones.length === 0) return false;
+        let barrageSkill = this.skills.findSkill("Barrage");
         clones.forEach(() => {
-            scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span>'s shadow clone uses <span class="output-text-${skill.style}">${skill.name}</span>!`);
-            let killed = skill.skillFunction(user, target, scene);
+            scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span>'s shadow clone uses <span class="output-text-neutral">Barrage</span>!`);
+            let killed = barrageSkill.skillFunction(user, target, scene);
             scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span>'s shadow clone disappears! 💨`);
             if (killed) return true;
         });
@@ -449,7 +459,7 @@ class BattleScene {
                     setTimeout(() => this.enemyTurn(), 1000);
                 } else {
                     this.queueOutput(`<span class="output-text-player">${game.player.name}</span> is <span class="status-stunned">Stunned ⚡️</span> and cannot act!`);
-                    game.player.statusEffects = game.player.statusEffects.filter(e => e.name !== "Stunned");
+                    game.player.statusEffects = game.player.statusEffects.filter(e => e.name === "Stunned");
                     setTimeout(() => this.enemyTurn(), 1000);
                 }
             } else {
@@ -509,7 +519,7 @@ class BattleScene {
         game.battleNum++;
         game.enemy = null;
         this.updateStatus();
-        if (game.player.skills.length >= 10 && game.gameState !== "rankedUp") {
+        if (game.player.skills.length >= 10 && game.player.Rank === "Student") {
             setTimeout(() => {
                 this.queueOutput("Congratulations, Shinobi! You are ready to become a Genin Shinobi!");
                 setTimeout(() => this.chooseRankUpStyle(), 1000);
@@ -560,7 +570,7 @@ function startGame() {
     lastClickTime = now;
     alert("Starting ShinobiWay!");
     game.output = ["Train to become a Genin Shinobi! Collect 10 skill cards!"];
-    game.player = new Mob("Shinobi", 10, 10, { Fire: "D-Rank", Lightning: "D-Rank", Illusion: "D-Rank", Earth: "D-Rank", Feral: "D-Rank" }, [], [], "images/shinobi.png");
+    game.player = new Mob("Shinobi", 10, 10, "Student", { Fire: "D-Rank", Lightning: "D-Rank", Illusion: "D-Rank", Earth: "D-Rank", Feral: "D-Rank" }, [], [], "images/shinobi.png");
     game.battleNum = 1;
     game.enemy = null;
     game.gameState = "start";
@@ -623,8 +633,9 @@ function selectSkillCard(skillName) {
     let skill = game.battleScene.skills.findSkill(skillName);
     let currentCount = game.player.skills.filter(s => s.name === skill.name).length;
     if (currentCount >= 4) {
-        game.battleScene.queueOutput(`You already have 4 copies of <span class="output-text-${skill.style}">${skill.name}</span>! Please choose a different skill card.`);
-        setTimeout(() => game.battleScene.chooseSkillCard(), 1000);
+        game.battleScene.queueOutput(`You already have the maximum of 4 <span class="output-text-${skill.style}">${skill.name}</span>! Moving to next battle.`);
+        document.getElementById("controls").innerHTML = "";
+        setTimeout(() => game.battleScene.continueGame(), 1000);
         return;
     }
     game.player.skills.push(skill);
@@ -639,9 +650,10 @@ function selectRankUpStyle(style) {
     lastClickTime = now;
     if (game.gameState === "chooseRankUpStyle") {
         game.player.ninjaStyles[style] = game.battleScene.rankUpStages[game.player.ninjaStyles[style]];
-        game.battleScene.queueOutput(`Shinobi ranks up <span class="output-text-${style.toLowerCase()}">${style}</span> to ${game.player.ninjaStyles[style]}!`);
+        game.player.Rank = "Genin"; // Update Rank to Genin
+        game.battleScene.queueOutput(`Shinobi ranks up <span class="output-text-${style.toLowerCase()}">${style}</span> to ${game.player.ninjaStyles[style]} and becomes a <span class="output-text-player">Genin</span>!`);
         game.gameState = "rankedUp";
         document.getElementById("controls").innerHTML = "";
         setTimeout(() => game.battleScene.chooseSkillCard(), 1000);
     }
-    }
+}
