@@ -3,7 +3,7 @@ let game = {
         name: "Shinobi",
         hp: 10,
         maxHp: 10,
-        Rank: "Student", // Added Rank property
+        Rank: "Student",
         ninjaStyles: { Fire: "D-Rank", Lightning: "D-Rank", Illusion: "D-Rank", Earth: "D-Rank", Feral: "D-Rank" },
         skills: [],
         statusEffects: []
@@ -41,7 +41,7 @@ class Mob {
         this.name = name;
         this.hp = hp;
         this.maxHp = maxHp;
-        this.Rank = Rank; // Added Rank property
+        this.Rank = Rank;
         this.ninjaStyles = ninjaStyles;
         this.skills = skills;
         this.statusEffects = statusEffects;
@@ -65,7 +65,7 @@ class Skills {
             new BattleSkill("Raikiri", ["Lightning"], { Lightning: "C-Rank" }, this.raikiri.bind(this), "lightning", false),
             new BattleSkill("Shadow Clone Jutsu", ["Illusion"], { Illusion: "C-Rank" }, this.shadowCloneJutsu.bind(this), "illusion", true),
             new BattleSkill("Bite", ["Feral"], { Feral: "C-Rank" }, this.bite.bind(this), "feral", false),
-            new BattleSkill("Kawarami", [], {}, this.kawarami.bind(this), "neutral", true),
+            new BattleSkill("Substitution", [], {}, this.substitution.bind(this), "neutral", true), // Renamed from Kawarami
             new BattleSkill("Rock Barrier Jutsu", ["Earth"], { Earth: "C-Rank" }, this.rockBarrierJutsu.bind(this), "earth", true),
             new BattleSkill("Impending Doom", ["Illusion"], { Illusion: "B-Rank" }, this.impendingDoom.bind(this), "illusion", false),
             new BattleSkill("Boulder Crush", ["Earth"], { Earth: "B-Rank" }, this.boulderCrush.bind(this), "earth", false)
@@ -162,9 +162,9 @@ class Skills {
         return false;
     }
 
-    kawarami(user, target, scene) {
-        user.statusEffects.push(new StatusEffect("Kawarami", 3));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> prepares <span class="output-text-neutral">Kawarami</span> <span class="status-kawarami">🪵</span>!`);
+    substitution(user, target, scene) { // Renamed from kawarami
+        user.statusEffects.push(new StatusEffect("Substitution", 3));
+        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> prepares <span class="output-text-neutral">Substitution</span> <span class="status-substitution">🪵</span>!`);
         return true;
     }
 
@@ -202,7 +202,7 @@ class BattleScene {
             Healing: "🌿",
             Stunned: "⚡️",
             ShadowCloneEffect: "👥",
-            Kawarami: "🪵",
+            Substitution: "🪵", // Updated from Kawarami
             "Rock Barrier": "🪨"
         };
         this.chosenStyles = [];
@@ -321,7 +321,7 @@ class BattleScene {
         let names = game.player.skills.length < 10 ? ["Wild Dog", "Training Dummy"] : ["Illusionist Genin", "Fire Genin", "Lightning Genin", "Earth Genin", "Feral Genin"];
         let name = names[Math.floor(Math.random() * names.length)];
         let sprite;
-        let rank = game.player.skills.length < 10 ? "Basic" : "Genin"; // Assign Rank to enemies
+        let rank = game.player.skills.length < 10 ? "Basic" : "Genin";
         switch (name) {
             case "Wild Dog": sprite = "images/wild_dog.png"; break;
             case "Training Dummy": sprite = "images/training_dummy.png"; break;
@@ -372,7 +372,7 @@ class BattleScene {
         mob.statusEffects.forEach(effect => {
             if (!effect.new) {
                 effect.duration--;
-                if (effect.duration > 0 || ["ShadowCloneEffect", "Kawarami", "Rock Barrier"].includes(effect.name)) {
+                if (effect.duration > 0 || ["ShadowCloneEffect", "Substitution", "Rock Barrier"].includes(effect.name)) { // Updated Kawarami to Substitution
                     newEffects.push(effect);
                 } else {
                     scene.queueOutput(`<span class="output-text-${mob === game.player ? 'player' : 'enemy'}">${mob.name}</span>'s <span class="status-${effect.name.toLowerCase().replace(" ", "")}">${effect.name} ${this.asciiMap[effect.name]}</span> wears off!`);
@@ -398,11 +398,11 @@ class BattleScene {
             scene.queueOutput(`<span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span>'s <span class="status-rockbarrier">Rock Barrier 🪨</span> blocks the attack! The rock barrier cracks in half!`);
             return true;
         }
-        let kawarami = target.statusEffects.some(e => e.name === "Kawarami");
-        if (kawarami && !skill.support) {
-            target.statusEffects = target.statusEffects.filter(e => e.name !== "Kawarami");
+        let substitution = target.statusEffects.some(e => e.name === "Substitution"); // Updated from Kawarami
+        if (substitution && !skill.support) {
+            target.statusEffects = target.statusEffects.filter(e => e.name !== "Substitution");
             scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-${skill.style}">${skill.name}</span>!`);
-            scene.queueOutput(`<span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> uses <span class="status-kawarami">Kawarami 🪵</span> to dodge! 💨`);
+            scene.queueOutput(`<span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> uses <span class="status-substitution">Substitution 🪵</span> to dodge! 💨`);
             return true;
         }
         let shadowClone = target.statusEffects.some(e => e.name === "ShadowCloneEffect");
@@ -417,7 +417,7 @@ class BattleScene {
 
     handleShadowCloneAction(skill, user, target, scene) {
         if (skill.support) return false;
-        let clones = user.statusEffects.filter(e => e.name === "ShadowCloneEffect" && !e.new); // Only active clones
+        let clones = user.statusEffects.filter(e => e.name === "ShadowCloneEffect" && !e.new);
         if (clones.length === 0) return false;
         let barrageSkill = this.skills.findSkill("Barrage");
         clones.forEach(() => {
@@ -442,14 +442,13 @@ class BattleScene {
                     let blocked = this.checkTargetedEffects(skill, game.player, game.enemy, this);
                     if (!blocked) {
                         let cloneKilled = this.handleShadowCloneAction(skill, game.player, game.enemy, this);
-                        if (!cloneKilled) {
-                            let killed = skill.skillFunction(game.player, game.enemy, this);
-                            this.updateStatus();
-                            if (killed) {
-                                setTimeout(() => this.endBattle(), 1000);
-                                return;
-                            }
-                        } else {
+                        if (cloneKilled) {
+                            setTimeout(() => this.endBattle(), 1000);
+                            return;
+                        }
+                        skill.skillFunction(game.player, game.enemy, this); // Execute skill without checking return
+                        this.updateStatus();
+                        if (game.enemy.hp <= 0) {
                             setTimeout(() => this.endBattle(), 1000);
                             return;
                         }
@@ -459,7 +458,7 @@ class BattleScene {
                     setTimeout(() => this.enemyTurn(), 1000);
                 } else {
                     this.queueOutput(`<span class="output-text-player">${game.player.name}</span> is <span class="status-stunned">Stunned ⚡️</span> and cannot act!`);
-                    game.player.statusEffects = game.player.statusEffects.filter(e => e.name === "Stunned");
+                    game.player.statusEffects = game.player.statusEffects.filter(e => e.name !== "Stunned");
                     setTimeout(() => this.enemyTurn(), 1000);
                 }
             } else {
@@ -481,14 +480,13 @@ class BattleScene {
                     let blocked = this.checkTargetedEffects(skill, game.enemy, game.player, this);
                     if (!blocked) {
                         let cloneKilled = this.handleShadowCloneAction(skill, game.enemy, game.player, this);
-                        if (!cloneKilled) {
-                            let killed = skill.skillFunction(game.enemy, game.player, this);
-                            this.updateStatus();
-                            if (killed) {
-                                setTimeout(() => this.endBattle(), 1000);
-                                return;
-                            }
-                        } else {
+                        if (cloneKilled) {
+                            setTimeout(() => this.endBattle(), 1000);
+                            return;
+                        }
+                        skill.skillFunction(game.enemy, game.player, this);
+                        this.updateStatus();
+                        if (game.player.hp <= 0) {
                             setTimeout(() => this.endBattle(), 1000);
                             return;
                         }
@@ -650,10 +648,10 @@ function selectRankUpStyle(style) {
     lastClickTime = now;
     if (game.gameState === "chooseRankUpStyle") {
         game.player.ninjaStyles[style] = game.battleScene.rankUpStages[game.player.ninjaStyles[style]];
-        game.player.Rank = "Genin"; // Update Rank to Genin
+        game.player.Rank = "Genin";
         game.battleScene.queueOutput(`Shinobi ranks up <span class="output-text-${style.toLowerCase()}">${style}</span> to ${game.player.ninjaStyles[style]} and becomes a <span class="output-text-player">Genin</span>!`);
         game.gameState = "rankedUp";
         document.getElementById("controls").innerHTML = "";
         setTimeout(() => game.battleScene.chooseSkillCard(), 1000);
     }
-}
+            }
