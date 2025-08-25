@@ -2,57 +2,92 @@
 <html>
 <head>
     <title>ShinobiWay</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
-            background-color: darkgrey; /* Dark grey background */
+            background-color: darkgrey;
             font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
+            min-height: 100vh;
         }
         #output {
-            background-color: lightgrey; /* Light grey battle text box */
+            background-color: lightgrey;
             border: 1px solid black;
-            padding: 10px;
-            height: 400px;
+            padding: 15px;
+            min-height: 60vh;
+            max-height: 80vh;
             overflow-y: auto;
             margin-bottom: 20px;
+            font-size: 1.2rem;
+            line-height: 1.5;
+        }
+        #player-status, #enemy-status, #skill-count {
+            font-size: 1.3rem;
+            margin: 10px 0;
         }
         #controls {
             margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         .sprite {
-            width: 32px;
-            height: 32px;
+            width: 48px;
+            height: 48px;
             vertical-align: middle;
-            margin-right: 5px;
+            margin-right: 10px;
         }
         .output-text-player { color: blue; }
         .output-text-enemy { color: red; }
         .output-text-neutral { color: black; }
-        .output-text-fire { color: orange; }
-        .output-text-lightning { color: gold; }
+        .output-text-fire { color: #ff0000; }
+        .output-text-lightning { color: #ffa500; }
         .output-text-illusion { color: purple; }
         .output-text-earth { color: brown; }
         .output-text-feral { color: darkgreen; }
         .status-doom { color: black; }
-        .status-burned { color: orange; }
+        .status-burned { color: #ff0000; }
         .status-bleed { color: red; }
         .status-healing { color: green; }
-        .status-stunned { color: gold; }
+        .status-stunned { color: #ffa500; }
         .status-shadowcloneeffect { color: purple; }
-        .status-substitution { color: grey; } /* Updated from kawarami */
+        .status-substitution { color: grey; }
         .status-rockbarrier { color: brown; }
         button {
-            margin: 5px;
-            padding: 10px;
-            font-size: 16px;
+            margin: 10px;
+            padding: 15px 20px;
+            font-size: 1.3rem;
             cursor: pointer;
+            border-radius: 5px;
+            min-width: 120px;
         }
         .start-button { background-color: green; color: white; }
-        .fire { background-color: orange; color: white; }
-        .lightning { background-color: gold; color: black; }
+        .fire { background-color: #ff0000; color: white; }
+        .lightning { background-color: #ffa500; color: black; }
         .illusion { background-color: purple; color: white; }
         .earth { background-color: brown; color: white; }
         .feral { background-color: darkgreen; color: white; }
         .neutral { background-color: grey; color: white; }
+        @media (max-width: 600px) {
+            #output {
+                font-size: 1rem;
+                min-height: 50vh;
+            }
+            #player-status, #enemy-status, #skill-count {
+                font-size: 1.1rem;
+            }
+            button {
+                font-size: 1.1rem;
+                padding: 10px 15px;
+                min-width: 100px;
+            }
+            .sprite {
+                width: 36px;
+                height: 36px;
+            }
+        }
     </style>
 </head>
 <body>
