@@ -1,23 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ShinobiWay</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background-color: darkgrey; /* Dark grey background */
+            font-family: Arial, sans-serif;
+        }
+        #output {
+            background-color: lightgrey; /* Light grey battle text box */
+            border: 1px solid black;
+            padding: 10px;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        #controls {
+            margin-top: 20px;
+        }
+        .sprite {
+            width: 32px;
+            height: 32px;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+        .output-text-player { color: blue; }
+        .output-text-enemy { color: red; }
+        .output-text-neutral { color: black; }
+        .output-text-fire { color: orange; }
+        .output-text-lightning { color: gold; }
+        .output-text-illusion { color: purple; }
+        .output-text-earth { color: brown; }
+        .output-text-feral { color: darkgreen; }
+        .status-doom { color: black; }
+        .status-burned { color: orange; }
+        .status-bleed { color: red; }
+        .status-healing { color: green; }
+        .status-stunned { color: gold; }
+        .status-shadowcloneeffect { color: purple; }
+        .status-substitution { color: grey; } /* Updated from kawarami */
+        .status-rockbarrier { color: brown; }
+        button {
+            margin: 5px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .start-button { background-color: green; color: white; }
+        .fire { background-color: orange; color: white; }
+        .lightning { background-color: gold; color: black; }
+        .illusion { background-color: purple; color: white; }
+        .earth { background-color: brown; color: white; }
+        .feral { background-color: darkgreen; color: white; }
+        .neutral { background-color: grey; color: white; }
+    </style>
 </head>
 <body>
-    <div class="game-container">
-        <h1>ShinobiWay</h1>
-        <div class="status">
-            <p id="player-status">Shinobi [HP: <span class="player-hp">10/10</span>]</p>
-            <p id="enemy-status">Enemy [HP: <span class="enemy-hp">0/0</span>]</p>
-            <p id="skill-count">Skill cards: 0</p>
-        </div>
-        <div class="output" id="output">Embark on your journey to become a Genin Shinobi!</div>
-        <div class="controls" id="controls">
-            <button onclick="startGame()">Start Game</button>
-        </div>
+    <div id="player-status">Shinobi [HP: <span class="player-hp">10/10</span>]</div>
+    <div id="enemy-status">Enemy [HP: <span class="enemy-hp">0/0</span>]</div>
+    <div id="skill-count">Skill cards: 0</div>
+    <div id="output">Welcome to ShinobiWay! Click Start to begin!</div>
+    <div id="controls">
+        <button class="start-button" onclick="startGame()">Start Game</button>
     </div>
     <script src="script.js"></script>
 </body>
