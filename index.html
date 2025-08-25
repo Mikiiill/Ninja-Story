@@ -15,7 +15,7 @@
 </head>
 <body>
     <div id="player-status">Shinobi [HP: <span class="player-hp">10/10</span>]</div>
-    <div id="enemy-status">Enemy [HP: 0/0</span>]</div>
+    <div id="enemy-status">Enemy [HP: <span class="enemy-hp">0/0</span>]</div>
     <div id="skill-count">Skill cards: 0 | Gold: 0</div>
     <div id="output">Welcome to ShinobiWay!</div>
     <div id="start-controls">
@@ -29,40 +29,50 @@
 
     <script>
         let game = {
-            player: { name: "Shinobi", hp: 10, maxHp: 10, skills: [], skillInventory: [], gold: 0, rank: "Student", styles: [], skillCounts: { "Fire Jutsu": 0, "Shock Field Jutsu": 0, "Fireball Jutsu": 0, "Flame Throw Jutsu": 0, "Rock Barrier Jutsu": 0, "Demon Mind Jutsu": 0, "Shadow Clone Jutsu": 0, "Bite": 0, "Barrage": 0, "Rock Smash Jutsu": 0 } },
+            player: { name: "Shinobi", hp: 10, maxHp: 10, skills: [], skillInventory: ["Barrage"], gold: 0, rank: "Student", styles: [], styleRanks: { Fire: "D-Rank", Illusion: "D-Rank", Earth: "D-Rank", Lightning: "D-Rank", Feral: "D-Rank", Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" }, skillCounts: { "Barrage": 1, "Shock Field Jutsu": 0, "Lightning Blade Jutsu": 0, "Fireball Jutsu": 0, "Flame Throw Jutsu": 0, "Rock Barrier Jutsu": 0, "Rock Smash Jutsu": 0, "Demonic Vision Jutsu": 0, "Genjutsu Release Jutsu": 0, "Shadow Clone Jutsu": 0, "Dynamic Entry Jutsu": 0, "Falcon Drop Jutsu": 0, "Substitution Jutsu": 0 } },
             gameState: "start",
             skillRanks: {
-                "Shock Field Jutsu": "C-Rank", "Fireball Jutsu": "C-Rank", "Flame Throw Jutsu": "C-Rank",
-                "Rock Barrier Jutsu": "C-Rank", "Demon Mind Jutsu": "C-Rank", "Shadow Clone Jutsu": "C-Rank",
-                "Bite": "C-Rank", "Barrage": "C-Rank", "Rock Smash Jutsu": "C-Rank"
+                "Shock Field Jutsu": "C-Rank", "Lightning Blade Jutsu": "B-Rank", "Fireball Jutsu": "C-Rank",
+                "Flame Throw Jutsu": "B-Rank", "Rock Barrier Jutsu": "C-Rank", "Rock Smash Jutsu": "B-Rank",
+                "Demonic Vision Jutsu": "C-Rank", "Genjutsu Release Jutsu": "B-Rank", "Shadow Clone Jutsu": "C-Rank",
+                "Dynamic Entry Jutsu": "C-Rank", "Falcon Drop Jutsu": "B-Rank", "Substitution Jutsu": "D-Rank",
+                "Barrage": "D-Rank"
             },
             goldValues: { "D-Rank": 5, "C-Rank": 10, "B-Rank": 50, "A-Rank": 100, "S-Rank": 500 },
             asciiArt: {
                 battleStart: "👊💥 BATTLE BEGINS! 👊💥\nShinobi vs. Enemy!",
                 "Shock Field Jutsu": "⚡️ Shock Field!",
+                "Lightning Blade Jutsu": "⚡ Blade Strike!",
                 "Fireball Jutsu": "🔥 Fireball Strike!",
                 "Flame Throw Jutsu": "🔥🔥 Flame Burst!",
                 "Rock Barrier Jutsu": "🪨 Rock Shield!",
-                "Demon Mind Jutsu": "💀 Doom Strikes!",
+                "Rock Smash Jutsu": "🪨💥 Rock Smash!",
+                "Demonic Vision Jutsu": "💀 Doom Strikes!",
+                "Genjutsu Release Jutsu": "🌫️ Mind Freed!",
                 "Shadow Clone Jutsu": "🌫️ Clone Appears!",
-                "Bite": "😡 Savage Bite!",
-                "Barrage": "💥 Rapid Assault!",
-                "Rock Smash Jutsu": "🪨💥 Rock Smash!"
+                "Dynamic Entry Jutsu": "💥 Dynamic Kick!",
+                "Falcon Drop Jutsu": "🦅 Falcon Strike!",
+                "Substitution Jutsu": "🌫️ Substitution!",
+                "Barrage": "💥 Rapid Assault!"
             },
             dotEffects: {
                 "Flame Throw Jutsu": { baseDamage: 2, duration: 3 },
-                "Demon Mind Jutsu": { baseDamage: 1, duration: 5 }
+                "Demonic Vision Jutsu": { baseDamage: 1, duration: 5 }
             },
             jutsuRequirements: {
-                "Shock Field Jutsu": { styles: ["Lightning"] },
-                "Fireball Jutsu": { styles: ["Fire"] },
-                "Flame Throw Jutsu": { styles: ["Fire"] },
-                "Rock Barrier Jutsu": { styles: ["Earth"] },
-                "Demon Mind Jutsu": { styles: ["Illusion"] },
-                "Shadow Clone Jutsu": { styles: ["Illusion"] },
-                "Bite": { styles: ["Feral"] },
-                "Barrage": { styles: ["Earth"] },
-                "Rock Smash Jutsu": { styles: ["Earth"] }
+                "Shock Field Jutsu": { styles: ["Lightning"], minRank: "C-Rank" },
+                "Lightning Blade Jutsu": { styles: ["Lightning"], minRank: "B-Rank" },
+                "Fireball Jutsu": { styles: ["Fire"], minRank: "C-Rank" },
+                "Flame Throw Jutsu": { styles: ["Fire"], minRank: "B-Rank" },
+                "Rock Barrier Jutsu": { styles: ["Earth"], minRank: "C-Rank", attributes: ["Support"] },
+                "Rock Smash Jutsu": { styles: ["Earth"], minRank: "B-Rank" },
+                "Demonic Vision Jutsu": { styles: ["Genjutsu"], minRank: "C-Rank" },
+                "Genjutsu Release Jutsu": { styles: ["Genjutsu"], minRank: "B-Rank" },
+                "Shadow Clone Jutsu": { styles: ["Ninjutsu"], minRank: "C-Rank" },
+                "Dynamic Entry Jutsu": { styles: ["Taijutsu"], minRank: "C-Rank" },
+                "Falcon Drop Jutsu": { styles: ["Taijutsu"], minRank: "B-Rank" },
+                "Substitution Jutsu": { styles: ["Ninjutsu", "Taijutsu"] },
+                "Barrage": {}
             },
             rankLimits: { "Student": 5, "Genin": 10, "Chunin": 15, "Jonin": 20, "Kage": 25 }
         };
@@ -89,7 +99,7 @@
         function setupStyleButtons() {
             let controls = document.getElementById("style-controls");
             controls.innerHTML = "";
-            let remainingStyles = ["Fire", "Illusion", "Earth", "Lightning", "Feral"].filter(s => !game.player.styles.includes(s));
+            let remainingStyles = ["Fire", "Illusion", "Earth", "Lightning", "Feral", "Ninjutsu", "Taijutsu", "Genjutsu"].filter(s => !game.player.styles.includes(s));
             if (remainingStyles.length > 0) {
                 remainingStyles.slice(0, 2).forEach(style => {
                     let button = document.createElement("button");
@@ -100,13 +110,6 @@
                 });
             } else {
                 log('No styles left to choose.');
-                game.player.styles.forEach(style => {
-                    Object.keys(game.jutsuRequirements).forEach(jutsu => {
-                        if (game.jutsuRequirements[jutsu].styles.includes(style)) {
-                            game.skillRanks[jutsu] = "C-Rank";
-                        }
-                    });
-                });
                 setupJutsuSelection();
             }
         }
@@ -130,9 +133,13 @@
             game.gameState = "chooseJutsu";
             let controls = document.getElementById("jutsu-controls");
             controls.innerHTML = "";
-            let availableJutsu = Object.keys(game.jutsuRequirements).filter(jutsu => 
-                game.jutsuRequirements[jutsu].styles.some(s => game.player.styles.includes(s))
-            );
+            let availableJutsu = Object.keys(game.jutsuRequirements).filter(jutsu => {
+                let req = game.jutsuRequirements[jutsu];
+                if (req.minRank) {
+                    return req.styles.some(s => game.player.styles.includes(s) && game.player.styleRanks[s] >= req.minRank);
+                }
+                return req.styles ? req.styles.some(s => game.player.styles.includes(s)) : true;
+            });
             let randomJutsu = [];
             for (let i = 0; i < 4 && availableJutsu.length > 0; i++) {
                 let index = Math.floor(Math.random() * availableJutsu.length);
@@ -147,7 +154,7 @@
                     log('Added ' + jutsu + ' to selection');
                 });
             } else {
-                log('No jutsu available based on styles.');
+                log('No jutsu available based on styles and ranks.');
                 showMainScreen();
             }
         }
