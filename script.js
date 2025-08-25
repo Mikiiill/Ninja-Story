@@ -588,17 +588,28 @@ function startGame() {
     game.outputQueue = [];
     game.isOutputting = false;
     document.getElementById("output").innerHTML = game.output.join("<br>");
-    let barrageSkill = new Skills().findSkill("Barrage");
+    game.battleScene = new BattleScene(); // Initialize BattleScene first
+    let barrageSkill = game.battleScene.skills.findSkill("Barrage");
     if (barrageSkill) {
         game.player.skills = [barrageSkill];
     } else {
+        console.error("Error: Barrage skill not found in game.battleScene.skills!");
         game.output.push("Error: Barrage skill not found!");
         document.getElementById("output").innerHTML = game.output.join("<br>");
         alert("Error: Barrage skill not found!");
         return;
     }
-    game.battleScene = new BattleScene();
-    setTimeout(() => game.battleScene.chooseNinjaStyles(), 1000);
+    console.log("Starting game, proceeding to chooseNinjaStyles...");
+    setTimeout(() => {
+        try {
+            game.battleScene.chooseNinjaStyles();
+        } catch (e) {
+            console.error("Error in chooseNinjaStyles:", e);
+            game.output.push("Error: Failed to start style selection!");
+            document.getElementById("output").innerHTML = game.output.join("<br>");
+            alert("Error: Failed to start style selection!");
+        }
+    }, 1000);
 }
 
 function selectStyle(style) {
@@ -667,4 +678,4 @@ function selectRankUpStyle(style) {
         document.getElementById("controls").innerHTML = "";
         setTimeout(() => game.battleScene.chooseSkillCard(), 1000);
     }
-            }
+                                                      }
