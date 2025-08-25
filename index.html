@@ -25,11 +25,6 @@
         log('HTML fully loaded');
 
         // Dynamic script loading
-        const script = document.createElement('script');
-        script.src = 'script.js';
-        script.onload = () => log('✅ script.js loaded');
-        script.onerror = () => log('❌ script.js failed to load');
-        document.body.appendChild(script);
-    </script>
+<script src="script.js"></script>
 </body>
 </html>
