@@ -84,6 +84,10 @@
             el.innerHTML += '<br>' + msg;
         }
 
+        function updateSkillCount() {
+            document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length + game.player.skillInventory.length} | Gold: ${game.player.gold}`;
+        }
+
         function startGame() {
             log('Starting game at ' + new Date().toLocaleTimeString() + '...');
             if (game.gameState === "start") {
@@ -92,6 +96,7 @@
                 game.gameState = "chooseStyles";
                 log('Setting up style selection...');
                 setupStyleButtons();
+                updateSkillCount(); // Update initial skill count with Barrage
                 document.getElementById("start-button").style.display = "none";
             } else {
                 log('Game already started, state: ' + game.gameState);
@@ -101,34 +106,38 @@
         function setupStyleButtons() {
             let controls = document.getElementById("style-controls");
             controls.innerHTML = "";
-            let remainingStyles = ["Fire", "Genjutsu", "Earth", "Lightning", "Feral", "Ninjutsu", "Taijutsu"].filter(s => !game.player.styles.includes(s));
-            if (remainingStyles.length > 0) {
-                remainingStyles.slice(0, 2).forEach(style => {
-                    let button = document.createElement("button");
-                    button.innerText = style;
-                    button.onclick = function() { selectStyle(style); };
-                    controls.appendChild(button);
-                    log('Added ' + style + ' button');
-                });
-            } else {
-                log('No styles left to choose.');
-                setupInitialJutsuSelection();
-            }
+            let allStyles = ["Fire", "Genjutsu", "Earth", "Lightning", "Feral", "Ninjutsu", "Taijutsu"];
+            allStyles.forEach(style => {
+                let button = document.createElement("button");
+                button.innerText = style;
+                button.onclick = function() { selectStyle(style); };
+                controls.appendChild(button);
+                log('Added ' + style + ' button');
+            });
         }
 
         function selectStyle(style) {
             log('Selecting ' + style + '...');
             if (game.player.styles.length < 2 && game.gameState === "chooseStyles") {
                 game.player.styles.push(style);
-                log(style + ' added as a style!');
-                setupStyleButtons();
+                game.player.styleRanks[style] = upgradeRank(game.player.styleRanks[style]); // Increase to C-Rank
+                log(style + ' added as a style with rank upgraded to ' + game.player.styleRanks[style] + '!');
                 if (game.player.styles.length === 2) {
                     log('Both styles selected, proceeding to initial jutsu selection...');
                     document.getElementById("style-controls").innerHTML = "";
+                    setupInitialJutsuSelection();
+                } else {
+                    setupStyleButtons(); // Refresh to show remaining styles
                 }
             } else {
                 log('Style selection invalid or complete, state: ' + game.gameState);
             }
+        }
+
+        function upgradeRank(rank) {
+            const ranks = ["D-Rank", "C-Rank", "B-Rank", "A-Rank", "S-Rank"];
+            let currentIndex = ranks.indexOf(rank);
+            return currentIndex < ranks.length - 1 ? ranks[currentIndex + 1] : rank;
         }
 
         function setupInitialJutsuSelection() {
@@ -176,8 +185,8 @@
                 game.player.skillInventory.push(jutsu);
                 game.player.skillCounts[jutsu]++;
                 log(jutsu + ' added to skill inventory!');
-                document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length + game.player.skillInventory.length} | Gold: ${game.player.gold}`;
                 document.getElementById("jutsu-controls").innerHTML = "";
+                updateSkillCount();
                 if (callback) callback();
             }
         }
@@ -198,7 +207,6 @@
         function handleMainOption(option) {
             log('Selected option: ' + option);
             if (option === "Train") {
-                // Simulate battle and trigger post-battle jutsu selection
                 log('Entering battle...');
                 document.getElementById("output").innerHTML += `<br><span class="battle-ready">Battle ended!</span>`;
                 performJutsuSelection(1); // Post-battle: 1 selection of 3
@@ -236,7 +244,7 @@
                 game.player.skillCounts[skill]++;
                 game.player.skillInventory = game.player.skillInventory.filter((s, i) => i !== countIndex);
                 log(`${skill} moved to active skills!`);
-                document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length + game.player.skillInventory.length} | Gold: ${game.player.gold}`;
+                updateSkillCount();
                 updateSkillControls();
             } else {
                 log('Active skills limit reached!');
@@ -250,7 +258,7 @@
                 game.player.skills = game.player.skills.filter(s => s !== skill);
             }
             log(`${skill} moved to inventory!`);
-            document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length + game.player.skillInventory.length} | Gold: ${game.player.gold}`;
+            updateSkillCount();
             updateSkillControls();
         }
     </script>
