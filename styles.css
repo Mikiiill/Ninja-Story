@@ -1,96 +1,67 @@
 body {
-    font-family: Arial, sans-serif;
     background-color: #222;
     color: #fff;
+    font-family: Arial, sans-serif;
     margin: 0;
-    padding: 20px;
+    padding: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-#game-container {
-    width: 100%;
-    max-width: 800px;
-}
-
 #output {
     background-color: #333;
-    border: 2px solid #fff;
-    padding: 10px;
-    height: 400px;
+    color: #fff;
+    width: 80%;
+    height: 300px;
     overflow-y: auto;
-    font-size: 1.2rem;
-    line-height: 1.5;
-}
-
-#player-status, #enemy-status {
-    margin: 10px 0;
+    margin: 10px;
+    padding: 10px;
+    border: 2px solid #fff;
     font-size: 1.2rem;
 }
 
 #controls {
-    margin-top: 10px;
-}
-
-#skill-count {
-    margin-top: 10px;
-    font-size: 1.1rem;
-}
-
-.sprite {
-    width: 50px;
-    height: 50px;
-    vertical-align: middle;
+    margin: 10px;
 }
 
 button {
-    font-size: 1.3rem;
-    margin: 5px;
-    padding: 5px 10px;
-    cursor: pointer;
-}
-
-.start-button {
-    background: #555;
+    background-color: #555;
     color: #fff;
     border: 2px solid #fff;
+    padding: 10px 20px;
+    margin: 5px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #777;
 }
 
 .fire {
-    background: #ff0000;
-    color: #fff;
-    border: 2px solid #fff;
+    background-color: #ff0000;
 }
 
 .lightning {
-    background: #ffa500;
-    color: #000;
-    border: 2px solid #000;
+    background-color: #ffa500;
 }
 
 .illusion {
-    background: #800080;
-    color: #fff;
-    border: 2px solid #fff;
+    background-color: #800080;
 }
 
 .earth {
-    background: #8b4513;
-    color: #fff;
-    border: 2px solid #fff;
+    background-color: #8b4513;
 }
 
 .feral {
-    background: #228b22;
-    color: #fff;
-    border: 2px solid #fff;
+    background-color: #228b22;
 }
 
 .neutral {
-    background: #555;
-    color: #fff;
-    border: 2px solid #fff;
+    background-color: #555;
 }
 
 .output-text-player {
@@ -101,60 +72,45 @@ button {
     color: #ff0000;
 }
 
-.output-text-fire {
-    color: #ff0000;
-}
-
-.output-text-lightning {
-    color: #ffa500;
-}
-
-.output-text-illusion {
-    color: #800080;
-}
-
-.output-text-earth {
-    color: #8b4513;
-}
-
-.output-text-feral {
-    color: #228b22;
-}
-
 .output-text-neutral {
     color: #ccc;
-}
-
-.status-doom {
-    color: #ff00ff;
 }
 
 .status-burn {
     color: #ff0000;
 }
 
+.status-numb {
+    color: #ffa500;
+}
+
 .status-bleed {
-    color: #8b0000;
+    color: #ff0000;
 }
 
 .status-healing {
     color: #00ff00;
 }
 
-.status-numb {
-    color: #ffa500;
-}
-
-.status-shadowcloneeffect {
+.status-doom {
     color: #800080;
 }
 
-.status-substitution {
+.status-shadowcloneeffect {
     color: #ccc;
+}
+
+.status-substitution {
+    color: #8b4513;
 }
 
 .status-rockbarrier {
     color: #8b4513;
+}
+
+#player-status, #enemy-status, #skill-count {
+    margin: 10px;
+    font-size: 1.2rem;
 }
 
 .player-hp {
@@ -165,85 +121,51 @@ button {
     color: #ff0000;
 }
 
-.skills-button, .train-button {
-    font-size: 1.3rem;
-    margin: 5px;
-    padding: 5px 10px;
-    background: #555;
-    color: #fff;
-    border: 2px solid #fff;
-    cursor: pointer;
+.sprite {
+    width: 50px;
+    height: 50px;
+    vertical-align: middle;
 }
 
-#skills-popup {
-    position: fixed;
-    top: 20%;
-    left: 20%;
-    width: 60%;
+.skills-button {
+    background-color: #228b22;
+}
+
+.train-button {
+    background-color: #555;
+    color: #fff;
+    border: 2px solid #fff;
+}
+
+.skills-popup {
     background: #333;
     color: #fff;
     padding: 20px;
     border: 2px solid #fff;
-    zIndex: 1000;
+    position: fixed;
+    top: 20%;
+    left: 20%;
+    width: 60%;
+    z-index: 1000;
     font-size: 1.2rem;
 }
 
-#skills-popup button {
-    font-size: 1.2rem;
-    margin: 5px;
-    padding: 5px;
-    width: 100%;
-    text-align: left;
-}
-
-#skills-popup ul {
-    list-style: none;
+.skills-popup ul {
+    list-style-type: none;
     padding: 0;
 }
 
-#skills-popup h3 {
-    margin: 10px 0;
+.skills-popup button {
+    margin: 5px 0;
+    padding: 5px 10px;
 }
 
-@media (max-width: 768px) {
-    body {
-        padding: 10px;
-    }
-
-    #output {
-        font-size: 1rem;
-        height: 300px;
-    }
-
-    #player-status, #enemy-status {
-        font-size: 1rem;
-    }
-
-    #skill-count {
-        font-size: 0.9rem;
-    }
-
-    button {
-        font-size: 1.1rem;
-        padding: 5px 8px;
-    }
-
-    .sprite {
-        width: 40px;
-        height: 40px;
-    }
-
-    .skills-button, .train-button {
-        font-size: 1.1rem;
-    }
-
-    #skills-popup {
-        font-size: 1rem;
-        width: 80%;
-        left: 10%;
-    }
-
-    #skills-popup button {
-        font-size: 1rem;
-    }
+.close-button {
+    background: #555;
+    color: #fff;
+    border: 2px solid #fff;
+    font-size: 1.2rem;
+    padding: 5px 10px;
+    cursor: pointer;
+    margin-top: 10px;
 }
