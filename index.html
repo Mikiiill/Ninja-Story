@@ -1,34 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>ShinobiWay</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
+    <title>ShinobiWay</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="player-status">Shinobi [HP: <span class="player-hp">10/10</span>]</div>
-    <div id="enemy-status">Enemy [HP: <span class="enemy-hp">0/0</span>]</div>
-    <div id="skill-count">Skill cards: 0</div>
-    <div id="output">Welcome to ShinobiWay! Click Start to begin!</div>
-    <div id="controls">
-        <button class="start-button" onclick="startGame()">Start Game</button>
-    </div>
-    <div id="log">Log started...</div>
-
-    <script>
-        function log(msg) {
-            const el = document.getElementById('log');
-            el.innerHTML += '<br>' + msg;
-        }
-
-        log('HTML fully loaded');
-
-        // Watch for script.js loading
-        const script = document.createElement('script');
-        script.src = 'script.js';
-        script.onload = () => log('✅ script.js loaded');
-        script.onerror = () => log('❌ script.js failed to load');
-        document.body.appendChild(script);
-    </script>
+    <div id="player-status">Shinobi [HP: <span class="player-hp">10/10</span>]</div>
+    <div id="enemy-status">Enemy [HP: <span class="enemy-hp">0/0</span>]</div>
+    <div id="skill-count">Skill cards: 0</div>
+    <div id="output">Welcome to ShinobiWay! Click Start to begin!</div>
+    <div id="controls">
+        <button class="start-button" onclick="startGame()">Start Game</button>
+    </div>
+    <div id="log">Log started...</div>
+    <script src="script.js" defer></script>
 </body>
 </html>
