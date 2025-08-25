@@ -132,16 +132,17 @@ class Skills {
     shadowCloneJutsu(user, target, scene) {
         if (user.hp < 3) {
             scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> does not have enough HP to cast <span class="output-text-illusion">Shadow Clone Jutsu</span>!`);
-            return;
+            return false;
         }
         let cloneCount = user.statusEffects.filter(e => e.name === "ShadowCloneEffect").length;
         if (cloneCount >= 3) {
             scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> already has the maximum of 3 shadow clones!`);
-            return;
+            return false;
         }
         user.hp = Math.max(0, Math.min(10, user.hp - 3));
         user.statusEffects.push(new StatusEffect("ShadowCloneEffect", 3));
         scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-illusion">Shadow Clone Jutsu</span>, adding a clone <span class="status-shadowcloneeffect">👥</span>!`);
+        return true;
     }
 
     bite(user, target, scene) {
@@ -156,11 +157,13 @@ class Skills {
     kawarami(user, target, scene) {
         user.statusEffects.push(new StatusEffect("Kawarami", 3));
         scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> prepares <span class="output-text-neutral">Kawarami</span> <span class="status-kawarami">🪵</span>!`);
+        return true;
     }
 
     rockBarrierJutsu(user, target, scene) {
         user.statusEffects.push(new StatusEffect("Rock Barrier", 3));
         scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-earth">Rock Barrier Jutsu</span> <span class="status-rockbarrier">🪨</span>!`);
+        return true;
     }
 
     impendingDoom(user, target, scene) {
@@ -351,7 +354,7 @@ class BattleScene {
         let healingEffects = mob.statusEffects.filter(e => !e.new && e.name === "Healing");
         let totalHeal = 0;
         healingEffects.forEach(effect => {
-            totalHeal += 1; // Changed to +1 HP per turn for Healing status
+            totalHeal += 1;
         });
         if (totalHeal > 0) {
             mob.hp = Math.max(0, Math.min(10, mob.hp + totalHeal));
@@ -388,14 +391,14 @@ class BattleScene {
         }
         let kawarami = target.statusEffects.some(e => e.name === "Kawarami");
         if (kawarami && !skill.support) {
-            target.statusEffects = target.statusEffects.filter(e => e.name !== "Kawarami");
+            target.statusEffects = target.statusEffects.filter(e => e.name === "Kawarami");
             scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-${skill.style}">${skill.name}</span>!`);
             scene.queueOutput(`<span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> uses <span class="status-kawarami">Kawarami 🪵</span> to dodge! 💨`);
             return true;
         }
         let shadowClone = target.statusEffects.some(e => e.name === "ShadowCloneEffect");
         if (shadowClone && !skill.support) {
-            target.statusEffects = target.statusEffects.filter(e => e.name === "ShadowCloneEffect");
+            target.statusEffects = target.statusEffects.filter(e => e.name === "ShadowCloneEffect")[0]; // Remove one clone
             scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-${skill.style}">${skill.name}</span>!`);
             scene.queueOutput(`<span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span>'s shadow clone takes the hit and disappears! 💨`);
             return true;
@@ -446,7 +449,7 @@ class BattleScene {
                     setTimeout(() => this.enemyTurn(), 1000);
                 } else {
                     this.queueOutput(`<span class="output-text-player">${game.player.name}</span> is <span class="status-stunned">Stunned ⚡️</span> and cannot act!`);
-                    game.player.statusEffects = game.player.statusEffects.filter(e => e.name === "Stunned");
+                    game.player.statusEffects = game.player.statusEffects.filter(e => e.name !== "Stunned");
                     setTimeout(() => this.enemyTurn(), 1000);
                 }
             } else {
@@ -485,7 +488,7 @@ class BattleScene {
                     setTimeout(() => this.playerTurn(), 1000);
                 } else {
                     this.queueOutput(`<span class="output-text-enemy">${game.enemy.name}</span> is <span class="status-stunned">Stunned ⚡️</span> and cannot act!`);
-                    game.enemy.statusEffects = game.enemy.statusEffects.filter(e => e.name === "Stunned");
+                    game.enemy.statusEffects = game.enemy.statusEffects.filter(e => e.name !== "Stunned");
                     setTimeout(() => this.playerTurn(), 1000);
                 }
             } else {
@@ -628,4 +631,17 @@ function selectSkillCard(skillName) {
     game.battleScene.queueOutput(`Shinobi gains new skill card: <span class="output-text-${skill.style}">${skill.name}</span>!`);
     document.getElementById("controls").innerHTML = "";
     setTimeout(() => game.battleScene.continueGame(), 1000);
-            }
+}
+
+function selectRankUpStyle(style) {
+    let now = Date.now();
+    if (now - lastClickTime < 1000) return;
+    lastClickTime = now;
+    if (game.gameState === "chooseRankUpStyle") {
+        game.player.ninjaStyles[style] = game.battleScene.rankUpStages[game.player.ninjaStyles[style]];
+        game.battleScene.queueOutput(`Shinobi ranks up <span class="output-text-${style.toLowerCase()}">${style}</span> to ${game.player.ninjaStyles[style]}!`);
+        game.gameState = "rankedUp";
+        document.getElementById("controls").innerHTML = "";
+        setTimeout(() => game.battleScene.chooseSkillCard(), 1000);
+    }
+    }
