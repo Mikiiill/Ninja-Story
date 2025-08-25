@@ -396,24 +396,24 @@ class BattleScene {
             target.statusEffects = target.statusEffects.filter(e => e.name !== "Rock Barrier");
             scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-${skill.style}">${skill.name}</span>!`);
             scene.queueOutput(`<span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span>'s <span class="status-rockbarrier">Rock Barrier 🪨</span> blocks the attack! The rock barrier cracks in half!`);
-            return true; // Block skill execution
+            return true;
         }
         let substitution = target.statusEffects.some(e => e.name === "Substitution");
         if (substitution && !skill.support) {
-            target.statusEffects = target.statusEffects.filter(e => e.name !== "Substitution");
+            target.statusEffects = target.statusEffects.filter(e => e.name === "Substitution");
             scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-${skill.style}">${skill.name}</span>!`);
             scene.queueOutput(`<span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> uses <span class="status-substitution">Substitution 🪵</span> to dodge! 💨`);
-            return true; // Block skill execution
+            return true;
         }
         let shadowClone = target.statusEffects.some(e => e.name === "ShadowCloneEffect");
         if (shadowClone && !skill.support) {
             let cloneEffects = target.statusEffects.filter(e => e.name === "ShadowCloneEffect");
             if (cloneEffects.length > 0) {
                 let index = target.statusEffects.indexOf(cloneEffects[0]);
-                target.statusEffects.splice(index, 1); // Remove one clone
+                target.statusEffects.splice(index, 1);
                 scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-${skill.style}">${skill.name}</span>!`);
                 scene.queueOutput(`<span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span>'s shadow clone takes the hit and disappears! 💨`);
-                return true; // Block skill execution
+                return true;
             }
         }
         return false;
@@ -423,6 +423,8 @@ class BattleScene {
         if (skill.support) return false;
         let clones = user.statusEffects.filter(e => e.name === "ShadowCloneEffect" && !e.new);
         if (clones.length === 0) return false;
+        // Display user's skill first
+        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-${skill.style}">${skill.name}</span>!`);
         let barrageSkill = this.skills.findSkill("Barrage");
         clones.forEach(() => {
             scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span>'s shadow clone uses <span class="output-text-neutral">Barrage</span>!`);
@@ -450,7 +452,9 @@ class BattleScene {
                             setTimeout(() => this.endBattle(), 1000);
                             return;
                         }
-                        skill.skillFunction(game.player, game.enemy, this);
+                        if (!skill.support) { // Execute skill only if not support (support skills don't need separate output)
+                            skill.skillFunction(game.player, game.enemy, this);
+                        }
                         this.updateStatus();
                         if (game.enemy.hp <= 0) {
                             setTimeout(() => this.endBattle(), 1000);
@@ -658,4 +662,4 @@ function selectRankUpStyle(style) {
         document.getElementById("controls").innerHTML = "";
         setTimeout(() => game.battleScene.chooseSkillCard(), 1000);
     }
-        }
+    }
