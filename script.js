@@ -134,14 +134,13 @@ class Skills {
     }
 
     shockFieldJutsu(user, target, scene) {
-    shockFieldJutsu(user, target, scene) {
-    let damage = Math.round(Math.random() * 2) + 2; // 2–4
-    target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-    user.statusEffects.push(new StatusEffect("Numb", 1));
-    target.statusEffects.push(new StatusEffect("Numb", 1));
-    scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-lightning">Shock Field Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-numb">Numb ⚡️</span> on both!`);
-    if (target.hp <= 0) return true;
-    return false;
+        let damage = Math.round(Math.random() * 2) + 2; // 2–4
+        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+        user.statusEffects.push(new StatusEffect("Numb", 1));
+        target.statusEffects.push(new StatusEffect("Numb", 1));
+        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-lightning">Shock Field Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-numb">Numb ⚡️</span> on both!`);
+        if (target.hp <= 0) return true;
+        return false;
     }
 
     shadowCloneJutsu(user, target, scene) {
@@ -678,9 +677,20 @@ class BattleScene {
 let lastClickTime = 0;
 function startGame() {
     let now = Date.now();
-    if (now - lastClickTime < 1000) return;
+    if (now - lastClickTime < 1500) {
+        console.log("Click ignored: Debounce active, time since last click:", now - lastClickTime);
+        return;
+    }
     lastClickTime = now;
-    alert("Starting ShinobiWay!");
+    console.log("Starting ShinobiWay, time:", now);
+
+    // Check DOM elements
+    if (!document.getElementById("output") || !document.getElementById("controls") || !document.getElementById("player-status") || !document.getElementById("enemy-status") || !document.getElementById("skill-count")) {
+        console.error("Error: Missing DOM elements (#output, #controls, #player-status, #enemy-status, #skill-count)");
+        document.getElementById("output").innerHTML = "Error: Missing game elements. Check index.html!";
+        return;
+    }
+
     game.output = ["Train to become a Genin Shinobi! Collect 10 skill cards!"];
     game.player = new Mob("Shinobi", 10, 10, "Student", { Fire: "D-Rank", Lightning: "D-Rank", Illusion: "D-Rank", Earth: "D-Rank", Feral: "D-Rank" }, [], [], "images/shinobi.png");
     game.player.skillInventory = [];
@@ -695,28 +705,28 @@ function startGame() {
     if (barrageSkill) {
         game.player.skillInventory = [barrageSkill];
         game.player.skills = [barrageSkill];
+        console.log("Barrage skill added to inventory and active skills:", barrageSkill);
     } else {
         console.error("Error: Barrage skill not found in game.battleScene.skills!");
         game.output.push("Error: Barrage skill not found!");
         document.getElementById("output").innerHTML = game.output.join("<br>");
-        alert("Error: Barrage skill not found!");
         return;
     }
     setTimeout(() => {
         try {
             game.battleScene.chooseNinjaStyles();
+            console.log("chooseNinjaStyles called successfully");
         } catch (e) {
             console.error("Error in chooseNinjaStyles:", e);
             game.output.push("Error: Failed to start style selection!");
             document.getElementById("output").innerHTML = game.output.join("<br>");
-            alert("Error: Failed to start style selection!");
         }
     }, 1000);
 }
 
 function selectStyle(style) {
     let now = Date.now();
-    if (now - lastClickTime < 1000) return;
+    if (now - lastClickTime < 1500) return;
     lastClickTime = now;
     if (game.battleScene.chosenStyles.length < 2) {
         game.battleScene.chosenStyles.push(style);
@@ -733,7 +743,7 @@ function selectStyle(style) {
 
 function selectSkill(skillName) {
     let now = Date.now();
-    if (now - lastClickTime < 1000) return;
+    if (now - lastClickTime < 1500) return;
     lastClickTime = now;
     let skill = game.battleScene.skills.findSkill(skillName);
     let inventoryCounts = {};
@@ -773,7 +783,7 @@ function selectSkill(skillName) {
 
 function selectSkillCard(skillName) {
     let now = Date.now();
-    if (now - lastClickTime < 1000) return;
+    if (now - lastClickTime < 1500) return;
     lastClickTime = now;
     let skill = game.battleScene.skills.findSkill(skillName);
     let inventoryCounts = {};
@@ -827,7 +837,7 @@ function swapSkillToInventory(skillName) {
 
 function selectRankUpStyle(style) {
     let now = Date.now();
-    if (now - lastClickTime < 1000) return;
+    if (now - lastClickTime < 1500) return;
     lastClickTime = now;
     if (game.gameState === "chooseRankUpStyle") {
         game.player.ninjaStyles[style] = game.battleScene.rankUpStages[game.player.ninjaStyles[style]];
@@ -839,4 +849,4 @@ function selectRankUpStyle(style) {
         document.getElementById("controls").innerHTML = "";
         setTimeout(() => game.battleScene.chooseSkillCard(), 1000);
     }
-            }
+                }
