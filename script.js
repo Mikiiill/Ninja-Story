@@ -642,7 +642,7 @@ function startGame() {
     lastClickTime = now;
 
     if (!document.getElementById("output") || !document.getElementById("controls") || !document.getElementById("player-status") || !document.getElementById("enemy-status") || !document.getElementById("skill-count")) {
-        log('Error: Missing DOM elements');
+        log('Error: Missing DOM elements - ' + JSON.stringify({ output: !!document.getElementById("output"), controls: !!document.getElementById("controls"), playerStatus: !!document.getElementById("player-status"), enemyStatus: !!document.getElementById("enemy-status"), skillCount: !!document.getElementById("skill-count") }));
         document.getElementById("output").innerHTML = "Error: Missing game elements. Check index.html!";
         return;
     }
@@ -662,7 +662,119 @@ function startGame() {
     if (barrageSkill) {
         game.player.skillInventory.push(barrageSkill);
         game.player.skills.push(barrageSkill);
-        log('Barrage skill added, starting game flow...');
+        log('Barrage skill added to inventory and active skills, triggering chooseNinjaStyles...');
     } else {
-        log('Error: Barrage skill not found!');
-        game.output.push("Error:
+        log('Error: Barrage skill not found in Skills class!');
+        game.output.push("Error: Barrage skill not found!");
+        document.getElementById("output").innerHTML = game.output.join("<br>");
+        return;
+    }
+    setTimeout(() => {
+        log('Calling chooseNinjaStyles...');
+        game.battleScene.chooseNinjaStyles();
+    }, 1000);
+}
+
+let lastClickTime = 0;
+
+function selectStyle(style) {
+    let now = Date.now();
+    if (now - lastClickTime < 1500) return;
+    lastClickTime = now;
+    if (game.battleScene.chosenStyles.length < 2) {
+        game.battleScene.chosenStyles.push(style);
+        game.player.ninjaStyles[style] = "C-Rank";
+        game.battleScene.queueOutput(`<span class="output-text-${style.toLowerCase()}">${style}</span> trained to C-Rank!`);
+        document.getElementById("controls").innerHTML = "";
+        if (game.battleScene.chosenStyles.length === 2) {
+            game.gameState = "chooseSkills";
+            setTimeout(() => game.battleScene.chooseStartingSkills(), 1000);
+        } else {
+            setTimeout(() => game.battleScene.chooseNinjaStyles(), 1000);
+        }
+    }
+}
+
+function selectSkill(skillName) {
+    let now = Date.now();
+    if (now - lastClickTime < 1500) return;
+    lastClickTime = now;
+    let skill = game.battleScene.skills.findSkill(skillName);
+    if (game.battleScene.chosenSkills.length < 4 && skill) {
+        game.battleScene.chosenSkills.push(skill);
+        game.player.skillInventory.push(skill);
+        game.player.skills.push(skill);
+        game.battleScene.queueOutput(`<span class="output-text-${skill.style}">${skillName}</span> learned!`);
+        document.getElementById("controls").innerHTML = "";
+        if (game.battleScene.chosenSkills.length === 4) {
+            game.gameState = "battle";
+            setTimeout(() => game.battleScene.startBattle(), 1000);
+        } else {
+            setTimeout(() => game.battleScene.chooseStartingSkills(), 1000);
+        }
+    }
+}
+
+function selectRankUpStyle(style) {
+    let now = Date.now();
+    if (now - lastClickTime < 1500) return;
+    lastClickTime = now;
+    game.player.ninjaStyles[style] = game.battleScene.rankUpStages[game.player.ninjaStyles[style]];
+    game.player.Rank = "Genin";
+    game.battleScene.queueOutput(`<span class="output-text-${style.toLowerCase()}">${style}</span> ranked up to ${game.player.ninjaStyles[style]}, <span class="output-text-player">Shinobi</span> is now a Genin!`);
+    document.getElementById("controls").innerHTML = "";
+    game.battleScene.showOptions();
+}
+
+function selectSkillCard(skillName) {
+    let now = Date.now();
+    if (now - lastClickTime < 1500) return;
+    lastClickTime = now;
+    let skill = game.battleScene.skills.findSkill(skillName);
+    if (skill && game.player.skillInventory.length < 10) {
+        game.player.skillInventory.push(skill);
+        game.battleScene.queueOutput(`<span class="output-text-${skill.style}">${skillName}</span> learned!`);
+        document.getElementById("controls").innerHTML = "";
+        if (game.player.skillInventory.length === 10) {
+            game.gameState = "chooseRankUpStyle";
+            setTimeout(() => game.battleScene.chooseRankUpStyle(), 1000);
+        } else {
+            game.battleScene.showOptions();
+        }
+    }
+}
+
+function addSkillToActive(skillName) {
+    let skill = game.battleScene.skills.findSkill(skillName);
+    if (!skill) return;
+    let inventoryCounts = {};
+    game.player.skillInventory.forEach(s => inventoryCounts[s.name] = (inventoryCounts[s.name] || 0) + 1);
+    let activeCount = game.player.skills.filter(s => s.name === skillName).length;
+    if (inventoryCounts[skillName] > activeCount) {
+        let limits = game.player.Rank === "Student" ? { "C-Rank": 4, "B-Rank": 1, "A-Rank": 0, "S-Rank": 0 } : { "C-Rank": 6, "B-Rank": 2, "A-Rank": 1, "S-Rank": 0 };
+        let rankCounts = {
+            "C-Rank": game.player.skills.filter(s => s.rank === "C-Rank").length,
+            "B-Rank": game.player.skills.filter(s => s.rank === "B-Rank").length,
+            "A-Rank": game.player.skills.filter(s => s.rank === "A-Rank").length,
+            "S-Rank": game.player.skills.filter(s => s.rank === "S-Rank").length
+        };
+        if (rankCounts[skill.rank] < limits[skill.rank]) {
+            game.player.skills.push(skill);
+            game.battleScene.queueOutput(`Added <span class="output-text-${skill.style}">${skillName}</span> to active skills!`);
+        } else {
+            game.battleScene.queueOutput(`Cannot add <span class="output-text-${skill.style}">${skillName}</span>: Reached ${skill.rank} limit!`);
+        }
+    }
+    game.battleScene.showSkillsPopup();
+}
+
+function removeSkillFromActive(skillName) {
+    let index = game.player.skills.findIndex(s => s.name === skillName);
+    if (index !== -1) {
+        game.player.skills.splice(index, 1);
+        game.battleScene.queueOutput(`Removed <span class="output-text-${game.battleScene.skills.findSkill(skillName).style}">${skillName}</span> from active skills!`);
+    }
+    game.battleScene.showSkillsPopup();
+}
+
+log('Script loaded at ' + new Date().toLocaleTimeString());
