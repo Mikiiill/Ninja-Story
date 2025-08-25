@@ -4,9 +4,23 @@
     <title>ShinobiWay</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { background-color: #000; color: #fff; font-family: Arial, sans-serif; }
-        button { background-color: #fff; color: #000; padding: 5px 10px; margin: 5px; }
-        #log { height: 100px; overflow-y: auto; }
+        body { 
+            background-color: #1a1a1a; /* Dark gray background */
+            color: #e0e0e0; /* Light gray text */
+            font-family: Arial, sans-serif;
+        }
+        button { 
+            background-color: #ff4500; /* Orange for ninja flair */
+            color: #fff;
+            padding: 5px 10px;
+            margin: 5px;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover { background-color: #ff6347; } /* Lighter orange on hover */
+        #log { height: 100px; overflow-y: auto; background-color: #2f2f2f; padding: 5px; }
+        #output { padding: 5px; }
+        .battle-ready { color: #00ff00; } /* Green for battle ready */
     </style>
 </head>
 <body>
@@ -17,13 +31,18 @@
     <div id="start-controls">
         <button id="start-button" onclick="startGame()">Start Game</button>
     </div>
-    <div id="style-controls"></div> <!-- Separate div for style buttons -->
+    <div id="style-controls"></div>
     <div id="log">Log started...</div>
 
     <script>
         let game = {
             player: { name: "Shinobi", hp: 10, maxHp: 10, Rank: "Student", skills: [], skillInventory: [] },
-            gameState: "start"
+            gameState: "start",
+            asciiArt: {
+                battleStart: "👊💥 BATTLE BEGINS! 👊💥\nShinobi vs. Enemy!",
+                fire: "🔥 Fire Strike!",
+                illusion: "🌫️ Illusion Cast!"
+            }
         };
 
         function log(msg) {
@@ -39,7 +58,7 @@
                 game.gameState = "chooseStyles";
                 log('Setting up style selection...');
                 setupStyleButtons();
-                document.getElementById("start-button").style.display = "none"; // Hide only after starting
+                document.getElementById("start-button").style.display = "none";
             } else {
                 log('Game already started, state: ' + game.gameState);
             }
@@ -68,12 +87,12 @@
                 game.player.skills.push(style);
                 log(style + ' added to skills!');
                 document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length}`;
-                setupStyleButtons(); // Refresh with remaining styles
+                setupStyleButtons();
                 if (game.player.skills.length === 2) {
                     log('Both styles selected, ready to play!');
                     game.gameState = "battle";
-                    document.getElementById("output").innerHTML += "<br>Battle ready!";
-                    document.getElementById("style-controls").innerHTML = ""; // Clear style buttons
+                    document.getElementById("output").innerHTML += `<br><span class="battle-ready">Battle ready!</span><br>${game.asciiArt.battleStart}`;
+                    document.getElementById("style-controls").innerHTML = "";
                 }
             } else {
                 log('Selection invalid or complete, state: ' + game.gameState);
