@@ -776,4 +776,99 @@ function selectSkill(skillName) {
         "C-Rank": game.player.skills.filter(s => s.rank === "C-Rank").length,
         "B-Rank": game.player.skills.filter(s => s.rank === "B-Rank").length,
         "A-Rank": game.player.skills.filter(s => s.rank === "A-Rank").length,
-        "S-Rank": game.player.skills.filter(s => s.rank === "S
+        "S-Rank": game.player.skills.filter(s => s.rank === "S-Rank").length
+    };
+    if (skill.rank !== "D-Rank" && (
+        (skill.rank === "C-Rank" && rankCounts["C-Rank"] >= limits["C-Rank"]) ||
+        (skill.rank === "B-Rank" && rankCounts["B-Rank"] >= limits["B-Rank"]) ||
+        (skill.rank === "A-Rank" && rankCounts["A-Rank"] >= limits["A-Rank"]) ||
+        (skill.rank === "S-Rank" && rankCounts["S-Rank"] >= limits["S-Rank"])
+    )) {
+        game.battleScene.queueOutput(`Cannot add <span class="output-text-${skill.style}">${skill.name}</span> (${skill.rank}): rank limit reached!`);
+        return;
+    }
+    if (game.battleScene.chosenSkills.length < 4) {
+        game.battleScene.chosenSkills.push(skill);
+        game.player.skillInventory.push(skill);
+        game.player.skills.push(skill);
+        game.battleScene.queueOutput(`Selected skill card: <span class="output-text-${skill.style}">${skill.name}</span> (${skill.rank})`);
+        document.getElementById("controls").innerHTML = "";
+        if (game.battleScene.chosenSkills.length === 4) {
+            let updatedRankCounts = {
+                "C-Rank": game.player.skills.filter(s => s.rank === "C-Rank").length,
+                "B-Rank": game.player.skills.filter(s => s.rank === "B-Rank").length,
+                "A-Rank": game.player.skills.filter(s => s.rank === "A-Rank").length,
+                "S-Rank": game.player.skills.filter(s => s.rank === "S-Rank").length
+            };
+            game.battleScene.queueOutput(`Skill cards: ${game.player.skills.length} (C: ${updatedRankCounts["C-Rank"]}/${limits["C-Rank"]}, B: ${updatedRankCounts["B-Rank"]}/${limits["B-Rank"]}, A: ${updatedRankCounts["A-Rank"]}/${limits["A-Rank"]}, S: ${updatedRankCounts["S-Rank"]}/${limits["S-Rank"]})`);
+            setTimeout(() => game.battleScene.startBattle(), 1000);
+        } else {
+            setTimeout(() => game.battleScene.chooseStartingSkills(), 1000);
+        }
+    }
+}
+
+function selectSkillCard(skillName) {
+    let now = Date.now();
+    if (now - lastClickTime < 1500) return;
+    lastClickTime = now;
+    let skill = game.battleScene.skills.findSkill(skillName);
+    game.player.skillInventory.push(skill);
+    game.battleScene.queueOutput(`Shinobi learns <span class="output-text-${skill.style}">${skill.name}</span> (${skill.rank})!`);
+    document.getElementById("controls").innerHTML = "";
+    setTimeout(() => game.battleScene.continueGame(), 1000);
+}
+
+function selectRankUpStyle(style) {
+    let now = Date.now();
+    if (now - lastClickTime < 1500) return;
+    lastClickTime = now;
+    game.player.ninjaStyles[style] = game.battleScene.rankUpStages[game.player.ninjaStyles[style]];
+    game.player.Rank = "Genin";
+    game.battleScene.queueOutput(`Shinobi ranks up <span class="output-text-${style.toLowerCase()}">${style}</span> to ${game.player.ninjaStyles[style]} and becomes a Genin!`);
+    document.getElementById("controls").innerHTML = "";
+    game.gameState = "rankedUp";
+    setTimeout(() => game.battleScene.chooseSkillCard(), 1000);
+}
+
+function swapSkillToActive(skillName) {
+    let skill = game.battleScene.skills.findSkill(skillName);
+    let limits = game.player.Rank === "Student" ? { "C-Rank": 4, "B-Rank": 1, "A-Rank": 0, "S-Rank": 0 } : { "C-Rank": 6, "B-Rank": 2, "A-Rank": 1, "S-Rank": 0 };
+    let rankCounts = {
+        "C-Rank": game.player.skills.filter(s => s.rank === "C-Rank").length,
+        "B-Rank": game.player.skills.filter(s => s.rank === "B-Rank").length,
+        "A-Rank": game.player.skills.filter(s => s.rank === "A-Rank").length,
+        "S-Rank": game.player.skills.filter(s => s.rank === "S-Rank").length
+    };
+    let inventoryCount = game.player.skillInventory.filter(s => s.name === skillName).length;
+    let activeCount = game.player.skills.filter(s => s.name === skillName).length;
+
+    if (skill.rank !== "D-Rank" && (
+        (skill.rank === "C-Rank" && rankCounts["C-Rank"] >= limits["C-Rank"]) ||
+        (skill.rank === "B-Rank" && rankCounts["B-Rank"] >= limits["B-Rank"]) ||
+        (skill.rank === "A-Rank" && rankCounts["A-Rank"] >= limits["A-Rank"]) ||
+        (skill.rank === "S-Rank" && rankCounts["S-Rank"] >= limits["S-Rank"])
+    )) {
+        alert(`Cannot add ${skill.name} (${skill.rank}): rank limit reached!`);
+        return;
+    }
+    if (activeCount >= inventoryCount) {
+        alert(`Cannot add ${skill.name}: You have ${activeCount} active, but only ${inventoryCount} in inventory!`);
+        return;
+    }
+    if (game.player.skillInventory.some(s => s.name === skillName)) {
+        game.player.skills.push(skill);
+        game.battleScene.updateStatus();
+        game.battleScene.showSkillsPopup();
+    }
+}
+
+function swapSkillToInventory(skillName) {
+    let skill = game.battleScene.skills.findSkill(skillName);
+    let index = game.player.skills.findIndex(s => s.name === skillName);
+    if (index !== -1) {
+        game.player.skills.splice(index, 1);
+        game.battleScene.updateStatus();
+        game.battleScene.showSkillsPopup();
+    }
+                }
