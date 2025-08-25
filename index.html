@@ -15,45 +15,56 @@
 </head>
 <body>
     <div id="player-status">Shinobi [HP: <span class="player-hp">10/10</span>]</div>
-    <div id="enemy-status">Enemy [HP: <span class="enemy-hp">0/0</span>]</div>
+    <div id="enemy-status">Enemy [HP: 0/0</span>]</div>
     <div id="skill-count">Skill cards: 0 | Gold: 0</div>
     <div id="output">Welcome to ShinobiWay!</div>
     <div id="start-controls">
         <button id="start-button" onclick="startGame()">Start Game</button>
     </div>
     <div id="style-controls"></div>
-    <div id="jutsu-controls"></div> <!-- For jutsu selection -->
-    <div id="skill-controls"></div> <!-- For skill management -->
-    <div id="main-controls"></div> <!-- For main menu options -->
+    <div id="jutsu-controls"></div>
+    <div id="skill-controls"></div>
+    <div id="main-controls"></div>
     <div id="log">Log started...</div>
 
     <script>
         let game = {
-            player: { name: "Shinobi", hp: 10, maxHp: 10, skills: [], skillInventory: [], gold: 0, rank: "Student", styles: [] },
+            player: { name: "Shinobi", hp: 10, maxHp: 10, skills: [], skillInventory: [], gold: 0, rank: "Student", styles: [], skillCounts: { "Fire Jutsu": 0, "Shock Field Jutsu": 0, "Fireball Jutsu": 0, "Flame Throw Jutsu": 0, "Rock Barrier Jutsu": 0, "Demon Mind Jutsu": 0, "Shadow Clone Jutsu": 0, "Bite": 0, "Barrage": 0, "Rock Smash Jutsu": 0 } },
             gameState: "start",
             skillRanks: {
-                "Fire Jutsu": "C-Rank", "Illusion Jutsu": "C-Rank", "Earth Jutsu": "C-Rank", 
-                "Shock Field Jutsu": "C-Rank", "Substitution Jutsu": "C-Rank", "Feral Jutsu": "C-Rank"
+                "Shock Field Jutsu": "C-Rank", "Fireball Jutsu": "C-Rank", "Flame Throw Jutsu": "C-Rank",
+                "Rock Barrier Jutsu": "C-Rank", "Demon Mind Jutsu": "C-Rank", "Shadow Clone Jutsu": "C-Rank",
+                "Bite": "C-Rank", "Barrage": "C-Rank", "Rock Smash Jutsu": "C-Rank"
             },
             goldValues: { "D-Rank": 5, "C-Rank": 10, "B-Rank": 50, "A-Rank": 100, "S-Rank": 500 },
             asciiArt: {
                 battleStart: "👊💥 BATTLE BEGINS! 👊💥\nShinobi vs. Enemy!",
-                "Fire Jutsu": "🔥 Fire Strike!",
-                "Illusion Jutsu": "🌫️ Illusion Cast!",
                 "Shock Field Jutsu": "⚡️ Shock Field!",
-                "Doom Jutsu": "💀 Doom Strikes!"
+                "Fireball Jutsu": "🔥 Fireball Strike!",
+                "Flame Throw Jutsu": "🔥🔥 Flame Burst!",
+                "Rock Barrier Jutsu": "🪨 Rock Shield!",
+                "Demon Mind Jutsu": "💀 Doom Strikes!",
+                "Shadow Clone Jutsu": "🌫️ Clone Appears!",
+                "Bite": "😡 Savage Bite!",
+                "Barrage": "💥 Rapid Assault!",
+                "Rock Smash Jutsu": "🪨💥 Rock Smash!"
             },
             dotEffects: {
-                "Burn Jutsu": { baseDamage: 2, duration: 3 },
-                "Doom Jutsu": { baseDamage: 1, duration: 5 }
+                "Flame Throw Jutsu": { baseDamage: 2, duration: 3 },
+                "Demon Mind Jutsu": { baseDamage: 1, duration: 5 }
             },
             jutsuRequirements: {
-                "Fire Jutsu": { styles: ["Fire"] },
-                "Illusion Jutsu": { styles: ["Illusion"] },
                 "Shock Field Jutsu": { styles: ["Lightning"] },
-                "Substitution Jutsu": { styles: ["Earth"] },
-                "Doom Jutsu": { styles: ["Illusion"] }
-            }
+                "Fireball Jutsu": { styles: ["Fire"] },
+                "Flame Throw Jutsu": { styles: ["Fire"] },
+                "Rock Barrier Jutsu": { styles: ["Earth"] },
+                "Demon Mind Jutsu": { styles: ["Illusion"] },
+                "Shadow Clone Jutsu": { styles: ["Illusion"] },
+                "Bite": { styles: ["Feral"] },
+                "Barrage": { styles: ["Earth"] },
+                "Rock Smash Jutsu": { styles: ["Earth"] }
+            },
+            rankLimits: { "Student": 5, "Genin": 10, "Chunin": 15, "Jonin": 20, "Kage": 25 }
         };
 
         function log(msg) {
@@ -78,9 +89,9 @@
         function setupStyleButtons() {
             let controls = document.getElementById("style-controls");
             controls.innerHTML = "";
-            let remainingStyles = ["Fire", "Illusion"].filter(s => !game.player.styles.includes(s));
+            let remainingStyles = ["Fire", "Illusion", "Earth", "Lightning", "Feral"].filter(s => !game.player.styles.includes(s));
             if (remainingStyles.length > 0) {
-                remainingStyles.forEach(style => {
+                remainingStyles.slice(0, 2).forEach(style => {
                     let button = document.createElement("button");
                     button.innerText = style;
                     button.onclick = function() { selectStyle(style); };
@@ -89,7 +100,13 @@
                 });
             } else {
                 log('No styles left to choose.');
-                game.player.styles.forEach(style => game.skillRanks[`${style} Jutsu`] = "C-Rank"); // Upgrade styles to C-Rank
+                game.player.styles.forEach(style => {
+                    Object.keys(game.jutsuRequirements).forEach(jutsu => {
+                        if (game.jutsuRequirements[jutsu].styles.includes(style)) {
+                            game.skillRanks[jutsu] = "C-Rank";
+                        }
+                    });
+                });
                 setupJutsuSelection();
             }
         }
@@ -139,11 +156,12 @@
             log('Selecting ' + jutsu + '...');
             if (game.gameState === "chooseJutsu") {
                 game.player.skills.push(jutsu);
+                game.player.skillCounts[jutsu]++;
                 log(jutsu + ' added to skills!');
                 document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length} | Gold: ${game.player.gold}`;
                 document.getElementById("jutsu-controls").innerHTML = "";
                 if (game.player.skills.length < 3) {
-                    setupJutsuSelection(); // Allow up to 3 jutsu
+                    setupJutsuSelection();
                 } else {
                     log('Three jutsu selected, returning to main screen...');
                     showMainScreen();
@@ -169,45 +187,50 @@
             if (option === "Manage Skills") {
                 updateSkillControls();
             }
-            // Add more options (e.g., Train) later
         }
 
         function updateSkillControls() {
             let controls = document.getElementById("skill-controls");
             controls.innerHTML = "";
             if (game.gameState === "main") {
-                game.player.skillInventory.forEach(skill => {
+                for (let skill in game.player.skillCounts) {
+                    for (let i = 0; i < game.player.skillCounts[skill]; i++) {
+                        let button = document.createElement("button");
+                        button.innerText = `Move ${skill} (${i + 1}) to Inventory`;
+                        button.onclick = function() { moveToInventory(skill, i); };
+                        controls.appendChild(button);
+                        log(`Added button to move ${skill} (${i + 1}) to inventory`);
+                    }
+                }
+                game.player.skillInventory.forEach((skill, index) => {
                     let button = document.createElement("button");
-                    button.innerText = `Add ${skill} to Active`;
-                    button.onclick = function() { moveToActiveSkills(skill); };
+                    button.innerText = `Add ${skill} (${index + 1}) to Active`;
+                    button.onclick = function() { moveToActiveSkills(skill, index); };
                     controls.appendChild(button);
-                    log(`Added button to move ${skill} to active skills`);
-                });
-                game.player.skills.forEach(skill => {
-                    let button = document.createElement("button");
-                    button.innerText = `Move ${skill} to Inventory`;
-                    button.onclick = function() { moveToInventory(skill); };
-                    controls.appendChild(button);
-                    log(`Added button to move ${skill} to inventory`);
+                    log(`Added button to move ${skill} (${index + 1}) to active skills`);
                 });
             }
         }
 
-        function moveToActiveSkills(skill) {
-            if (game.player.skills.length < 10) {
+        function moveToActiveSkills(skill, index) {
+            if (game.player.skills.length < game.rankLimits[game.player.rank]) {
                 game.player.skills.push(skill);
-                game.player.skillInventory = game.player.skillInventory.filter(s => s !== skill);
+                game.player.skillCounts[skill]++;
+                game.player.skillInventory.splice(index, 1);
                 log(`${skill} moved to active skills!`);
                 document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length} | Gold: ${game.player.gold}`;
                 updateSkillControls();
             } else {
-                log('Active skills limit reached (10)!');
+                log('Active skills limit reached!');
             }
         }
 
-        function moveToInventory(skill) {
+        function moveToInventory(skill, countIndex) {
             game.player.skillInventory.push(skill);
-            game.player.skills = game.player.skills.filter(s => s !== skill);
+            game.player.skillCounts[skill]--;
+            if (game.player.skillCounts[skill] <= 0) {
+                game.player.skills = game.player.skills.filter(s => s !== skill);
+            }
             log(`${skill} moved to inventory!`);
             document.getElementById("skill-count").innerText = `Skill cards: ${game.player.skills.length} | Gold: ${game.player.gold}`;
             updateSkillControls();
