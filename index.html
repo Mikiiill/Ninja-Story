@@ -5,38 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
-            background-image: url('https://mikiiill.github.io/ShinobiWay/Back.png');
-            background-repeat: no-repeat;
-            background-size: cover;
-            color: #fff;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
+        .controls {
+            margin: 10px;
+        }
         .output {
             width: 85%;
-            height: 400px;
+            height: 200px;
             background-color: #333;
-            overflow-y: auto;
+            color: #fff;
             padding: 10px;
             margin: 10px;
-            border: 2px solid #fff;
-        }
-        .controls {
-            width: 80%;
-            margin: 10px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-        }
-        .status {
-            width: 80%;
-            margin: 10px;
-            padding: 10px;
             border: 2px solid #fff;
         }
         button {
@@ -46,239 +28,34 @@
             padding: 5px 10px;
             font-size: 1.2rem;
             cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #777;
-        }
-        .start-button {
-            background-color: #555;
-            color: #fff;
-            border: 2px solid #fff;
-            font-size: 1.5rem;
-            padding: 10px 20px;
         }
     </style>
 </head>
 <body>
-    <div class="status" id="player-status">Shinobi [HP: <span class="player-hp">10/10</span>] [Gold: <span id="gold-amount">0</span>]</div>
-    <div class="status" id="enemy-status">Enemy [HP: <span class="enemy-hp">0/0</span>]</div>
     <div class="output" id="output">Welcome to ShinobiWay!</div>
     <div class="controls" id="start-controls">
         <button class="start-button" onclick="startGame()">Start Game</button>
     </div>
-    <div class="controls" id="style-controls"></div>
-    <div class="controls" id="jutsu-controls"></div>
-    <div class="controls" id="skill-controls"></div>
-    <div class="controls" id="main-controls"></div>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             let game = {
-                player: {
-                    name: "Shinobi",
-                    hp: 10,
-                    maxHp: 10,
-                    Rank: "Student",
-                    ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank", Fire: "D-Rank", Lightning: "D-Rank", Earth: "D-Rank", Water: "D-Rank", Wind: "D-Rank", Feral: "D-Rank" },
-                    skills: [],
-                    skillInventory: [new Skills().findSkill("Barrage")],
-                    statusEffects: [],
-                    gold: 0
-                },
-                enemy: null,
-                battleNum: 1,
-                output: [],
                 gameState: "start",
-                battleScene: null,
-                outputQueue: [],
-                isOutputting: false
+                output: []
             };
-
-            class StatusEffect {
-                constructor(name, duration, damage = 0) {
-                    this.name = name;
-                    this.duration = duration;
-                    this.damage = damage;
-                    this.new = true;
-                }
-            }
-
-            class BattleSkill {
-                constructor(name, attributes, requirements, skillFunction, style, support, rank) {
-                    this.name = name;
-                    this.attributes = attributes || [];
-                    this.requirements = requirements || {};
-                    this.skillFunction = skillFunction;
-                    this.style = style;
-                    this.support = support || false;
-                    this.rank = rank;
-                }
-            }
-
-            class Mob {
-                constructor(name, hp, maxHp, Rank, ninjaStyles, skills, statusEffects, sprite) {
-                    this.name = name;
-                    this.hp = hp;
-                    this.maxHp = maxHp;
-                    this.Rank = Rank;
-                    this.ninjaStyles = ninjaStyles;
-                    this.skills = skills;
-                    this.statusEffects = statusEffects || [];
-                    this.sprite = sprite;
-                }
-            }
-
-            class Skills {
-                constructor() {
-                    this.skills = [];
-                    this.initializeSkills();
-                }
-
-                initializeSkills() {
-                    this.skills = [
-                        new BattleSkill("Barrage", ["Taijutsu"], {}, this.barrage.bind(this), "neutral", false, "D-Rank"),
-                        new BattleSkill("Bite", ["Feral"], { Feral: "C-Rank" }, this.bite.bind(this), "feral", false, "C-Rank")
-                    ];
-                }
-
-                canUseSkill(mob, skill) {
-                    return Object.keys(skill.requirements).every(key => mob.ninjaStyles[key] && compareRanks(mob.ninjaStyles[key], skill.requirements[key]) >= 0);
-                }
-
-                findSkill(name) {
-                    return this.skills.find(skill => skill.name === name);
-                }
-
-                barrage(user, target, scene) {
-                    let baseDamage = Math.floor(Math.random() * 2) + 1;
-                    target.hp = Math.max(0, Math.min(target.maxHp, target.hp - baseDamage));
-                    scene.queueOutput(`<span class="output-text-player">${user.name}</span> attacks <span class="output-text-enemy">${target.name}</span> with Barrage for ${baseDamage} damage!`);
-                    return target.hp <= 0;
-                }
-
-                bite(user, target, scene) {
-                    let damage = 1;
-                    let heal = user.hp < user.maxHp ? 1 : 0;
-                    user.hp = Math.max(0, Math.min(user.maxHp, user.hp + heal));
-                    target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-                    scene.queueOutput(`<span class="output-text-player">${user.name}</span> bites <span class="output-text-enemy">${target.name}</span> for ${damage} damage${heal > 0 ? `, healing ${heal} HP` : ""}!`);
-                    return target.hp <= 0;
-                }
-            }
-
-            function compareRanks(rank1, rank2) {
-                const ranks = ["D-Rank", "C-Rank", "B-Rank", "A-Rank", "S-Rank"];
-                return ranks.indexOf(rank1) - ranks.indexOf(rank2);
-            }
-
-            function updateStatus() {
-                document.getElementById("player-status").innerHTML = `${game.player.name} [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] [Gold: <span id="gold-amount">${game.player.gold}</span>]`;
-                document.getElementById("enemy-status").innerHTML = `Enemy [HP: <span class="enemy-hp">${game.enemy ? game.enemy.hp + "/" + game.enemy.maxHp : "0/0"}</span>] ${game.enemy ? game.enemy.name : ""}`;
-            }
-
-            function updateSkillCount() {
-                document.getElementById("gold-amount").innerText = game.player.gold;
-            }
 
             function startGame() {
                 if (game.gameState === "start") {
-                    game.output = ["Train to earn gold and skills! Aim for 10 skills to become a Genin!"];
+                    game.output = ["Game started! Train to earn gold and skills!"];
                     document.getElementById("output").innerHTML = game.output.join("<br>");
                     game.gameState = "chooseStyles";
-                    setupStyleButtons();
-                    updateSkillCount();
                     document.getElementById("start-controls").innerHTML = "";
-                }
-            }
-
-            function setupStyleButtons() {
-                let controls = document.getElementById("style-controls");
-                controls.innerHTML = "";
-                queueOutput("You have 2 skill points to spend on ranking up your fighting styles.");
-                let allStyles = ["Ninjutsu", "Taijutsu", "Genjutsu"];
-                allStyles.forEach(style => {
-                    let button = document.createElement("button");
-                    button.innerText = style;
-                    button.onclick = function() { selectStyle(style); };
-                    controls.appendChild(button);
-                });
-            }
-
-            function selectStyle(style) {
-                if (game.player.ninjaStyles[style] && Object.values(game.player.ninjaStyles).filter(r => r !== "D-Rank").length < 2) {
-                    if (game.player.ninjaStyles[style] === "D-Rank") {
-                        game.player.ninjaStyles[style] = "C-Rank";
-                        queueOutput(`${style} upgraded to C-Rank!`);
-                        if (Object.values(game.player.ninjaStyles).filter(r => r !== "D-Rank").length === 2) {
-                            document.getElementById("style-controls").innerHTML = "";
-                            setupInitialJutsuSelection();
-                        }
-                    }
-                }
-            }
-
-            function setupInitialJutsuSelection() {
-                game.gameState = "chooseInitialJutsu";
-                performJutsuSelection(1);
-            }
-
-            function performJutsuSelection(times) {
-                if (times > 0) {
-                    let controls = document.getElementById("jutsu-controls");
-                    controls.innerHTML = "";
-                    let skillSet = new Skills();
-                    let availableJutsu = skillSet.skills.filter(skill => skillSet.canUseSkill(game.player, skill));
-                    let randomJutsu = availableJutsu.length > 0 ? [availableJutsu[0]] : [];
-                    if (randomJutsu.length > 0) {
-                        randomJutsu.forEach(jutsu => {
-                            let button = document.createElement("button");
-                            button.innerText = jutsu.name;
-                            button.onclick = function() { selectJutsu(jutsu, () => performJutsuSelection(times - 1)); };
-                            controls.appendChild(button);
-                        });
-                    } else {
-                        queueOutput("No jutsu available.");
-                        showMainScreen();
-                    }
-                } else {
-                    showMainScreen();
-                }
-            }
-
-            function selectJutsu(jutsu, callback) {
-                if (game.gameState === "chooseInitialJutsu") {
-                    game.player.skillInventory.push(jutsu);
-                    queueOutput(`${jutsu.name} added to inventory!`);
-                    document.getElementById("jutsu-controls").innerHTML = "";
-                    if (callback) callback();
-                }
-            }
-
-            function showMainScreen() {
-                game.gameState = "main";
-                let controls = document.getElementById("main-controls");
-                controls.innerHTML = "";
-                let button = document.createElement("button");
-                button.className = "train-button";
-                button.innerText = "Train";
-                button.onclick = function() { startBattle(); };
-                controls.appendChild(button);
-            }
-
-            function startBattle() {
-                if (game.gameState !== "battle") {
-                    game.enemy = new Mob("Wild Dog", 8, 8, "D-Rank", { Feral: "D-Rank" }, [new Skills().findSkill("Bite")]);
-                    game.gameState = "battle";
-                    updateStatus();
-                    queueOutput(`BATTLE BEGINS! ${game.player.name} vs. ${game.enemy.name}`);
                 }
             }
 
             function queueOutput(msg) {
                 game.output.push(msg);
                 document.getElementById("output").innerHTML = game.output.join("<br>");
-                document.getElementById("output").scrollTop = document.getElementById("output").scrollHeight;
             }
         });
     </script>
