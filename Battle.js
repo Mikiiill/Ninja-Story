@@ -13,12 +13,12 @@ function startBattle() {
         updateStatus();
         game.battleScene = { queueOutput: queueOutput };
         queueOutput(""); // Empty line before battle start
-        queueOutput(`<span class="battle-ready">BATTLE BEGINS!</span>`);
-        queueOutput(`<span class="output-text-player">${game.player.name}</span> vs. <span class="output-text-enemy">${game.enemy.name}</span>`);
+        queueOutput("<span class='battle-ready'>BATTLE BEGINS!</span>");
+        queueOutput(`<span class='output-text-player'>${game.player.name}</span> vs. <span class='output-text-enemy'>${game.enemy.name}</span>`);
         queueOutput(""); // Empty line after names
         setTimeout(() => determineTurnOrder(), 1000);
     } else {
-        queueOutput('Battle already in progress!');
+        queueOutput("<span class='output-text-neutral'>Battle already in progress!</span>");
     }
 }
 
@@ -26,12 +26,12 @@ function determineTurnOrder() {
     let coinFlip = Math.random() < 0.5;
     let first = coinFlip ? game.player.name : game.enemy.name;
     let second = coinFlip ? game.enemy.name : game.player.name;
-    queueOutput(`${second} is off guard!`);
+    queueOutput(`<span class='output-text-neutral'>${second} is off guard!</span>`);
     setTimeout(() => takeTurn(first), 2000);
 }
 
 function takeTurn(name) {
-    queueOutput(`<span class="output-text-${name === game.player.name ? 'player' : 'enemy'}">${name}</span>'s turn`);
+    queueOutput(`<span class='output-text-${name === game.player.name ? 'player' : 'enemy'}'>${name}</span>'s turn`);
     setTimeout(() => {
         let user = name === game.player.name ? game.player : game.enemy;
         let target = name === game.player.name ? game.enemy : game.player;
@@ -40,7 +40,7 @@ function takeTurn(name) {
         let usableSkills = user.skills.filter(skill => skillSet.canUseSkill(user, skill));
         let skill = usableSkills.length > 0 ? usableSkills[Math.floor(Math.random() * usableSkills.length)] : null;
         if (user.statusEffects.some(e => e.name === "Numb")) {
-            queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> is stunned by <span class="status-numb">Numb ⚡️</span> and skips their skill phase!`);
+            queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> is stunned by <span class='status-numb'>Numb ⚡️</span> and skips their skill phase!`);
             user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
         } else if (user.statusEffects.some(e => e.name === "READY")) {
             let barrageSkill = skillSet.findSkill("Barrage");
@@ -74,13 +74,13 @@ function applyStatusEffects(entity) {
         if (effect.name === "Burn" || effect.name === "Doom" || effect.name === "Bleed") {
             entity.hp -= effect.damage;
             effect.duration--;
-            queueOutput(`${entity.name} takes ${effect.damage} damage from ${effect.name}!`);
+            queueOutput(`<span class='output-text-${entity === game.player ? 'player' : 'enemy'}'>${entity.name}</span> takes ${effect.damage} damage from <span class='status-${effect.name.toLowerCase().replace(" ", "")}'>${effect.name}</span>!`);
             updateStatus();
         } else if (effect.name === "Regen") {
             let heal = entity.hp < entity.maxHp ? effect.damage : 0;
             entity.hp = Math.min(entity.maxHp, entity.hp + heal);
             effect.duration--;
-            if (heal > 0) queueOutput(`${entity.name} heals ${heal} HP from ${effect.name}!`);
+            if (heal > 0) queueOutput(`<span class='output-text-${entity === game.player ? 'player' : 'enemy'}'>${entity.name}</span> heals ${heal} HP from <span class='status-${effect.name.toLowerCase().replace(" ", "")}'>${effect.name}</span>!`);
             updateStatus();
         } else if (effect.name === "ShadowCloneEffect") {
             if (effect.new) {
@@ -101,7 +101,7 @@ function applyStatusEffects(entity) {
 
 function endBattle() {
     game.gameState = "postBattle";
-    queueOutput(`<span class="battle-ready">Battle ended!</span>`);
+    queueOutput("<span class='battle-ready'>Battle ended!</span>");
     game.player.hp = game.player.maxHp;
     game.player.statusEffects = [];
     performJutsuSelection(1);
