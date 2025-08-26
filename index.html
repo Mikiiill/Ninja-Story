@@ -587,16 +587,18 @@
         }
 
         function startBattle() {
-            if (game.gameState !== "battle") {
-                let enemyType = Math.random() < 0.5 ? new Mob("Wild Dog", 8, 8, "D-Rank", { Feral: "D-Rank" }, [new Skills().findSkill("Barrage")]) : new Mob("Training Dummy", 6, 6, "D-Rank", { Neutral: "D-Rank" }, [new Skills().findSkill("Barrage")]);
-                game.enemy = enemyType;
-                game.gameState = "battle";
-                updateStatus();
-                game.battleScene = { queueOutput: queueOutput };
-                log('Entering battle...');
-                queueOutput(`<span class="battle-ready">${game.asciiArt.battleStart || "BATTLE BEGINS!"}</span>`);
-                setTimeout(() => determineTurnOrder(), 1000);
-            }
+    if (game.gameState !== "battle") {
+        let enemyType = Math.random() < 0.5 ? new Mob("Wild Dog", 8, 8, "D-Rank", { Feral: "D-Rank" }, [new Skills().findSkill("Barrage")]) : new Mob("Training Dummy", 6, 6, "D-Rank", { Neutral: "D-Rank" }, [new Skills().findSkill("Barrage")]);
+        game.enemy = enemyType;
+        game.gameState = "battle";
+        updateStatus();
+        game.battleScene = { queueOutput: queueOutput };
+        log('Entering battle...');
+        queueOutput(`<span class="battle-ready">BATTLE BEGINS! ${game.player.name} vs. ${game.enemy.name}</span>`); // Fallback text
+        setTimeout(() => determineTurnOrder(), 1000);
+    } else {
+        log('Battle already in progress!');
+    }
         }
 
         function determineTurnOrder() {
