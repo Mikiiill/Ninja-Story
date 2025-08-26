@@ -52,28 +52,19 @@
             background-color: #777;
         }
         .fire {
-            background-color: #800000;
+            background-color: #ff0000;
         }
         .lightning {
-            background-color: #ff4500;
+            background-color: #ffa500;
         }
-        .illusion {
+        .genjutsu {
             background-color: #800080;
         }
         .earth {
-            background-color: #3c2f2f;
-        }
-        .feral {
-            background-color: #228b22;
+            background-color: #8b4513;
         }
         .neutral {
             background-color: #555;
-        }
-        .water {
-            background-color: #000080;
-        }
-        .wind {
-            background-color: #d4a017;
         }
         .start-button {
             background-color: #555;
@@ -99,10 +90,10 @@
             color: #ccc;
         }
         .status-burn {
-            color: #800000;
+            color: #ff0000;
         }
         .status-numb {
-            color: #ff4500;
+            color: #ffa500;
         }
         .status-bleed {
             color: #ff00ff;
@@ -117,7 +108,7 @@
             color: #800080;
         }
         .status-substitution {
-            color: #3c2f2f;
+            color: #8b4513;
         }
         .status-rockbarrier {
             color: #228b22;
@@ -169,7 +160,7 @@
                 hp: 10,
                 maxHp: 10,
                 Rank: "Student",
-                ninjaStyles: { Fire: "D-Rank", Lightning: "D-Rank", Illusion: "D-Rank", Earth: "D-Rank", Feral: "D-Rank" },
+                ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank", Fire: "D-Rank", Lightning: "D-Rank", Earth: "D-Rank", Water: "D-Rank", Wind: "D-Rank", Feral: "D-Rank" },
                 skills: [],
                 skillInventory: [],
                 statusEffects: []
@@ -209,7 +200,7 @@
 
         function updateSkillCount() {
             let totalCards = game.player.skills.length + game.player.skillInventory.length;
-            document.getElementById("skill-count").innerText = `Skill cards: ${totalCards} | Gold: ${game.gold}`;
+            // document.getElementById("skill-count").innerText = `Skill cards: ${totalCards} | Gold: ${game.gold}`;
             if (totalCards >= 10 && game.player.Rank === "Student") {
                 game.player.Rank = "Genin";
                 queueOutput("Promoted to Genin!");
@@ -222,7 +213,7 @@
             game.gameState = "chooseStyles";
             let controls = document.getElementById("style-controls");
             controls.innerHTML = "";
-            let styles = ["Fire", "Lightning", "Illusion", "Earth", "Feral"];
+            let styles = ["Ninjutsu", "Genjutsu", "Taijutsu", "Fire", "Lightning", "Earth", "Water", "Wind"];
             styles.forEach((style) => {
                 let button = document.createElement("button");
                 button.innerText = style;
@@ -240,6 +231,7 @@
                 queueOutput(`<span class="output-text-${style.toLowerCase()}">${style}</span> trained to C-Rank!`);
                 document.getElementById("style-controls").innerHTML = "";
                 if (Object.values(game.player.ninjaStyles).filter(r => r !== "D-Rank").length === 2) {
+                    document.getElementById("style-controls").innerHTML = "";
                     setupInitialJutsuSelection();
                 } else {
                     setupStyleButtons();
