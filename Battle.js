@@ -58,6 +58,7 @@ function takeTurn(name) {
                     return result;
                 };
             }
+            let skillStyle = skill.style || "neutral";
             skill.skillFunction(user, target, game.battleScene);
         }
         if (game.player.hp > 0 && game.enemy.hp > 0) {
