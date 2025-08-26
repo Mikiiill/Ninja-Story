@@ -67,13 +67,13 @@ function selectJutsu(jutsu, callback) {
             let count = game.player.skills.filter(s => s.name === jutsu.name).length + game.player.skillInventory.filter(s => s.name === jutsu.name).length;
             if (count < 3 || (game.player.skills.length + game.player.skillInventory.length < 10 && (jutsu.rank === "D-Rank" || jutsu.rank === "C-Rank"))) {
                 game.player.skillInventory.push(jutsu);
-                queueOutput(`<span class='output-text-${jutsu.style || 'neutral'}'>${jutsu.name}</span> added to skill inventory!`);
+                queueOutput(`<span class='output-text-${jutsu.style}'>${jutsu.name}</span> added to skill inventory!`); // Fixed to use jutsu.style directly
                 updateSkillCount();
                 document.getElementById("jutsu-controls").innerHTML = "";
                 if (callback) callback();
             } else {
                 game.player.gold += jutsu.rank === "D-Rank" ? 5 : jutsu.rank === "C-Rank" ? 10 : 50;
-                queueOutput(`Extra <span class='output-text-${jutsu.style || 'neutral'}'>${jutsu.name}</span> converted to ${jutsu.rank === "D-Rank" ? 5 : jutsu.rank === "C-Rank" ? 10 : 50} gold due to owning 3 or more!`);
+                queueOutput(`Extra <span class='output-text-${jutsu.style}'>${jutsu.name}</span> converted to ${jutsu.rank === "D-Rank" ? 5 : jutsu.rank === "C-Rank" ? 10 : 50} gold due to owning 3 or more!`);
                 updateSkillCount();
                 document.getElementById("jutsu-controls").innerHTML = "";
                 if (callback) callback();
