@@ -5,20 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
+            background-image: url('https://mikiiill.github.io/ShinobiWay/Back.png');
+            background-repeat: no-repeat;
+            background-size: cover;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        .controls {
-            margin: 10px;
-        }
         .output {
             width: 85%;
-            height: 200px;
+            height: 400px;
             background-color: #333;
-            color: #fff;
+            overflow-y: auto;
             padding: 10px;
             margin: 10px;
+            border: 2px solid #fff;
+        }
+        .controls {
+            width: 80%;
+            margin: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .status {
+            width: 80%;
+            margin: 10px;
+            padding: 10px;
             border: 2px solid #fff;
         }
         button {
@@ -28,40 +46,467 @@
             padding: 5px 10px;
             font-size: 1.2rem;
             cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #777;
+        }
+        .fire {
+            background-color: #800000;
+        }
+        .lightning {
+            background-color: #ff4500;
+        }
+        .illusion {
+            background-color: #800080;
+        }
+        .earth {
+            background-color: #3c2f2f;
+        }
+        .feral {
+            background-color: #228b22;
+        }
+        .neutral {
+            background-color: #555;
+        }
+        .water {
+            background-color: #000080;
+        }
+        .wind {
+            background-color: #d4a017;
+        }
+        .start-button {
+            background-color: #555;
+            color: #fff;
+            border: 2px solid #fff;
+            font-size: 1.5rem;
+            padding: 10px 20px;
+        }
+        .skills-button, .train-button {
+            background-color: #555;
+            color: #fff;
+            border: 2px solid #fff;
+            font-size: 1.2rem;
+            padding: 5px 10px;
+        }
+        .output-text-player {
+            color: #00ff00;
+        }
+        .output-text-enemy {
+            color: #ff00ff;
+        }
+        .output-text-neutral {
+            color: #ccc;
+        }
+        .status-burn {
+            color: #800000;
+        }
+        .status-numb {
+            color: #ff4500;
+        }
+        .status-bleed {
+            color: #ff00ff;
+        }
+        .status-healing {
+            color: #00ff00;
+        }
+        .status-doom {
+            color: #ffffff;
+        }
+        .status-shadowcloneeffect {
+            color: #800080;
+        }
+        .status-substitution {
+            color: #3c2f2f;
+        }
+        .status-rockbarrier {
+            color: #228b22;
+        }
+        .sprite {
+            width: 50px;
+            height: 50px;
+            vertical-align: middle;
+        }
+        .player-hp {
+            color: #00ff00;
+        }
+        .enemy-hp {
+            color: #ff00ff;
+        }
+        .skills-popup {
+            background: #333;
+            color: #fff;
+            padding: 20px;
+            border: 2px solid #fff;
+        }
+        .close-button {
+            background: #555;
+            color: #fff;
+            border: 2px solid #fff;
+            font-size: 1.2rem;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
+    <div class="status" id="player-status">Shinobi [HP: <span class="player-hp">10/10</span>]</div>
+    <div class="status" id="enemy-status">Enemy [HP: <span class="enemy-hp">0/0</span>]</div>
     <div class="output" id="output">Welcome to ShinobiWay!</div>
     <div class="controls" id="start-controls">
         <button class="start-button" onclick="startGame()">Start Game</button>
     </div>
+    <div class="controls" id="style-controls"></div>
+    <div class="controls" id="jutsu-controls"></div>
+    <div class="controls" id="skill-controls"></div>
+    <div class="controls" id="main-controls"></div>
 
     <script>
-        let game;
+        let game = {
+            player: {
+                name: "Shinobi",
+                hp: 10,
+                maxHp: 10,
+                Rank: "Student",
+                ninjaStyles: { Fire: "D-Rank", Lightning: "D-Rank", Illusion: "D-Rank", Earth: "D-Rank", Feral: "D-Rank" },
+                skills: [],
+                skillInventory: [],
+                statusEffects: []
+            },
+            enemy: null,
+            battleNum: 1,
+            output: [],
+            gameState: "start",
+            battleScene: null,
+            outputQueue: [],
+            isOutputting: false
+        };
+
+        function queueOutput(text) {
+            game.outputQueue.push(text);
+            if (!game.isOutputting) processOutputQueue();
+        }
+
+        function processOutputQueue() {
+            if (game.outputQueue.length === 0) {
+                game.isOutputting = false;
+                return;
+            }
+            game.isOutputting = true;
+            let text = game.outputQueue.shift();
+            game.output.push(text);
+            document.getElementById("output").innerHTML = game.output.join("<br>");
+            document.getElementById("output").scrollTop = document.getElementById("output").scrollHeight;
+            setTimeout(processOutputQueue, 1000);
+        }
+
+        function updateStatus() {
+            let playerEffects = game.player.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`).join("");
+            document.getElementById("player-status").innerHTML = `Shinobi [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] ${playerEffects}`;
+            document.getElementById("enemy-status").innerHTML = game.enemy ? `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>]` : "Enemy [HP: <span class='enemy-hp'>0/0</span>]";
+        }
+
+        function updateSkillCount() {
+            let totalCards = game.player.skills.length + game.player.skillInventory.length;
+            document.getElementById("skill-count").innerText = `Skill cards: ${totalCards} | Gold: ${game.gold}`;
+            if (totalCards >= 10 && game.player.Rank === "Student") {
+                game.player.Rank = "Genin";
+                queueOutput("Promoted to Genin!");
+            }
+        }
 
         function startGame() {
-            if (game && game.gameState === "start") {
-                game.output = ["Game started! Train to earn gold and skills!"];
-                document.getElementById("output").innerHTML = game.output.join("<br>");
-                game.gameState = "chooseStyles";
-                document.getElementById("start-controls").innerHTML = "";
+            game.output = ["Train to earn gold and skills! Aim for 10 skills to become a Genin! Click to choose styles!"];
+            document.getElementById("output").innerHTML = game.output.join("<br>");
+            game.gameState = "chooseStyles";
+            let controls = document.getElementById("style-controls");
+            controls.innerHTML = "";
+            let styles = ["Fire", "Lightning", "Illusion", "Earth", "Feral"];
+            styles.forEach((style) => {
+                let button = document.createElement("button");
+                button.innerText = style;
+                button.className = style.toLowerCase();
+                button.onclick = () => selectStyle(style);
+                controls.appendChild(button);
+            });
+            updateSkillCount();
+            document.getElementById("start-controls").innerHTML = "";
+        }
+
+        function selectStyle(style) {
+            if (game.gameState === "chooseStyles" && game.player.ninjaStyles[style] && game.player.ninjaStyles[style] === "D-Rank" && Object.values(game.player.ninjaStyles).filter(r => r !== "D-Rank").length < 2) {
+                game.player.ninjaStyles[style] = "C-Rank";
+                queueOutput(`<span class="output-text-${style.toLowerCase()}">${style}</span> trained to C-Rank!`);
+                document.getElementById("style-controls").innerHTML = "";
+                if (Object.values(game.player.ninjaStyles).filter(r => r !== "D-Rank").length === 2) {
+                    setupInitialJutsuSelection();
+                } else {
+                    setupStyleButtons();
+                }
             }
+        }
+
+        function setupInitialJutsuSelection() {
+            game.gameState = "chooseInitialJutsu";
+            performJutsuSelection(3);
+        }
+
+        function performJutsuSelection(times) {
+            if (times > 0) {
+                let controls = document.getElementById("jutsu-controls");
+                controls.innerHTML = "";
+                let skillSet = new Skills();
+                let availableJutsu = skillSet.skills.filter(skill => skillSet.canUseSkill(game.player, skill));
+                let randomJutsu = [];
+                for (let i = 0; i < 3 && availableJutsu.length > 0; i++) {
+                    let index = Math.floor(Math.random() * availableJutsu.length);
+                    randomJutsu.push(availableJutsu.splice(index, 1)[0]);
+                }
+                if (randomJutsu.length > 0) {
+                    randomJutsu.forEach(jutsu => {
+                        let button = document.createElement("button");
+                        button.innerText = jutsu.name;
+                        button.onclick = function() { selectJutsu(jutsu, () => performJutsuSelection(times - 1)); };
+                        controls.appendChild(button);
+                    });
+                } else {
+                    queueOutput('No jutsu available based on styles and ranks.');
+                    showMainScreen();
+                }
+            } else {
+                queueOutput('Initial jutsu selection complete, returning to main screen...');
+                showMainScreen();
+            }
+        }
+
+        function selectJutsu(jutsu, callback) {
+            if (game.gameState === "chooseInitialJutsu" || game.gameState === "postBattle") {
+                if (confirm("Select " + jutsu.name + "?")) {
+                    let count = game.player.skills.filter(s => s.name === jutsu.name).length + game.player.skillInventory.filter(s => s.name === jutsu.name).length;
+                    if (count < 3 || (game.player.skills.length + game.player.skillInventory.length < 10 && (jutsu.rank === "D-Rank" || jutsu.rank === "C-Rank"))) {
+                        game.player.skillInventory.push(jutsu);
+                        queueOutput(`${jutsu.name} added to skill inventory!`);
+                        updateSkillCount();
+                        document.getElementById("jutsu-controls").innerHTML = "";
+                        if (callback) callback();
+                    } else {
+                        game.player.gold += jutsu.rank === "D-Rank" ? 5 : jutsu.rank === "C-Rank" ? 10 : 50;
+                        queueOutput(`Extra ${jutsu.name} converted to ${jutsu.rank === "D-Rank" ? 5 : jutsu.rank === "C-Rank" ? 10 : 50} gold due to owning 3 or more!`);
+                        updateSkillCount();
+                        document.getElementById("jutsu-controls").innerHTML = "";
+                        if (callback) callback();
+                    }
+                }
+            }
+        }
+
+        function showMainScreen() {
+            game.gameState = "main";
+            let controls = document.getElementById("main-controls");
+            controls.innerHTML = "";
+            ["Train", "Manage Skills"].forEach(option => {
+                let button = document.createElement("button");
+                button.className = option === "Train" ? "train-button" : "skills-button";
+                button.innerText = option;
+                button.onclick = function() { handleMainOption(option); };
+                controls.appendChild(button);
+            });
+            updateSkillControls();
+        }
+
+        function handleMainOption(option) {
+            if (option === "Train" && game.gameState !== "battle") {
+                startBattle();
+            } else if (option === "Manage Skills") {
+                if (document.getElementById("skill-controls").innerHTML === "") {
+                    updateSkillControls();
+                } else {
+                    document.getElementById("skill-controls").innerHTML = "";
+                }
+            }
+        }
+
+        function updateSkillControls() {
+            let controls = document.getElementById("skill-controls");
+            controls.innerHTML = "";
+            if (game.gameState === "main") {
+                game.player.skillInventory.forEach((skill, index) => {
+                    let button = document.createElement("button");
+                    button.innerText = `Add ${skill.name} (${index + 1}) to Active`;
+                    button.onclick = function() { moveToActiveSkills(skill, index); };
+                    controls.appendChild(button);
+                });
+                game.player.skills.forEach((skill, index) => {
+                    let button = document.createElement("button");
+                    button.innerText = `Move ${skill.name} (${index + 1}) to Inventory`;
+                    button.onclick = function() { moveToInventory(skill, index); };
+                    controls.appendChild(button);
+                });
+            }
+        }
+
+        function moveToActiveSkills(skill, index) {
+            if (game.gameState !== "battle") {
+                let cRankCount = game.player.skills.filter(s => s.rank === "C-Rank").length;
+                let bRankCount = game.player.skills.filter(s => s.rank === "B-Rank").length;
+                let aRankCount = game.player.skills.filter(s => s.rank === "A-Rank").length;
+                let maxSkills = game.player.Rank === "Student" ? 5 : game.player.Rank === "Genin" ? 10 : 15;
+                if (game.player.skills.length < maxSkills) {
+                    if (skill.rank === "C-Rank" && cRankCount < (game.player.Rank === "Genin" ? 3 : 5) ||
+                        skill.rank === "B-Rank" && bRankCount < (game.player.Rank === "Genin" ? 2 : 0) ||
+                        skill.rank === "A-Rank" && aRankCount < (game.player.Rank === "Genin" ? 1 : 0) ||
+                        skill.rank === "D-Rank") {
+                        game.player.skills.push(skill);
+                        game.player.skillInventory.splice(index, 1);
+                        queueOutput(`${skill.name} moved to active skills!`);
+                        updateSkillCount();
+                        updateSkillControls();
+                    } else {
+                        queueOutput(`Rank limit reached for ${skill.rank} skills!`);
+                    }
+                } else {
+                    queueOutput('Active skills limit reached!');
+                }
+            } else {
+                queueOutput('Cannot move skills during battle!');
+            }
+        }
+
+        function moveToInventory(skill, index) {
+            if (game.gameState !== "battle") {
+                game.player.skillInventory.push(skill);
+                game.player.skills.splice(index, 1);
+                queueOutput(`${skill.name} moved to inventory!`);
+                updateSkillCount();
+                updateSkillControls();
+            } else {
+                queueOutput('Cannot move skills during battle!');
+            }
+        }
+
+        function startBattle() {
+            if (game.gameState !== "battle") {
+                let enemyType = Math.random() < 0.5 ? new Mob("Wild Dog", 8, 8, "D-Rank", { Feral: "D-Rank" }, [new Skills().findSkill("Bite")]) : new Mob("Training Dummy", 6, 6, "D-Rank", { Neutral: "D-Rank" }, [new Skills().findSkill("Healing Stance")]);
+                game.enemy = enemyType;
+                game.gameState = "battle";
+                // Fill active skills to 10 if possible
+                while (game.player.skills.length < 10 && game.player.skillInventory.length > 0) {
+                    let randIndex = Math.floor(Math.random() * game.player.skillInventory.length);
+                    game.player.skills.push(game.player.skillInventory.splice(randIndex, 1)[0]);
+                }
+                updateStatus();
+                game.battleScene = { queueOutput: queueOutput };
+                queueOutput(`<span class="battle-ready">BATTLE BEGINS! ${game.player.name} vs. ${game.enemy.name}</span>`);
+                setTimeout(() => determineTurnOrder(), 1000);
+            } else {
+                queueOutput('Battle already in progress!');
+            }
+        }
+
+        function determineTurnOrder() {
+            let coinFlip = Math.random() < 0.5;
+            let first = coinFlip ? game.player.name : game.enemy.name;
+            let second = coinFlip ? game.enemy.name : game.player.name;
+            queueOutput(`${second} is off guard!`);
+            setTimeout(() => takeTurn(first), 2000);
+        }
+
+        function takeTurn(name) {
+            queueOutput(`${name}'s turn`);
+            setTimeout(() => {
+                let user = name === game.player.name ? game.player : game.enemy;
+                let target = name === game.player.name ? game.enemy : game.player;
+                applyStatusEffects(user);
+                let skillSet = new Skills();
+                let usableSkills = user.skills.filter(skill => skillSet.canUseSkill(user, skill));
+                let skill = usableSkills.length > 0 ? usableSkills[Math.floor(Math.random() * usableSkills.length)] : null;
+                if (user.statusEffects.some(e => e.name === "READY")) {
+                    let barrageSkill = skillSet.findSkill("Barrage");
+                    if (barrageSkill) barrageSkill.skillFunction(user, target, game.battleScene);
+                    user.statusEffects = user.statusEffects.filter(e => e.name !== "READY");
+                }
+                if (skill && !user.statusEffects.some(e => e.name === "Numb")) {
+                    let burnReduction = user.statusEffects.some(e => e.name === "Burn") ? 1 : 0;
+                    if (burnReduction && skill !== skillSet.findSkill("Healing Stance")) {
+                        skill.skillFunction = function(u, t, s) {
+                            let original = skillSet.findSkill(skill.name).skillFunction;
+                            let result = original(u, t, s);
+                            if (t.hp > 0 && !result) {
+                                s.queueOutput(`${t.name} feels exhausted from Burn, reducing skill damage!`);
+                            }
+                            return result;
+                        };
+                    }
+                    skill.skillFunction(user, target, game.battleScene);
+                } else if (user.statusEffects.some(e => e.name === "Numb")) {
+                    queueOutput(`${user.name} is stunned by Numb!`);
+                    user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
+                }
+                if (game.player.hp > 0 && game.enemy.hp > 0) {
+                    setTimeout(() => takeTurn(target.name), 2000);
+                } else {
+                    endBattle();
+                }
+            }, 2000);
+        }
+
+        function applyStatusEffects(entity) {
+            entity.statusEffects = entity.statusEffects.filter(effect => {
+                if (effect.name === "Burn" || effect.name === "Doom" || effect.name === "Bleed") {
+                    entity.hp -= effect.damage;
+                    effect.duration--;
+                    queueOutput(`${entity.name} takes ${effect.damage} damage from ${effect.name}!`);
+                    updateStatus();
+                } else if (effect.name === "Healing") {
+                    let heal = entity.hp < entity.maxHp ? effect.damage : 0;
+                    entity.hp = Math.min(entity.maxHp, entity.hp + heal);
+                    effect.duration--;
+                    if (heal > 0) queueOutput(`${entity.name} heals ${heal} HP from ${effect.name}!`);
+                    updateStatus();
+                } else if (effect.name === "ShadowCloneEffect") {
+                    if (effect.new) {
+                        effect.new = false;
+                    } else if (effect.duration > 0) {
+                        effect.duration--;
+                    }
+                } else if (effect.name === "Swap" || effect.name === "DoubleImage" || effect.name === "Dome" || effect.name === "RockBarrier") {
+                    effect.duration--;
+                } else if (effect.name === "Numb" || effect.name === "READY") {
+                    effect.duration--;
+                } else if (effect.name === "Release") {
+                    effect.duration--;
+                }
+                return effect.duration > 0;
+            });
         }
 
         function queueOutput(msg) {
-            if (game) {
+            game.outputQueue.push(msg);
+            if (!game.isOutputting) processOutputQueue();
+        }
+
+        function processOutputQueue() {
+            game.isOutputting = true;
+            if (game.outputQueue.length > 0) {
+                let msg = game.outputQueue.shift();
                 game.output.push(msg);
-                document.getElementById("output").innerHTML = game.output.join("<br>");
+                let outputDiv = document.getElementById("output");
+                outputDiv.innerHTML = game.output.join("<br>");
+                outputDiv.scrollTop = outputDiv.scrollHeight; // Auto-scroll
+                setTimeout(processOutputQueue, 1000);
+            } else {
+                game.isOutputting = false;
             }
         }
 
-        document.addEventListener("DOMContentLoaded", function() {
-            game = {
-                gameState: "start",
-                output: []
-            };
-        });
+        function endBattle() {
+            game.gameState = "postBattle";
+            queueOutput(`<span class="battle-ready">Battle ended!</span>`);
+            game.player.hp = game.player.maxHp; // Heal to full HP
+            game.player.statusEffects = []; // Clear status effects
+            performJutsuSelection(1);
+        }
     </script>
 </body>
 </html>
