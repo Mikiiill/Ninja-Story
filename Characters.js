@@ -24,3 +24,11 @@ function generateEnemySkills(rank, styles) {
     }
     return selectedSkills.length > 0 ? selectedSkills : [skillSet.findSkill("Healing Stance")];
 }
+
+function generateEnemy() {
+    if (game.player.Rank === "Genin") {
+        return new Mob("Genin Opponent", 12, 12, "C-Rank", { Ninjutsu: "C-Rank", Taijutsu: "C-Rank" }, generateEnemySkills("C-Rank", { Ninjutsu: "C-Rank", Taijutsu: "C-Rank" }));
+    } else {
+        return Math.random() < 0.5 ? new Mob("Wild Dog", 8, 8, "D-Rank", { Feral: "C-Rank" }, [new Skills().findSkill("Bite")]) : new Mob("Training Dummy", 6, 6, "D-Rank", { Neutral: "D-Rank" }, [new Skills().findSkill("Healing Stance")]);
+    }
+}
