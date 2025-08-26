@@ -54,14 +54,10 @@ function performJutsuSelection(times) {
             });
         } else {
             queueOutput('No jutsu available based on styles and ranks.');
-            showMainScreen();
+            addInitialBarrageCards();
         }
     } else {
-        // Add one extra Barrage card after initial selection (total of 2)
-        let barrageSkill = new Skills().findSkill("Barrage");
-        game.player.skillInventory.push(barrageSkill);
-        queueOutput("Extra Barrage card added to your inventory for a total of 2!");
-        showMainScreen();
+        addInitialBarrageCards();
     }
 }
 
@@ -84,4 +80,12 @@ function selectJutsu(jutsu, callback) {
             }
         }
     }
+}
+
+function addInitialBarrageCards() {
+    let barrageSkill = new Skills().findSkill("Barrage");
+    game.player.skillInventory.push(barrageSkill);
+    game.player.skillInventory.push(barrageSkill); // Total of 2 Barrage cards
+    queueOutput("You received 2 free Barrage cards to start!");
+    showMainScreen();
 }
