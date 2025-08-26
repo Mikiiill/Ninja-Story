@@ -87,13 +87,20 @@ function addInitialBarrageCards() {
     game.player.skillInventory.push(barrageSkill);
     game.player.skillInventory.push(barrageSkill); // Total of 2 Barrage cards
     queueOutput("You received 2 free <span class='output-text-neutral'>Barrage</span> cards to start!");
-    // Wait for output queue to process before completing rank-up
-    let checkQueue = setInterval(() => {
-        if (!game.isOutputting && game.outputQueue.length === 0) {
-            clearInterval(checkQueue);
-            completeRankUp();
-        }
-    }, 100);
+    // Ensure output queue is processed before proceeding
+    processOutputQueue(); // Force immediate processing
+    if (!game.isOutputting && game.outputQueue.length === 0) {
+        Log.debug("Output queue cleared, proceeding to complete rank-up");
+        completeRankUp();
+    } else {
+        let checkQueue = setInterval(() => {
+            if (!game.isOutputting && game.outputQueue.length === 0) {
+                clearInterval(checkQueue);
+                Log.debug("Output queue cleared after delay, proceeding to complete rank-up");
+                completeRankUp();
+            }
+        }, 100);
+    }
 }
 
 function completeRankUp() {
