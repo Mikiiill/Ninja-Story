@@ -1,11 +1,6 @@
 function startBattle() {
     if (game.gameState !== "battle") {
-        let enemyType;
-        if (game.player.Rank === "Genin") {
-            enemyType = new Mob("Genin Opponent", 12, 12, "C-Rank", { Ninjutsu: "C-Rank", Taijutsu: "C-Rank" }, generateEnemySkills("C-Rank", { Ninjutsu: "C-Rank", Taijutsu: "C-Rank" }));
-        } else {
-            enemyType = Math.random() < 0.5 ? new Mob("Wild Dog", 8, 8, "D-Rank", { Feral: "C-Rank" }, [new Skills().findSkill("Bite")]) : new Mob("Training Dummy", 6, 6, "D-Rank", { Neutral: "D-Rank" }, [new Skills().findSkill("Healing Stance")]);
-        }
+        let enemyType = generateEnemy();
         game.enemy = enemyType;
         game.gameState = "battle";
         // Clear skill management during battle
@@ -17,7 +12,10 @@ function startBattle() {
         }
         updateStatus();
         game.battleScene = { queueOutput: queueOutput };
-        queueOutput(`<span class="battle-ready">BATTLE BEGINS! ${game.player.name} vs. ${game.enemy.name}</span>`);
+        queueOutput(""); // Empty line before battle start
+        queueOutput(`<span class="battle-ready">BATTLE BEGINS!</span>`);
+        queueOutput(`<span class="output-text-player">${game.player.name}</span> vs. <span class="output-text-enemy">${game.enemy.name}</span>`);
+        queueOutput(""); // Empty line after names
         setTimeout(() => determineTurnOrder(), 1000);
     } else {
         queueOutput('Battle already in progress!');
@@ -33,7 +31,7 @@ function determineTurnOrder() {
 }
 
 function takeTurn(name) {
-    queueOutput(`${name}'s turn`);
+    queueOutput(`<span class="output-text-${name === game.player.name ? 'player' : 'enemy'}">${name}</span>'s turn`);
     setTimeout(() => {
         let user = name === game.player.name ? game.player : game.enemy;
         let target = name === game.player.name ? game.enemy : game.player;
@@ -41,12 +39,14 @@ function takeTurn(name) {
         let skillSet = new Skills();
         let usableSkills = user.skills.filter(skill => skillSet.canUseSkill(user, skill));
         let skill = usableSkills.length > 0 ? usableSkills[Math.floor(Math.random() * usableSkills.length)] : null;
-        if (user.statusEffects.some(e => e.name === "READY")) {
+        if (user.statusEffects.some(e => e.name === "Numb")) {
+            queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> is stunned by <span class="status-numb">Numb ⚡️</span> and skips their skill phase!`);
+            user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
+        } else if (user.statusEffects.some(e => e.name === "READY")) {
             let barrageSkill = skillSet.findSkill("Barrage");
             if (barrageSkill) barrageSkill.skillFunction(user, target, game.battleScene);
             user.statusEffects = user.statusEffects.filter(e => e.name !== "READY");
-        }
-        if (skill && !user.statusEffects.some(e => e.name === "Numb")) {
+        } else if (skill) {
             let burnReduction = user.statusEffects.some(e => e.name === "Burn") ? 1 : 0;
             if (burnReduction && skill !== skillSet.findSkill("Healing Stance")) {
                 skill.skillFunction = function(u, t, s) {
@@ -59,9 +59,6 @@ function takeTurn(name) {
                 };
             }
             skill.skillFunction(user, target, game.battleScene);
-        } else if (user.statusEffects.some(e => e.name === "Numb")) {
-            queueOutput(`${user.name} is stunned by Numb!`);
-            user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
         }
         if (game.player.hp > 0 && game.enemy.hp > 0) {
             setTimeout(() => takeTurn(target.name), 2000);
