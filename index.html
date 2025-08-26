@@ -4,105 +4,417 @@
     <title>ShinobiWay</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { background-color: #1a1a1a; color: #e0e0e0; font-family: Arial, sans-serif; }
-        button { background-color: #ff4500; color: #fff; padding: 5px 10px; margin: 5px; border: none; cursor: pointer; }
-        button:hover { background-color: #ff6347; }
-        #log { height: 100px; overflow-y: auto; background-color: #2f2f2f; padding: 5px; }
-        #output { padding: 5px; }
-        .battle-ready { color: #00ff00; }
-        .genin { color: #ffd700; }
-        .section { margin: 10px 0; }
-        #active-skills, #skill-inventory { border: 1px solid #444; padding: 5px; }
+        body {
+            background-color: #222;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .output {
+            width: 80%;
+            height: 300px;
+            background-color: #333;
+            overflow-y: auto;
+            padding: 10px;
+            margin: 10px;
+            border: 2px solid #fff;
+        }
+        .controls {
+            width: 80%;
+            margin: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .status {
+            width: 80%;
+            margin: 10px;
+            padding: 10px;
+            border: 2px solid #fff;
+        }
+        .skill-count {
+            width: 80%;
+            margin: 10px;
+            padding: 10px;
+            border: 2px solid #fff;
+            text-align: center;
+        }
+        button {
+            background-color: #555;
+            color: #fff;
+            border: 2px solid #fff;
+            padding: 5px 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #777;
+        }
+        .fire {
+            background-color: #ff0000;
+        }
+        .lightning {
+            background-color: #ffa500;
+        }
+        .illusion {
+            background-color: #800080;
+        }
+        .earth {
+            background-color: #8b4513;
+        }
+        .feral {
+            background-color: #228b22;
+        }
+        .neutral {
+            background-color: #555;
+        }
+        .start-button {
+            background-color: #555;
+            color: #fff;
+            border: 2px solid #fff;
+            font-size: 1.5rem;
+            padding: 10px 20px;
+        }
+        .skills-button, .train-button {
+            background-color: #555;
+            color: #fff;
+            border: 2px solid #fff;
+            font-size: 1.2rem;
+            padding: 5px 10px;
+        }
+        .output-text-player {
+            color: #00ff00;
+        }
+        .output-text-enemy {
+            color: #ff00ff;
+        }
+        .output-text-neutral {
+            color: #ccc;
+        }
+        .status-burn {
+            color: #ff0000;
+        }
+        .status-numb {
+            color: #ffa500;
+        }
+        .status-bleed {
+            color: #ff00ff;
+        }
+        .status-healing {
+            color: #00ff00;
+        }
+        .status-doom {
+            color: #ffffff;
+        }
+        .status-shadowcloneeffect {
+            color: #800080;
+        }
+        .status-substitution {
+            color: #8b4513;
+        }
+        .status-rockbarrier {
+            color: #228b22;
+        }
+        .sprite {
+            width: 50px;
+            height: 50px;
+            vertical-align: middle;
+        }
+        .player-hp {
+            color: #00ff00;
+        }
+        .enemy-hp {
+            color: #ff00ff;
+        }
+        .skills-popup {
+            background: #333;
+            color: #fff;
+            padding: 20px;
+            border: 2px solid #fff;
+        }
+        .close-button {
+            background: #555;
+            color: #fff;
+            border: 2px solid #fff;
+            font-size: 1.2rem;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
-    <div id="player-status">Shinobi [HP: <span class="player-hp">10/10</span>]</div>
-    <div id="enemy-status">Enemy [HP: <span class="enemy-hp">0/0</span>]</div>
-    <div id="skill-count">Skill cards: 0 | Gold: 0</div>
-    <div id="output">Welcome to ShinobiWay!</div>
-    <div id="start-controls">
-        <button id="start-button" onclick="startGame()">Start Game</button>
+    <div class="status" id="player-status">Shinobi [HP: <span class="player-hp">10/10</span>]</div>
+    <div class="status" id="enemy-status">Enemy [HP: <span class="enemy-hp">0/0</span>]</div>
+    <div class="skill-count" id="skill-count">Skill cards: 0 | Gold: 0</div>
+    <div class="output" id="output">Welcome to ShinobiWay!</div>
+    <div class="controls" id="start-controls">
+        <button class="start-button" onclick="startGame()">Start Game</button>
     </div>
-    <div id="style-controls"></div>
-    <div id="jutsu-controls"></div>
-    <div id="skill-controls">
-        <div class="section" id="active-skills"><h3>Active Skills</h3></div>
-        <div class="section" id="skill-inventory"><h3>Skill Inventory</h3></div>
-    </div>
-    <div id="main-controls"></div>
-    <div id="log">Log started...</div>
+    <div class="controls" id="style-controls"></div>
+    <div class="controls" id="jutsu-controls"></div>
+    <div class="controls" id="skill-controls"></div>
+    <div class="controls" id="main-controls"></div>
+    <div class="output" id="log">Log started...</div>
 
     <script>
         let game = {
-            player: { name: "Shinobi", hp: 10, maxHp: 10, skills: [], skillInventory: ["Barrage"], gold: 0, rank: "Student", styles: [], styleRanks: { Fire: "D-Rank", Genjutsu: "D-Rank", Earth: "D-Rank", Lightning: "D-Rank", Feral: "D-Rank", Ninjutsu: "D-Rank", Taijutsu: "D-Rank" }, skillCounts: { "Barrage": 1, "Shock Field Jutsu": 0, "Lightning Blade Jutsu": 0, "Fireball Jutsu": 0, "Flame Throw Jutsu": 0, "Rock Barrier Jutsu": 0, "Rock Smash Jutsu": 0, "Demonic Vision Jutsu": 0, "Genjutsu Release Jutsu": 0, "Shadow Clone Jutsu": 0, "Dynamic Entry Jutsu": 0, "Falcon Drop Jutsu": 0, "Substitution Jutsu": 0, "Clone Jutsu": 0 }, statusEffects: [] },
-            enemy: { name: "", hp: 0, maxHp: 0, skills: [], statusEffects: [] },
+            player: {
+                name: "Shinobi",
+                hp: 10,
+                maxHp: 10,
+                Rank: "Student",
+                ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank", Fire: "D-Rank", Lightning: "D-Rank", Illusion: "D-Rank", Earth: "D-Rank", Feral: "D-Rank" },
+                skills: [],
+                skillInventory: [],
+                statusEffects: []
+            },
+            enemy: null,
+            battleNum: 1,
+            output: [],
             gameState: "start",
-            skillRanks: {
-                "Shock Field Jutsu": "C-Rank", "Lightning Blade Jutsu": "B-Rank", "Fireball Jutsu": "C-Rank",
-                "Flame Throw Jutsu": "B-Rank", "Rock Barrier Jutsu": "C-Rank", "Rock Smash Jutsu": "B-Rank",
-                "Demonic Vision Jutsu": "C-Rank", "Genjutsu Release Jutsu": "B-Rank", "Shadow Clone Jutsu": "C-Rank",
-                "Dynamic Entry Jutsu": "C-Rank", "Falcon Drop Jutsu": "B-Rank", "Substitution Jutsu": "D-Rank",
-                "Clone Jutsu": "D-Rank", "Barrage": "D-Rank", "Bite": "D-Rank", "Healing Stance": "D-Rank"
-            },
-            goldValues: { "D-Rank": 5, "C-Rank": 10, "B-Rank": 50, "A-Rank": 100, "S-Rank": 500 },
-            asciiArt: {
-                battleStart: "👊💥 BATTLE BEGINS! 👊💥\nShinobi vs. Enemy!",
-                "Shock Field Jutsu": "⚡️ Shock Field!", "Lightning Blade Jutsu": "⚡ Blade Strike!",
-                "Fireball Jutsu": "🔥 Fireball Strike!", "Flame Throw Jutsu": "🔥🔥 Flame Burst!",
-                "Rock Barrier Jutsu": "🪨 Rock Shield!", "Rock Smash Jutsu": "🪨💥 Rock Smash!",
-                "Demonic Vision Jutsu": "💀 Doom Strikes!", "Genjutsu Release Jutsu": "🌫️ Mind Freed!",
-                "Shadow Clone Jutsu": "🌫️ Clone Appears!", "Dynamic Entry Jutsu": "💥 Dynamic Kick!",
-                "Falcon Drop Jutsu": "🦅 Falcon Strike!", "Substitution Jutsu": "🌫️ Substitution!",
-                "Clone Jutsu": "🌫️ Illusion Clone!", "Barrage": "💥 Rapid Assault!",
-                "Bite": "😡 Savage Bite!", "Healing Stance": "🩺 Healing Aura!"
-            },
-            dotEffects: {
-                "Flame Throw Jutsu": { baseDamage: 2, duration: 3, name: "Burn" },
-                "Demonic Vision Jutsu": { baseDamage: 1, duration: 5, name: "Doom" },
-                "Bite": { baseDamage: 1, duration: 2, name: "Bleed" },
-                "Healing Stance": { heal: 1, duration: 3, name: "Regen" }
-            },
-            jutsuRequirements: {
-                "Shock Field Jutsu": { styles: ["Lightning"], minRank: "C-Rank" },
-                "Lightning Blade Jutsu": { styles: ["Lightning"], minRank: "B-Rank" },
-                "Fireball Jutsu": { styles: ["Fire"], minRank: "C-Rank" },
-                "Flame Throw Jutsu": { styles: ["Fire"], minRank: "B-Rank" },
-                "Rock Barrier Jutsu": { styles: ["Earth"], minRank: "C-Rank", attributes: ["Support"] },
-                "Rock Smash Jutsu": { styles: ["Earth"], minRank: "B-Rank" },
-                "Demonic Vision Jutsu": { styles: ["Genjutsu"], minRank: "C-Rank" },
-                "Genjutsu Release Jutsu": { styles: ["Genjutsu"], minRank: "B-Rank", attributes: ["Support"] },
-                "Shadow Clone Jutsu": { styles: ["Ninjutsu"], minRank: "C-Rank", attributes: ["Support"] },
-                "Dynamic Entry Jutsu": { styles: ["Taijutsu"], minRank: "C-Rank" },
-                "Falcon Drop Jutsu": { styles: ["Taijutsu"], minRank: "B-Rank" },
-                "Substitution Jutsu": { styles: ["Ninjutsu", "Taijutsu"], attributes: ["Support"] },
-                "Clone Jutsu": { styles: ["Genjutsu"], attributes: ["Support"] },
-                "Barrage": {},
-                "Bite": {},
-                "Healing Stance": {}
-            },
-            rankLimits: { "Student": 5, "Genin": 10, "Chunin": 15, "Jonin": 20, "Kage": 25 },
-            enemies: {
-                "Wild Dog": { hp: 8, maxHp: 8, skills: ["Bite"], statusEffects: [] },
-                "Training Dummy": { hp: 6, maxHp: 6, skills: ["Healing Stance"], statusEffects: [] }
-            }
+            battleScene: null,
+            outputQueue: [],
+            isOutputting: false,
+            gold: 0
         };
+
+        class StatusEffect {
+            constructor(name, duration, damage = 0) {
+                this.name = name;
+                this.duration = duration;
+                this.damage = damage;
+                this.new = true;
+            }
+        }
+
+        class BattleSkill {
+            constructor(name, attributes, requirements, skillFunction, style, support, rank) {
+                this.name = name;
+                this.attributes = attributes || [];
+                this.requirements = requirements || {};
+                this.skillFunction = skillFunction;
+                this.style = style;
+                this.support = support || false;
+                this.rank = rank;
+            }
+        }
+
+        class Mob {
+            constructor(name, hp, maxHp, Rank, ninjaStyles, skills, statusEffects, sprite) {
+                this.name = name;
+                this.hp = hp;
+                this.maxHp = maxHp;
+                this.Rank = Rank;
+                this.ninjaStyles = ninjaStyles;
+                this.skills = skills;
+                this.statusEffects = statusEffects || [];
+                this.sprite = sprite;
+            }
+        }
+
+        class Skills {
+            constructor() {
+                this.skills = [];
+                this.initializeSkills();
+            }
+
+            initializeSkills() {
+                this.skills = [
+                    new BattleSkill("Barrage", [], {}, this.barrage.bind(this), "neutral", false, "D-Rank"),
+                    new BattleSkill("Demon Mind Jutsu", ["Illusion"], { Illusion: "C-Rank" }, this.demonMindJutsu.bind(this), "illusion", false, "C-Rank"),
+                    new BattleSkill("Fireball Jutsu", ["Fire"], { Fire: "C-Rank" }, this.fireballJutsu.bind(this), "fire", false, "C-Rank"),
+                    new BattleSkill("Flame Throw Jutsu", ["Fire"], { Fire: "B-Rank" }, this.flameThrowJutsu.bind(this), "fire", false, "B-Rank"),
+                    new BattleSkill("Healing Stance", [], {}, this.healingStance.bind(this), "neutral", true, "D-Rank"),
+                    new BattleSkill("Shock Field Jutsu", ["Lightning"], { Lightning: "C-Rank" }, this.shockFieldJutsu.bind(this), "lightning", false, "C-Rank"),
+                    new BattleSkill("Shadow Clone Jutsu", ["Illusion"], { Illusion: "C-Rank" }, this.shadowCloneJutsu.bind(this), "illusion", true, "C-Rank"),
+                    new BattleSkill("Bite", ["Feral"], { Feral: "C-Rank" }, this.bite.bind(this), "feral", false, "C-Rank"),
+                    new BattleSkill("Substitution", [], {}, this.substitution.bind(this), "neutral", true, "D-Rank"),
+                    new BattleSkill("Rock Barrier Jutsu", ["Earth"], { Earth: "C-Rank" }, this.rockBarrierJutsu.bind(this), "earth", true, "C-Rank"),
+                    new BattleSkill("Impending Doom", ["Illusion"], { Illusion: "B-Rank" }, this.impendingDoom.bind(this), "illusion", false, "B-Rank"),
+                    new BattleSkill("Rock Smash Jutsu", ["Earth"], { Earth: "B-Rank" }, this.rockSmashJutsu.bind(this), "earth", false, "B-Rank"),
+                    new BattleSkill("Storm Release Jutsu", ["Lightning"], { Lightning: "A-Rank" }, this.stormReleaseJutsu.bind(this), "lightning", false, "A-Rank"),
+                    new BattleSkill("Ultimate Shadow Clone", ["Illusion"], { Illusion: "S-Rank" }, this.ultimateShadowClone.bind(this), "illusion", true, "S-Rank")
+                ];
+            }
+
+            canUseSkill(mob, skill) {
+                return Object.keys(skill.requirements).every(key => mob.ninjaStyles[key] && compareRanks(mob.ninjaStyles[key], skill.requirements[key]) >= 0);
+            }
+
+            findSkill(name) {
+                return this.skills.find(skill => skill.name === name);
+            }
+
+            barrage(user, target, scene) {
+                let baseDamage = Math.round(Math.random()) + 1;
+                let comboDamage = Math.round(Math.random()) + 1;
+                target.hp = Math.max(0, Math.min(target.maxHp, target.hp - baseDamage));
+                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> attacks <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> with <span class="output-text-neutral">Barrage</span> and hits for ${baseDamage} damage!`);
+                if (target.hp > 0) {
+                    target.hp = Math.max(0, Math.min(target.maxHp, target.hp - comboDamage));
+                    scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> combos for ${comboDamage} damage!`);
+                }
+                if (target.hp <= 0) return true;
+                return false;
+            }
+
+            demonMindJutsu(user, target, scene) {
+                let damage = 2;
+                target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+                target.statusEffects.push(new StatusEffect("Doom", 3, 2));
+                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-illusion">Demon Mind Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-doom">Doom 💀</span>!`);
+                if (target.hp <= 0) return true;
+                return false;
+            }
+
+            fireballJutsu(user, target, scene) {
+                let damage = Math.round(Math.random()) + 3;
+                target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+                target.statusEffects.push(new StatusEffect("Burn", 3, 1));
+                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Fireball Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burn">Burn 🔥</span>!`);
+                if (target.hp <= 0) return true;
+                return false;
+            }
+
+            flameThrowJutsu(user, target, scene) {
+                let damage = Math.round(Math.random()) + 5;
+                target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+                target.statusEffects.push(new StatusEffect("Burn", 3, 1));
+                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Flame Throw Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burn">Burn 🔥</span>!`);
+                if (target.hp <= 0) return true;
+                return false;
+            }
+
+            healingStance(user, target, scene) {
+                let heal = user.hp < user.maxHp ? 1 : 0;
+                user.hp = Math.max(0, Math.min(user.maxHp, user.hp + heal));
+                user.statusEffects.push(new StatusEffect("Healing", 3, 1));
+                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> enters <span class="output-text-neutral">Healing Stance</span>${heal > 0 ? `, healing ${heal} HP` : ""} <span class="status-healing">🌿</span>!`);
+                return true;
+            }
+
+            shockFieldJutsu(user, target, scene) {
+                let damage = Math.round(Math.random() * 2) + 2;
+                target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+                user.statusEffects.push(new StatusEffect("Numb", 1));
+                target.statusEffects.push(new StatusEffect("Numb", 1));
+                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-lightning">Shock Field Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-numb">Numb ⚡️</span> on both!`);
+                if (target.hp <= 0) return true;
+                return false;
+            }
+
+            shadowCloneJutsu(user, target, scene) {
+                if (user.hp < 2) {
+                    scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> does not have enough HP to cast <span class="output-text-illusion">Shadow Clone Jutsu</span>!`);
+                    return false;
+                }
+                let cloneCount = user.statusEffects.filter(e => e.name === "ShadowCloneEffect").length;
+                if (cloneCount >= 3) {
+                    scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> already has the maximum of 3 shadow clones!`);
+                    return false;
+                }
+                user.hp = Math.max(0, Math.min(user.maxHp, user.hp - 2));
+                user.statusEffects.push(new StatusEffect("ShadowCloneEffect", 3));
+                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-illusion">Shadow Clone Jutsu</span>, adding a clone <span class="status-shadowcloneeffect">👥</span>!`);
+                return true;
+            }
+
+            bite(user, target, scene) {
+                let damage = 1;
+                let heal = user.hp < user.maxHp ? 1 : 0;
+                user.hp = Math.max(0, Math.min(user.maxHp, user.hp + heal));
+                target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+                target.statusEffects.push(new StatusEffect("Bleed", 3, 2));
+                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-feral">Bite</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage${heal > 0 ? `, healing ${heal} HP` : ""}, inflicting <span class="status-bleed">Bleed 🩸</span>!`);
+                if (target.hp <= 0) return true;
+                return false;
+            }
+
+            substitution(user, target, scene) {
+                user.statusEffects.push(new StatusEffect("Substitution", 3));
+                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> prepares <span class="output-text-neutral">Substitution</span> <span class="status-substitution">🪵</span>!`);
+                return true;
+            }
+
+            rockBarrierJutsu(user, target, scene) {
+                user.statusEffects.push(new StatusEffect("RockBarrier", 2));
+                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> raises <span class="output-text-earth">Rock Barrier Jutsu</span> <span class="status-rockbarrier">🪨</span>!`);
+                return true;
+            }
+
+            impendingDoom(user, target, scene) {
+                let damage = 4;
+                target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+                target.statusEffects.push(new StatusEffect("Doom", 5, 2));
+                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-illusion">Impending Doom</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-doom">Doom 💀</span>!`);
+                if (target.hp <= 0) return true;
+                return false;
+            }
+
+            rockSmashJutsu(user, target, scene) {
+                let damage = Math.round(Math.random()) + 4;
+                target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-earth">Rock Smash Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage!`);
+                if (target.hp <= 0) return true;
+                return false;
+            }
+
+            stormReleaseJutsu(user, target, scene) {
+                let damage = Math.round(Math.random() * 3) + 5;
+                target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+                target.statusEffects.push(new StatusEffect("Numb", 2));
+                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> unleashes <span class="output-text-lightning">Storm Release Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-numb">Numb ⚡️</span>!`);
+                if (target.hp <= 0) return true;
+                return false;
+            }
+
+            ultimateShadowClone(user, target, scene) {
+                if (user.hp < 3) {
+                    scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> does not have enough HP to cast <span class="output-text-illusion">Ultimate Shadow Clone</span>!`);
+                    return false;
+                }
+                let cloneCount = user.statusEffects.filter(e => e.name === "UltimateShadowCloneEffect").length;
+                if (cloneCount >= 5) {
+                    scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> already has the maximum of 5 ultimate shadow clones!`);
+                    return false;
+                }
+                user.hp = Math.max(0, Math.min(user.maxHp, user.hp - 3));
+                user.statusEffects.push(new StatusEffect("UltimateShadowCloneEffect", 5));
+                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-illusion">Ultimate Shadow Clone</span>, adding an ultimate clone <span class="status-shadowcloneeffect">👥</span>!`);
+                return true;
+            }
+        }
+
+        function compareRanks(rank1, rank2) {
+            const ranks = ["D-Rank", "C-Rank", "B-Rank", "A-Rank", "S-Rank"];
+            return ranks.indexOf(rank1) - ranks.indexOf(rank2);
+        }
 
         function log(msg) {
             const el = document.getElementById('log');
             el.innerHTML += '<br>' + msg;
         }
 
-        function updateSkillCount() {
-            let totalCards = 0;
-            for (let skill in game.player.skillCounts) {
-                totalCards += game.player.skillCounts[skill] || 0;
-            }
-            document.getElementById("skill-count").innerText = `Skill cards: ${totalCards} | Gold: ${game.player.gold}`;
+        function updateStatus() {
+            document.getElementById("player-status").innerHTML = `${game.player.name} [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>]`;
+            document.getElementById("enemy-status").innerHTML = `Enemy [HP: <span class="enemy-hp">${game.enemy ? game.enemy.hp + "/" + game.enemy.maxHp : "0/0"}</span>] ${game.enemy ? game.enemy.name : ""}`;
         }
 
-        function updateStatus() {
-            document.getElementById("player-status").innerHTML = `Shinobi [HP: <span class="player-hp">${isNaN(game.player.hp) ? 0 : game.player.hp}/${game.player.maxHp}</span>]`;
-            document.getElementById("enemy-status").innerHTML = `Enemy [HP: <span class="enemy-hp">${isNaN(game.enemy.hp) ? 0 : game.enemy.hp}/${game.enemy.maxHp}</span>]`;
+        function updateSkillCount() {
+            let totalCards = game.player.skills.length + game.player.skillInventory.length;
+            document.getElementById("skill-count").innerText = `Skill cards: ${totalCards} | Gold: ${game.player.gold}`;
+            if (totalCards >= 10 && game.player.Rank === "Student") {
+                game.player.Rank = "Genin";
+                queueOutput(`<span class="genin">Promoted to Genin!</span>`);
+                log('Promoted to Genin!');
+            }
         }
 
         function startGame() {
@@ -114,16 +426,14 @@
                 log('Setting up style selection...');
                 setupStyleButtons();
                 updateSkillCount();
-                document.getElementById("start-button").style.display = "none";
-            } else {
-                log('Game already started, state: ' + game.gameState);
+                document.getElementById("start-controls").innerHTML = "";
             }
         }
 
         function setupStyleButtons() {
             let controls = document.getElementById("style-controls");
             controls.innerHTML = "";
-            let allStyles = ["Fire", "Genjutsu", "Earth", "Lightning", "Feral", "Ninjutsu", "Taijutsu"];
+            let allStyles = ["Ninjutsu", "Taijutsu", "Genjutsu", "Fire", "Lightning", "Illusion", "Earth", "Feral"];
             allStyles.forEach(style => {
                 let button = document.createElement("button");
                 button.innerText = style;
@@ -135,23 +445,16 @@
 
         function selectStyle(style) {
             log('Selecting ' + style + '...');
-            if (game.player.styles.length < 2 && game.gameState === "chooseStyles") {
+            if (game.player.ninjaStyles[style] && Object.values(game.player.ninjaStyles).filter(r => r !== "D-Rank").length < 2) {
                 if (confirm("Select " + style + "?")) {
-                    game.player.styles.push(style);
-                    game.player.styleRanks[style] = upgradeRank(game.player.styleRanks[style]);
-                    log(style + ' added as a style with rank upgraded to ' + game.player.styleRanks[style] + '!');
-                    if (game.player.styles.length === 2) {
+                    game.player.ninjaStyles[style] = upgradeRank(game.player.ninjaStyles[style]);
+                    log(style + ' added as a style with rank upgraded to ' + game.player.ninjaStyles[style] + '!');
+                    if (Object.values(game.player.ninjaStyles).filter(r => r !== "D-Rank").length === 2) {
                         log('Both styles selected, proceeding to initial jutsu selection...');
                         document.getElementById("style-controls").innerHTML = "";
                         setupInitialJutsuSelection();
-                    } else {
-                        setupStyleButtons();
                     }
-                } else {
-                    log(style + ' selection canceled.');
                 }
-            } else {
-                log('Style selection invalid or complete, state: ' + game.gameState);
             }
         }
 
@@ -170,14 +473,8 @@
             if (times > 0) {
                 let controls = document.getElementById("jutsu-controls");
                 controls.innerHTML = "";
-                let availableJutsu = Object.keys(game.jutsuRequirements).filter(jutsu => {
-                    let req = game.jutsuRequirements[jutsu];
-                    if (req.minRank) {
-                        let matchingStyles = req.styles.filter(s => game.player.styles.includes(s));
-                        return matchingStyles.some(s => compareRanks(game.player.styleRanks[s], req.minRank) >= 0);
-                    }
-                    return req.styles ? req.styles.some(s => game.player.styles.includes(s)) : true;
-                });
+                let skillSet = new Skills();
+                let availableJutsu = skillSet.skills.filter(skill => skillSet.canUseSkill(game.player, skill));
                 let randomJutsu = [];
                 for (let i = 0; i < 3 && availableJutsu.length > 0; i++) {
                     let index = Math.floor(Math.random() * availableJutsu.length);
@@ -186,10 +483,9 @@
                 if (randomJutsu.length > 0) {
                     randomJutsu.forEach(jutsu => {
                         let button = document.createElement("button");
-                        button.innerText = jutsu;
+                        button.innerText = jutsu.name;
                         button.onclick = function() { selectJutsu(jutsu, () => performJutsuSelection(times - 1)); };
                         controls.appendChild(button);
-                        log('Added ' + jutsu + ' to selection');
                     });
                 } else {
                     log('No jutsu available based on styles and ranks.');
@@ -201,27 +497,18 @@
             }
         }
 
-        function compareRanks(rank1, rank2) {
-            const ranks = ["D-Rank", "C-Rank", "B-Rank", "A-Rank", "S-Rank"];
-            return ranks.indexOf(rank1) - ranks.indexOf(rank2);
-        }
-
         function selectJutsu(jutsu, callback) {
-            log('Selecting ' + jutsu + '...');
+            log('Selecting ' + jutsu.name + '...');
             if (game.gameState === "chooseInitialJutsu" || game.gameState === "postBattle") {
-                let count = game.player.skillCounts[jutsu] || 0;
-                if (count < 4) {
+                if (game.player.skills.length + game.player.skillInventory.length < 10 || jutsu.rank === "D-Rank" || jutsu.rank === "C-Rank") {
                     game.player.skillInventory.push(jutsu);
-                    game.player.skillCounts[jutsu] = (game.player.skillCounts[jutsu] || 0) + 1;
-                    log(jutsu + ' added to skill inventory!');
+                    log(jutsu.name + ' added to skill inventory!');
                     updateSkillCount();
                     document.getElementById("jutsu-controls").innerHTML = "";
                     if (callback) callback();
                 } else {
-                    let rank = game.skillRanks[jutsu] || "D-Rank";
-                    let goldGain = game.goldValues[rank];
-                    game.player.gold += goldGain;
-                    log(`5th ${jutsu} converted to ${goldGain} gold!`);
+                    game.player.gold += jutsu.rank === "D-Rank" ? 5 : jutsu.rank === "C-Rank" ? 10 : 50;
+                    log(`Extra ${jutsu.name} converted to ${jutsu.rank === "D-Rank" ? 5 : jutsu.rank === "C-Rank" ? 10 : 50} gold!`);
                     updateSkillCount();
                     document.getElementById("jutsu-controls").innerHTML = "";
                     if (callback) callback();
@@ -235,11 +522,13 @@
             controls.innerHTML = "";
             ["Train", "Manage Skills"].forEach(option => {
                 let button = document.createElement("button");
+                button.className = option === "Train" ? "train-button" : "skills-button";
                 button.innerText = option;
                 button.onclick = function() { handleMainOption(option); };
                 controls.appendChild(button);
                 log('Added ' + option + ' option');
             });
+            updateSkillControls();
         }
 
         function handleMainOption(option) {
@@ -247,56 +536,41 @@
             if (option === "Train" && game.gameState !== "battle") {
                 startBattle();
             } else if (option === "Manage Skills") {
-                if (document.getElementById("skill-controls").innerHTML === "<div class='section' id='active-skills'><h3>Active Skills</h3></div><div class='section' id='skill-inventory'><h3>Skill Inventory</h3></div>") {
+                if (document.getElementById("skill-controls").innerHTML === "") {
                     updateSkillControls();
                 } else {
-                    document.getElementById("skill-controls").innerHTML = "<div class='section' id='active-skills'><h3>Active Skills</h3></div><div class='section' id='skill-inventory'><h3>Skill Inventory</h3></div>";
+                    document.getElementById("skill-controls").innerHTML = "";
                     log('Manage Skills menu closed.');
                 }
             }
         }
 
         function updateSkillControls() {
-            let activeSection = document.getElementById("active-skills");
-            let inventorySection = document.getElementById("skill-inventory");
-            activeSection.innerHTML = "<h3>Active Skills</h3>";
-            inventorySection.innerHTML = "<h3>Skill Inventory</h3>";
+            let controls = document.getElementById("skill-controls");
+            controls.innerHTML = "";
             if (game.gameState === "main") {
-                let activeSkills = [];
-                for (let skill in game.player.skillCounts) {
-                    for (let i = 0; i < game.player.skillCounts[skill] || 0; i++) {
-                        if (game.player.skills.includes(skill)) {
-                            activeSkills.push({ name: skill, index: i });
-                        }
-                    }
-                }
-                activeSkills.forEach((skillObj, index) => {
-                    if (!game.player.skillInventory.includes(skillObj.name)) {
-                        let button = document.createElement("button");
-                        button.innerText = `Move ${skillObj.name} (${index + 1}) to Inventory`;
-                        button.onclick = function() { moveToInventory(skillObj.name, index); };
-                        activeSection.appendChild(button);
-                        log(`Added button to move ${skillObj.name} (${index + 1}) to inventory`);
-                    }
-                });
                 game.player.skillInventory.forEach((skill, index) => {
-                    if (!game.player.skills.includes(skill)) {
-                        let button = document.createElement("button");
-                        button.innerText = `Add ${skill} (${index + 1}) to Active`;
-                        button.onclick = function() { moveToActiveSkills(skill, index); };
-                        inventorySection.appendChild(button);
-                        log(`Added button to move ${skill} (${index + 1}) to active skills`);
-                    }
+                    let button = document.createElement("button");
+                    button.innerText = `Add ${skill.name} (${index + 1}) to Active`;
+                    button.onclick = function() { moveToActiveSkills(skill, index); };
+                    controls.appendChild(button);
+                    log(`Added button to move ${skill.name} (${index + 1}) to active skills`);
+                });
+                game.player.skills.forEach((skill, index) => {
+                    let button = document.createElement("button");
+                    button.innerText = `Move ${skill.name} (${index + 1}) to Inventory`;
+                    button.onclick = function() { moveToInventory(skill, index); };
+                    controls.appendChild(button);
+                    log(`Added button to move ${skill.name} (${index + 1}) to inventory`);
                 });
             }
         }
 
         function moveToActiveSkills(skill, index) {
-            if (game.player.skills.length < game.rankLimits[game.player.rank]) {
+            if (game.player.skills.length < (game.player.Rank === "Student" ? 5 : game.player.Rank === "Genin" ? 10 : 15)) {
                 game.player.skills.push(skill);
                 game.player.skillInventory.splice(index, 1);
-                game.player.skillCounts[skill] = (game.player.skillCounts[skill] || 0) + 1;
-                log(`${skill} moved to active skills!`);
+                log(`${skill.name} moved to active skills!`);
                 updateSkillCount();
                 updateSkillControls();
             } else {
@@ -305,31 +579,23 @@
         }
 
         function moveToInventory(skill, index) {
-            let activeSkills = game.player.skills;
-            if (index < activeSkills.length) {
-                game.player.skillInventory.push(skill);
-                game.player.skills.splice(index, 1);
-                game.player.skillCounts[skill]--;
-                if (game.player.skillCounts[skill] <= 0) {
-                    delete game.player.skillCounts[skill];
-                }
-                log(`${skill} moved to inventory!`);
-                updateSkillCount();
-                updateSkillControls();
-            }
+            game.player.skillInventory.push(skill);
+            game.player.skills.splice(index, 1);
+            log(`${skill.name} moved to inventory!`);
+            updateSkillCount();
+            updateSkillControls();
         }
 
         function startBattle() {
             if (game.gameState !== "battle") {
-                let enemyType = Math.random() < 0.5 ? "Wild Dog" : "Training Dummy";
-                game.enemy = { ...game.enemies[enemyType], name: enemyType, statusEffects: [] };
+                let enemyType = Math.random() < 0.5 ? new Mob("Wild Dog", 8, 8, "D-Rank", { Feral: "D-Rank" }, [new Skills().findSkill("Barrage")]) : new Mob("Training Dummy", 6, 6, "D-Rank", { Neutral: "D-Rank" }, [new Skills().findSkill("Barrage")]);
+                game.enemy = enemyType;
                 game.gameState = "battle";
                 updateStatus();
+                game.battleScene = { queueOutput: queueOutput };
                 log('Entering battle...');
-                document.getElementById("output").innerHTML += `<br><span class="battle-ready">${game.asciiArt.battleStart}</span>`;
+                queueOutput(`<span class="battle-ready">${game.asciiArt.battleStart || "BATTLE BEGINS!"}</span>`);
                 setTimeout(() => determineTurnOrder(), 1000);
-            } else {
-                log('Battle already in progress!');
             }
         }
 
@@ -337,97 +603,79 @@
             let coinFlip = Math.random() < 0.5;
             let first = coinFlip ? game.player.name : game.enemy.name;
             let second = coinFlip ? game.enemy.name : game.player.name;
-            document.getElementById("output").innerHTML += `<br>${second} is off guard!`;
+            queueOutput(`${second} is off guard!`);
             setTimeout(() => takeTurn(first), 2000);
         }
 
         function takeTurn(name) {
-            document.getElementById("output").innerHTML += `<br> ${name}'s turn`;
+            queueOutput(`${name}'s turn`);
             setTimeout(() => {
-                if (name === game.player.name) {
-                    applyStatusEffects(game.player);
-                    let skill = game.player.skills.length > 0 ? game.player.skills[Math.floor(Math.random() * game.player.skills.length)] : null;
-                    if (skill) {
-                        useSkill(skill, game.enemy, game.player);
-                    }
-                    setTimeout(() => takeTurn(game.enemy.name), 3000);
-                } else {
-                    applyStatusEffects(game.enemy);
-                    let skill = game.enemy.skills.length > 0 ? game.enemy.skills[Math.floor(Math.random() * game.enemy.skills.length)] : null;
-                    if (skill) {
-                        useSkill(skill, game.player, game.enemy);
-                    }
-                    if (game.player.hp > 0 && game.enemy.hp > 0) {
-                        setTimeout(() => takeTurn(game.player.name), 3000);
-                    } else {
-                        endBattle();
-                    }
+                let user = name === game.player.name ? game.player : game.enemy;
+                let target = name === game.player.name ? game.enemy : game.player;
+                applyStatusEffects(user);
+                let skillSet = new Skills();
+                let usableSkills = user.skills.filter(skill => skillSet.canUseSkill(user, skill));
+                let skill = usableSkills.length > 0 ? usableSkills[Math.floor(Math.random() * usableSkills.length)] : null;
+                if (skill && !user.statusEffects.some(e => e.name === "Numb")) {
+                    skill.skillFunction(user, target, game.battleScene);
+                } else if (user.statusEffects.some(e => e.name === "Numb")) {
+                    queueOutput(`${user.name} is stunned by Numb!`);
+                    user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
                 }
-            }, 3000);
+                if (game.player.hp > 0 && game.enemy.hp > 0) {
+                    setTimeout(() => takeTurn(target.name), 2000);
+                } else {
+                    endBattle();
+                }
+            }, 2000);
         }
 
         function applyStatusEffects(entity) {
             entity.statusEffects = entity.statusEffects.filter(effect => {
-                if (effect.type === "dot") {
+                if (effect.name === "Burn" || effect.name === "Doom" || effect.name === "Bleed") {
                     entity.hp -= effect.damage;
                     effect.duration--;
-                    document.getElementById("output").innerHTML += `<br>${entity.name} takes damage from ${effect.name}!`;
+                    queueOutput(`${entity.name} takes ${effect.damage} damage from ${effect.name}!`);
                     updateStatus();
-                } else if (effect.type === "heal") {
-                    entity.hp = Math.min(entity.maxHp, entity.hp + effect.heal);
+                } else if (effect.name === "Healing") {
+                    let heal = entity.hp < entity.maxHp ? effect.damage : 0;
+                    entity.hp = Math.min(entity.maxHp, entity.hp + heal);
                     effect.duration--;
-                    document.getElementById("output").innerHTML += `<br>${entity.name} heals ${effect.heal} HP from ${effect.name}!`;
+                    if (heal > 0) queueOutput(`${entity.name} heals ${heal} HP from ${effect.name}!`);
                     updateStatus();
+                } else if (effect.name === "ShadowCloneEffect" || effect.name === "UltimateShadowCloneEffect") {
+                    if (effect.new) {
+                        effect.new = false;
+                    } else if (effect.duration > 0) {
+                        effect.duration--;
+                    }
+                } else if (effect.name === "Substitution" || effect.name === "RockBarrier") {
+                    effect.duration--;
                 }
                 return effect.duration > 0;
             });
         }
 
-        function useSkill(skill, target, user) {
-            document.getElementById("output").innerHTML += `<br>${user.name} uses ${skill}! ${game.asciiArt[skill] || ""}`;
-            setTimeout(() => {
-                let isSupport = game.jutsuRequirements[skill]?.attributes?.includes("Support");
-                if (target.statusEffects.some(e => (e.name === "Substitution" || e.name === "Clone") && !isSupport)) {
-                    let triggered = target.statusEffects.find(e => e.name === "Substitution" || e.name === "Clone");
-                    target.statusEffects = target.statusEffects.filter(e => e !== triggered);
-                    document.getElementById("output").innerHTML += `<br>${target.name}'s ${triggered.name} blocks ${skill}! Turn ends.`;
-                    return;
-                }
-                if (user.statusEffects.some(e => e.name === "Shadow Clone" && !isSupport)) {
-                    let cloneCount = user.statusEffects.filter(e => e.name === "Shadow Clone").length;
-                    user.statusEffects = user.statusEffects.filter(e => e.name !== "Shadow Clone");
-                    for (let i = 0; i < cloneCount; i++) {
-                        document.getElementById("output").innerHTML += `<br>Shadow Clone uses Barrage!`;
-                        target.hp -= 1; // Barrage damage
-                        document.getElementById("output").innerHTML += `<br>${target.name} takes 1 damage from Barrage!`;
-                    }
-                    updateStatus();
-                }
-                if (skill === "Healing Stance") {
-                    user.statusEffects.push({ name: "Regen", type: "heal", heal: 1, duration: 3, source: "Healing Stance" });
-                    document.getElementById("output").innerHTML += `<br>${user.name} gains Regen!`;
-                } else if (skill === "Bite") {
-                    user.hp = Math.min(user.maxHp, user.hp + 1);
-                    target.statusEffects.push({ name: "Bleed", type: "dot", damage: 1, duration: 2, source: "Bite" });
-                    document.getElementById("output").innerHTML += `<br>${user.name} heals 1 HP from Bite! ${target.name} gains Bleed!`;
-                } else if (skill === "Shadow Clone Jutsu") {
-                    user.statusEffects.push({ name: "Shadow Clone", type: "special", duration: Infinity, source: "Shadow Clone Jutsu" });
-                    document.getElementById("output").innerHTML += `<br>${user.name} gains a Shadow Clone!`;
-                } else if (!isSupport) {
-                    let damage = 1; // Standardized damage for non-support skills
-                    target.hp -= damage;
-                    document.getElementById("output").innerHTML += `<br>${target.name} takes ${damage} damage!`;
-                }
-                updateStatus();
-                if (game.dotEffects[skill] && skill !== "Healing Stance") {
-                    target.statusEffects.push({ name: game.dotEffects[skill].name, type: "dot", damage: game.dotEffects[skill].baseDamage, duration: game.dotEffects[skill].duration, source: skill });
-                }
-            }, 1000);
+        function queueOutput(msg) {
+            game.outputQueue.push(msg);
+            if (!game.isOutputting) processOutputQueue();
+        }
+
+        function processOutputQueue() {
+            game.isOutputting = true;
+            if (game.outputQueue.length > 0) {
+                let msg = game.outputQueue.shift();
+                game.output.push(msg);
+                document.getElementById("output").innerHTML = game.output.join("<br>");
+                setTimeout(processOutputQueue, 1000);
+            } else {
+                game.isOutputting = false;
+            }
         }
 
         function endBattle() {
             game.gameState = "postBattle";
-            document.getElementById("output").innerHTML += `<br><span class="battle-ready">Battle ended!</span>`;
+            queueOutput(`<span class="battle-ready">Battle ended!</span>`);
             performJutsuSelection(1);
         }
     </script>
