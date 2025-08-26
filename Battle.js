@@ -53,7 +53,7 @@ function takeTurn(name) {
                     let original = skillSet.findSkill(skill.name).skillFunction;
                     let result = original(u, t, s);
                     if (t.hp > 0 && !result) {
-                        s.queueOutput(`${t.name} feels exhausted from Burn, reducing skill damage!`);
+                        s.queueOutput(`<span class='output-text-${t === game.player ? 'player' : 'enemy'}'>${t.name}</span> feels exhausted from Burn, reducing skill damage!`);
                     }
                     return result;
                 };
