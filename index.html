@@ -51,102 +51,12 @@
         button:hover {
             background-color: #777;
         }
-        .fire {
-            background-color: #800000;
-        }
-        .lightning {
-            background-color: #ff4500;
-        }
-        .illusion {
-            background-color: #800080;
-        }
-        .earth {
-            background-color: #3c2f2f;
-        }
-        .feral {
-            background-color: #228b22;
-        }
-        .neutral {
-            background-color: #555;
-        }
-        .water {
-            background-color: #000080;
-        }
-        .wind {
-            background-color: #d4a017;
-        }
         .start-button {
             background-color: #555;
             color: #fff;
             border: 2px solid #fff;
             font-size: 1.5rem;
             padding: 10px 20px;
-        }
-        .skills-button, .train-button {
-            background-color: #555;
-            color: #fff;
-            border: 2px solid #fff;
-            font-size: 1.2rem;
-            padding: 5px 10px;
-        }
-        .output-text-player {
-            color: #00ff00;
-        }
-        .output-text-enemy {
-            color: #ff00ff;
-        }
-        .output-text-neutral {
-            color: #ccc;
-        }
-        .status-burn {
-            color: #800000;
-        }
-        .status-numb {
-            color: #ff4500;
-        }
-        .status-bleed {
-            color: #ff00ff;
-        }
-        .status-healing {
-            color: #00ff00;
-        }
-        .status-doom {
-            color: #ffffff;
-        }
-        .status-shadowcloneeffect {
-            color: #800080;
-        }
-        .status-substitution {
-            color: #3c2f2f;
-        }
-        .status-rockbarrier {
-            color: #228b22;
-        }
-        .sprite {
-            width: 50px;
-            height: 50px;
-            vertical-align: middle;
-        }
-        .player-hp {
-            color: #00ff00;
-        }
-        .enemy-hp {
-            color: #ff00ff;
-        }
-        .skills-popup {
-            background: #333;
-            color: #fff;
-            padding: 20px;
-            border: 2px solid #fff;
-        }
-        .close-button {
-            background: #555;
-            color: #fff;
-            border: 2px solid #fff;
-            font-size: 1.2rem;
-            padding: 5px 10px;
-            cursor: pointer;
-            margin-top: 10px;
         }
     </style>
 </head>
@@ -163,575 +73,214 @@
     <div class="controls" id="main-controls"></div>
 
     <script>
-        let game = {
-            player: {
-                name: "Shinobi",
-                hp: 10,
-                maxHp: 10,
-                Rank: "Student",
-                ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank", Fire: "D-Rank", Lightning: "D-Rank", Earth: "D-Rank", Water: "D-Rank", Wind: "D-Rank", Feral: "D-Rank" },
-                skills: [],
-                skillInventory: [new Skills().findSkill("Barrage")], // Start with 1 Barrage
-                statusEffects: []
-            },
-            enemy: null,
-            battleNum: 1,
-            output: [],
-            gameState: "start",
-            battleScene: null,
-            outputQueue: [],
-            isOutputting: false,
-            gold: 0
-        };
+        document.addEventListener("DOMContentLoaded", function() {
+            let game = {
+                player: {
+                    name: "Shinobi",
+                    hp: 10,
+                    maxHp: 10,
+                    Rank: "Student",
+                    ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank", Fire: "D-Rank", Lightning: "D-Rank", Earth: "D-Rank", Water: "D-Rank", Wind: "D-Rank", Feral: "D-Rank" },
+                    skills: [],
+                    skillInventory: [new Skills().findSkill("Barrage")],
+                    statusEffects: [],
+                    gold: 0
+                },
+                enemy: null,
+                battleNum: 1,
+                output: [],
+                gameState: "start",
+                battleScene: null,
+                outputQueue: [],
+                isOutputting: false
+            };
 
-        class StatusEffect {
-            constructor(name, duration, damage = 0) {
-                this.name = name;
-                this.duration = duration;
-                this.damage = damage;
-                this.new = true;
-            }
-        }
-
-        class BattleSkill {
-            constructor(name, attributes, requirements, skillFunction, style, support, rank) {
-                this.name = name;
-                this.attributes = attributes || [];
-                this.requirements = requirements || {};
-                this.skillFunction = skillFunction;
-                this.style = style;
-                this.support = support || false;
-                this.rank = rank;
-            }
-        }
-
-        class Mob {
-            constructor(name, hp, maxHp, Rank, ninjaStyles, skills, statusEffects, sprite) {
-                this.name = name;
-                this.hp = hp;
-                this.maxHp = maxHp;
-                this.Rank = Rank;
-                this.ninjaStyles = ninjaStyles;
-                this.skills = skills;
-                this.statusEffects = statusEffects || [];
-                this.sprite = sprite;
-            }
-        }
-
-        class Skills {
-            constructor() {
-                this.skills = [];
-                this.initializeSkills();
-            }
-
-            initializeSkills() {
-                this.skills = [
-                    new BattleSkill("Barrage", ["Taijutsu"], {}, this.barrage.bind(this), "neutral", false, "D-Rank"),
-                    new BattleSkill("Substitution Jutsu", [], { Ninjutsu: "D-Rank", Taijutsu: "D-Rank" }, this.substitutionJutsu.bind(this), "neutral", true, "D-Rank"),
-                    new BattleSkill("Double Image", ["Genjutsu"], {}, this.doubleImage.bind(this), "illusion", true, "D-Rank"),
-                    new BattleSkill("Shadow Clone Jutsu", ["Ninjutsu"], { Ninjutsu: "C-Rank" }, this.shadowCloneJutsu.bind(this), "neutral", true, "C-Rank"),
-                    new BattleSkill("Demonic Vision", ["Genjutsu"], { Genjutsu: "C-Rank" }, this.demonicVision.bind(this), "illusion", false, "C-Rank"),
-                    new BattleSkill("Healing Stance", ["Ninjutsu"], {}, this.healingStance.bind(this), "neutral", true, "D-Rank"),
-                    new BattleSkill("Earth Dome Jutsu", ["Earth", "Ninjutsu"], { Earth: "C-Rank" }, this.earthDomeJutsu.bind(this), "earth", true, "C-Rank"),
-                    new BattleSkill("Flame Throw Jutsu", ["Fire", "Ninjutsu"], { Fire: "C-Rank", Ninjutsu: "C-Rank" }, this.flameThrowJutsu.bind(this), "fire", false, "B-Rank"),
-                    new BattleSkill("Static Field Jutsu", ["Lightning", "Ninjutsu"], { Lightning: "C-Rank" }, this.staticFieldJutsu.bind(this), "lightning", false, "C-Rank"),
-                    new BattleSkill("Fireball Jutsu", ["Fire", "Ninjutsu"], { Fire: "C-Rank" }, this.fireballJutsu.bind(this), "fire", false, "C-Rank"),
-                    new BattleSkill("Dynamic Entry", ["Taijutsu"], { Taijutsu: "C-Rank" }, this.dynamicEntry.bind(this), "neutral", false, "C-Rank"),
-                    new BattleSkill("Falcon Drop", ["Taijutsu"], { Taijutsu: "B-Rank" }, this.falconDrop.bind(this), "neutral", false, "B-Rank"),
-                    new BattleSkill("Rock Smash Jutsu", ["Earth", "Taijutsu"], { Earth: "B-Rank" }, this.rockSmashJutsu.bind(this), "earth", false, "B-Rank"),
-                    new BattleSkill("Genjutsu Release", ["Genjutsu"], { Genjutsu: "B-Rank" }, this.genjutsuRelease.bind(this), "illusion", true, "B-Rank"),
-                    new BattleSkill("Lightning Edge", ["Lightning", "Ninjutsu"], { Lightning: "C-Rank", Ninjutsu: "C-Rank" }, this.lightningEdge.bind(this), "lightning", false, "B-Rank"),
-                    new BattleSkill("Bite", ["Feral"], { Feral: "C-Rank" }, this.bite.bind(this), "feral", false, "C-Rank")
-                ];
-            }
-
-            canUseSkill(mob, skill) {
-                return Object.keys(skill.requirements).every(key => mob.ninjaStyles[key] && compareRanks(mob.ninjaStyles[key], skill.requirements[key]) >= 0);
-            }
-
-            findSkill(name) {
-                return this.skills.find(skill => skill.name === name);
-            }
-
-            barrage(user, target, scene) {
-                let baseDamage = Math.floor(Math.random() * 2) + 1; // 1-2 damage
-                let comboDamage = Math.floor(Math.random() * 2) + 1; // 1-2 damage
-                target.hp = Math.max(0, Math.min(target.maxHp, target.hp - baseDamage));
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> attacks <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> with <span class="output-text-neutral">Barrage</span> and hits for ${baseDamage} damage!`);
-                if (target.hp > 0) {
-                    target.hp = Math.max(0, Math.min(target.maxHp, target.hp - comboDamage));
-                    scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> combos ${target.name} for ${comboDamage} damage!`);
+            class StatusEffect {
+                constructor(name, duration, damage = 0) {
+                    this.name = name;
+                    this.duration = duration;
+                    this.damage = damage;
+                    this.new = true;
                 }
-                if (target.hp <= 0) return true;
-                return false;
             }
 
-            substitutionJutsu(user, target, scene) {
-                user.statusEffects.push(new StatusEffect("Swap", 1));
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> prepares <span class="output-text-neutral">Substitution Jutsu</span> <span class="status-substitution">🪵</span>!`);
-                return true;
-            }
-
-            doubleImage(user, target, scene) {
-                user.statusEffects.push(new StatusEffect("DoubleImage", 1));
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> creates <span class="output-text-illusion">Double Image</span> <span class="status-substitution">🌫️</span>!`);
-                return true;
-            }
-
-            shadowCloneJutsu(user, target, scene) {
-                if (user.hp < 2) {
-                    scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> does not have enough HP to cast <span class="output-text-neutral">Shadow Clone Jutsu</span>!`);
-                    return false;
+            class BattleSkill {
+                constructor(name, attributes, requirements, skillFunction, style, support, rank) {
+                    this.name = name;
+                    this.attributes = attributes || [];
+                    this.requirements = requirements || {};
+                    this.skillFunction = skillFunction;
+                    this.style = style;
+                    this.support = support || false;
+                    this.rank = rank;
                 }
-                let cloneCount = user.statusEffects.filter(e => e.name === "ShadowCloneEffect").length;
-                if (cloneCount >= 3) {
-                    scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> already has the maximum of 3 shadow clones!`);
-                    return false;
+            }
+
+            class Mob {
+                constructor(name, hp, maxHp, Rank, ninjaStyles, skills, statusEffects, sprite) {
+                    this.name = name;
+                    this.hp = hp;
+                    this.maxHp = maxHp;
+                    this.Rank = Rank;
+                    this.ninjaStyles = ninjaStyles;
+                    this.skills = skills;
+                    this.statusEffects = statusEffects || [];
+                    this.sprite = sprite;
                 }
-                user.hp = Math.max(0, Math.min(user.maxHp, user.hp - 2));
-                user.statusEffects.push(new StatusEffect("ShadowCloneEffect", 3));
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-neutral">Shadow Clone Jutsu</span>, adding a clone <span class="status-shadowcloneeffect">👥</span>!`);
-                return true;
             }
 
-            demonicVision(user, target, scene) {
-                let damage = 1;
-                target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-                target.statusEffects.push(new StatusEffect("Doom", 5, 1));
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-illusion">Demonic Vision</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-doom">Doom 💀</span>!`);
-                if (target.hp <= 0) return true;
-                return false;
+            class Skills {
+                constructor() {
+                    this.skills = [];
+                    this.initializeSkills();
+                }
+
+                initializeSkills() {
+                    this.skills = [
+                        new BattleSkill("Barrage", ["Taijutsu"], {}, this.barrage.bind(this), "neutral", false, "D-Rank"),
+                        new BattleSkill("Bite", ["Feral"], { Feral: "C-Rank" }, this.bite.bind(this), "feral", false, "C-Rank")
+                    ];
+                }
+
+                canUseSkill(mob, skill) {
+                    return Object.keys(skill.requirements).every(key => mob.ninjaStyles[key] && compareRanks(mob.ninjaStyles[key], skill.requirements[key]) >= 0);
+                }
+
+                findSkill(name) {
+                    return this.skills.find(skill => skill.name === name);
+                }
+
+                barrage(user, target, scene) {
+                    let baseDamage = Math.floor(Math.random() * 2) + 1;
+                    target.hp = Math.max(0, Math.min(target.maxHp, target.hp - baseDamage));
+                    scene.queueOutput(`<span class="output-text-player">${user.name}</span> attacks <span class="output-text-enemy">${target.name}</span> with Barrage for ${baseDamage} damage!`);
+                    return target.hp <= 0;
+                }
+
+                bite(user, target, scene) {
+                    let damage = 1;
+                    let heal = user.hp < user.maxHp ? 1 : 0;
+                    user.hp = Math.max(0, Math.min(user.maxHp, user.hp + heal));
+                    target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+                    scene.queueOutput(`<span class="output-text-player">${user.name}</span> bites <span class="output-text-enemy">${target.name}</span> for ${damage} damage${heal > 0 ? `, healing ${heal} HP` : ""}!`);
+                    return target.hp <= 0;
+                }
             }
 
-            healingStance(user, target, scene) {
-                let heal = user.hp < user.maxHp ? 1 : 0;
-                user.hp = Math.max(0, Math.min(user.maxHp, user.hp + heal));
-                user.statusEffects.push(new StatusEffect("Healing", 3, 1));
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> enters <span class="output-text-neutral">Healing Stance</span>${heal > 0 ? `, healing ${heal} HP` : ""} <span class="status-healing">🌿</span>!`);
-                return true;
+            function compareRanks(rank1, rank2) {
+                const ranks = ["D-Rank", "C-Rank", "B-Rank", "A-Rank", "S-Rank"];
+                return ranks.indexOf(rank1) - ranks.indexOf(rank2);
             }
 
-            earthDomeJutsu(user, target, scene) {
-                user.statusEffects.push(new StatusEffect("Dome", 2));
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> raises <span class="output-text-earth">Earth Dome Jutsu</span> <span class="status-rockbarrier">🪨</span>!`);
-                return true;
+            function updateStatus() {
+                document.getElementById("player-status").innerHTML = `${game.player.name} [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] [Gold: <span id="gold-amount">${game.player.gold}</span>]`;
+                document.getElementById("enemy-status").innerHTML = `Enemy [HP: <span class="enemy-hp">${game.enemy ? game.enemy.hp + "/" + game.enemy.maxHp : "0/0"}</span>] ${game.enemy ? game.enemy.name : ""}`;
             }
 
-            flameThrowJutsu(user, target, scene) {
-                let damage = Math.floor(Math.random() * 2) + 4; // 4-5 damage
-                target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-                target.statusEffects.push(new StatusEffect("Burn", 1, 2));
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Flame Throw Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burn">Burn 🔥</span>!`);
-                if (target.hp <= 0) return true;
-                return false;
+            function updateSkillCount() {
+                document.getElementById("gold-amount").innerText = game.player.gold;
             }
 
-            staticFieldJutsu(user, target, scene) {
-                let damage = Math.floor(Math.random() * 2) + 2; // 2-3 damage
-                target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-                user.statusEffects.push(new StatusEffect("Numb", 1));
-                target.statusEffects.push(new StatusEffect("Numb", 1));
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-lightning">Static Field Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-numb">Numb ⚡️</span> on both!`);
-                if (target.hp <= 0) return true;
-                return false;
+            function startGame() {
+                if (game.gameState === "start") {
+                    game.output = ["Train to earn gold and skills! Aim for 10 skills to become a Genin!"];
+                    document.getElementById("output").innerHTML = game.output.join("<br>");
+                    game.gameState = "chooseStyles";
+                    setupStyleButtons();
+                    updateSkillCount();
+                    document.getElementById("start-controls").innerHTML = "";
+                }
             }
 
-            fireballJutsu(user, target, scene) {
-                let damage = Math.floor(Math.random() * 2) + 3; // 3-4 damage
-                target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-                target.statusEffects.push(new StatusEffect("Burn", 1, 1));
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Fireball Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burn">Burn 🔥</span>!`);
-                if (target.hp <= 0) return true;
-                return false;
+            function setupStyleButtons() {
+                let controls = document.getElementById("style-controls");
+                controls.innerHTML = "";
+                queueOutput("You have 2 skill points to spend on ranking up your fighting styles.");
+                let allStyles = ["Ninjutsu", "Taijutsu", "Genjutsu"];
+                allStyles.forEach(style => {
+                    let button = document.createElement("button");
+                    button.innerText = style;
+                    button.onclick = function() { selectStyle(style); };
+                    controls.appendChild(button);
+                });
             }
 
-            dynamicEntry(user, target, scene) {
-                let damage = 1;
-                target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-                let usableSkills = user.skills.filter(skill => !skill.support && skill !== this.findSkill("Dynamic Entry"));
-                let nextSkill = usableSkills.length > 0 ? usableSkills[Math.floor(Math.random() * usableSkills.length)] : null;
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-neutral">Dynamic Entry</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage!`);
-                if (nextSkill) nextSkill.skillFunction(user, target, scene);
-                return target.hp <= 0;
-            }
-
-            falconDrop(user, target, scene) {
-                let damage = 2;
-                user.hp = Math.max(0, Math.min(user.maxHp, user.hp - 2));
-                target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-                target.statusEffects.push(new StatusEffect("Numb", 1));
-                user.statusEffects.push(new StatusEffect("READY", 1));
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-neutral">Falcon Drop</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, stunning target and taking 2 damage!`);
-                if (target.hp <= 0) return true;
-                return false;
-            }
-
-            rockSmashJutsu(user, target, scene) {
-                let damage = 6;
-                target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-earth">Rock Smash Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage!`);
-                if (target.hp <= 0) return true;
-                return false;
-            }
-
-            genjutsuRelease(user, target, scene) {
-                user.statusEffects = user.statusEffects.filter(e => e.name !== "Doom");
-                user.statusEffects.push(new StatusEffect("Release", 1));
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-illusion">Genjutsu Release</span>, dispelling Doom and gaining <span class="status-substitution">Release 🌀</span>!`);
-                return true;
-            }
-
-            lightningEdge(user, target, scene) {
-                let damage = Math.floor(Math.random() * 2) + 4; // 4-5 damage
-                target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-                target.statusEffects = target.statusEffects.filter(e => e.name !== "Dome" && e.name !== "ShadowCloneEffect" && e.name !== "DoubleImage" && e.name !== "Swap");
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> strikes with <span class="output-text-lightning">Lightning Edge</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, destroying all defenses and clones!`);
-                if (target.hp <= 0) return true;
-                return false;
-            }
-
-            bite(user, target, scene) {
-                let damage = 1;
-                let heal = user.hp < user.maxHp ? 1 : 0;
-                user.hp = Math.max(0, Math.min(user.maxHp, user.hp + heal));
-                target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-                target.statusEffects.push(new StatusEffect("Bleed", 2, 1));
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-feral">Bite</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage${heal > 0 ? `, healing ${heal} HP` : ""}, inflicting <span class="status-bleed">Bleed 🩸</span>!`);
-                if (target.hp <= 0) return true;
-                return false;
-            }
-        }
-
-        function compareRanks(rank1, rank2) {
-            const ranks = ["D-Rank", "C-Rank", "B-Rank", "A-Rank", "S-Rank"];
-            return ranks.indexOf(rank1) - ranks.indexOf(rank2);
-        }
-
-        function updateStatus() {
-            document.getElementById("player-status").innerHTML = `${game.player.name} [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] [Gold: <span id="gold-amount">${game.player.gold}</span>]`;
-            document.getElementById("enemy-status").innerHTML = `Enemy [HP: <span class="enemy-hp">${game.enemy ? game.enemy.hp + "/" + game.enemy.maxHp : "0/0"}</span>] ${game.enemy ? game.enemy.name : ""}`;
-        }
-
-        function updateSkillCount() {
-            document.getElementById("gold-amount").innerText = game.player.gold;
-            if (game.gameState === "main" && document.getElementById("skill-controls").innerHTML !== "") {
-                let totalInventory = game.player.skillInventory.length;
-                let totalActive = game.player.skills.length;
-                document.getElementById("skill-controls").innerHTML = `<p>Inventory: ${totalInventory} cards | Active: ${totalActive} cards</p>` + document.getElementById("skill-controls").innerHTML;
-            }
-            if (game.player.skills.length + game.player.skillInventory.length >= 10 && game.player.Rank === "Student") {
-                game.player.Rank = "Genin";
-                queueOutput(`<span class="genin">Promoted to Genin!</span>`);
-            }
-        }
-
-        function startGame() {
-    if (game.gameState === "start") {
-        game.output = ["Train to earn gold and skills! Aim for 10 skills to become a Genin!"];
-        document.getElementById("output").innerHTML = game.output.join("<br>");
-        game.gameState = "chooseStyles";
-        setupStyleButtons();
-        updateSkillCount();
-        document.getElementById("start-controls").innerHTML = "";
-    }
-}
-
-        function setupStyleButtons() {
-            let controls = document.getElementById("style-controls");
-            controls.innerHTML = "";
-            queueOutput("You have 2 skill points to spend on ranking up your fighting styles. Use them wisely to enhance your abilities!");
-            let allStyles = ["Ninjutsu", "Genjutsu", "Taijutsu", "Fire", "Lightning", "Earth", "Water", "Wind"];
-            allStyles.forEach(style => {
-                let button = document.createElement("button");
-                button.innerText = style;
-                button.onclick = function() { selectStyle(style); };
-                controls.appendChild(button);
-            });
-        }
-
-        function selectStyle(style) {
-            if (game.player.ninjaStyles[style] && Object.values(game.player.ninjaStyles).filter(r => r !== "D-Rank").length < 2) {
-                if (game.player.ninjaStyles[style] === "D-Rank") {
-                    if (confirm("Select " + style + "?")) {
-                        game.player.ninjaStyles[style] = upgradeRank(game.player.ninjaStyles[style]);
-                        queueOutput(`${style} added as a style with rank upgraded to ${game.player.ninjaStyles[style]}!`);
+            function selectStyle(style) {
+                if (game.player.ninjaStyles[style] && Object.values(game.player.ninjaStyles).filter(r => r !== "D-Rank").length < 2) {
+                    if (game.player.ninjaStyles[style] === "D-Rank") {
+                        game.player.ninjaStyles[style] = "C-Rank";
+                        queueOutput(`${style} upgraded to C-Rank!`);
                         if (Object.values(game.player.ninjaStyles).filter(r => r !== "D-Rank").length === 2) {
                             document.getElementById("style-controls").innerHTML = "";
                             setupInitialJutsuSelection();
                         }
                     }
-                } else {
-                    queueOutput(`You have already upgraded ${style}! Choose a different style.`);
                 }
             }
-        }
 
-        function upgradeRank(rank) {
-            const ranks = ["D-Rank", "C-Rank", "B-Rank", "A-Rank", "S-Rank"];
-            let currentIndex = ranks.indexOf(rank);
-            return currentIndex < ranks.length - 1 ? ranks[currentIndex + 1] : rank;
-        }
+            function setupInitialJutsuSelection() {
+                game.gameState = "chooseInitialJutsu";
+                performJutsuSelection(1);
+            }
 
-        function setupInitialJutsuSelection() {
-            game.gameState = "chooseInitialJutsu";
-            performJutsuSelection(3);
-        }
-
-        function performJutsuSelection(times) {
-            if (times > 0) {
-                let controls = document.getElementById("jutsu-controls");
-                controls.innerHTML = "";
-                let skillSet = new Skills();
-                let availableJutsu = skillSet.skills.filter(skill => skillSet.canUseSkill(game.player, skill));
-                let randomJutsu = [];
-                for (let i = 0; i < 3 && availableJutsu.length > 0; i++) {
-                    let index = Math.floor(Math.random() * availableJutsu.length);
-                    randomJutsu.push(availableJutsu.splice(index, 1)[0]);
-                }
-                if (randomJutsu.length > 0) {
-                    randomJutsu.forEach(jutsu => {
-                        let button = document.createElement("button");
-                        button.innerText = jutsu.name;
-                        button.onclick = function() { selectJutsu(jutsu, () => performJutsuSelection(times - 1)); };
-                        controls.appendChild(button);
-                    });
+            function performJutsuSelection(times) {
+                if (times > 0) {
+                    let controls = document.getElementById("jutsu-controls");
+                    controls.innerHTML = "";
+                    let skillSet = new Skills();
+                    let availableJutsu = skillSet.skills.filter(skill => skillSet.canUseSkill(game.player, skill));
+                    let randomJutsu = availableJutsu.length > 0 ? [availableJutsu[0]] : [];
+                    if (randomJutsu.length > 0) {
+                        randomJutsu.forEach(jutsu => {
+                            let button = document.createElement("button");
+                            button.innerText = jutsu.name;
+                            button.onclick = function() { selectJutsu(jutsu, () => performJutsuSelection(times - 1)); };
+                            controls.appendChild(button);
+                        });
+                    } else {
+                        queueOutput("No jutsu available.");
+                        showMainScreen();
+                    }
                 } else {
-                    queueOutput('No jutsu available based on styles and ranks.');
                     showMainScreen();
                 }
-            } else {
-                queueOutput('Initial jutsu selection complete, returning to main screen...');
-                showMainScreen();
             }
-        }
 
-        function selectJutsu(jutsu, callback) {
-            if (game.gameState === "chooseInitialJutsu" || game.gameState === "postBattle") {
-                if (confirm("Select " + jutsu.name + "?")) {
-                    let count = game.player.skills.filter(s => s.name === jutsu.name).length + game.player.skillInventory.filter(s => s.name === jutsu.name).length;
-                    if (count < 3 || (game.player.skills.length + game.player.skillInventory.length < 10 && (jutsu.rank === "D-Rank" || jutsu.rank === "C-Rank"))) {
-                        game.player.skillInventory.push(jutsu);
-                        queueOutput(`${jutsu.name} added to skill inventory!`);
-                        updateSkillCount();
-                        document.getElementById("jutsu-controls").innerHTML = "";
-                        if (callback) callback();
-                    } else {
-                        game.player.gold += jutsu.rank === "D-Rank" ? 5 : jutsu.rank === "C-Rank" ? 10 : 50;
-                        queueOutput(`Extra ${jutsu.name} converted to ${jutsu.rank === "D-Rank" ? 5 : jutsu.rank === "C-Rank" ? 10 : 50} gold due to owning 3 or more!`);
-                        updateSkillCount();
-                        document.getElementById("jutsu-controls").innerHTML = "";
-                        if (callback) callback();
-                    }
+            function selectJutsu(jutsu, callback) {
+                if (game.gameState === "chooseInitialJutsu") {
+                    game.player.skillInventory.push(jutsu);
+                    queueOutput(`${jutsu.name} added to inventory!`);
+                    document.getElementById("jutsu-controls").innerHTML = "";
+                    if (callback) callback();
                 }
             }
-        }
 
-        function showMainScreen() {
-            game.gameState = "main";
-            let controls = document.getElementById("main-controls");
-            controls.innerHTML = "";
-            ["Train", "Manage Skills"].forEach(option => {
+            function showMainScreen() {
+                game.gameState = "main";
+                let controls = document.getElementById("main-controls");
+                controls.innerHTML = "";
                 let button = document.createElement("button");
-                button.className = option === "Train" ? "train-button" : "skills-button";
-                button.innerText = option;
-                button.onclick = function() { handleMainOption(option); };
+                button.className = "train-button";
+                button.innerText = "Train";
+                button.onclick = function() { startBattle(); };
                 controls.appendChild(button);
-            });
-            updateSkillControls();
-        }
-
-        function handleMainOption(option) {
-            if (option === "Train" && game.gameState !== "battle") {
-                startBattle();
-            } else if (option === "Manage Skills") {
-                if (document.getElementById("skill-controls").innerHTML === "") {
-                    updateSkillControls();
-                } else {
-                    document.getElementById("skill-controls").innerHTML = "";
-                }
             }
-        }
 
-        function updateSkillControls() {
-            let controls = document.getElementById("skill-controls");
-            controls.innerHTML = "";
-            if (game.gameState === "main") {
-                game.player.skillInventory.forEach((skill, index) => {
-                    let button = document.createElement("button");
-                    button.innerText = `Add ${skill.name} (${index + 1}) to Active`;
-                    button.onclick = function() { moveToActiveSkills(skill, index); };
-                    controls.appendChild(button);
-                });
-                game.player.skills.forEach((skill, index) => {
-                    let button = document.createElement("button");
-                    button.innerText = `Move ${skill.name} (${index + 1}) to Inventory`;
-                    button.onclick = function() { moveToInventory(skill, index); };
-                    controls.appendChild(button);
-                });
-            }
-        }
-
-        function moveToActiveSkills(skill, index) {
-            if (game.gameState !== "battle") {
-                let cRankCount = game.player.skills.filter(s => s.rank === "C-Rank").length;
-                let bRankCount = game.player.skills.filter(s => s.rank === "B-Rank").length;
-                let aRankCount = game.player.skills.filter(s => s.rank === "A-Rank").length;
-                let maxSkills = game.player.Rank === "Student" ? 5 : game.player.Rank === "Genin" ? 10 : 15;
-                if (game.player.skills.length < maxSkills) {
-                    if (skill.rank === "C-Rank" && cRankCount < (game.player.Rank === "Genin" ? 3 : 5) ||
-                        skill.rank === "B-Rank" && bRankCount < (game.player.Rank === "Genin" ? 2 : 0) ||
-                        skill.rank === "A-Rank" && aRankCount < (game.player.Rank === "Genin" ? 1 : 0) ||
-                        skill.rank === "D-Rank") {
-                        game.player.skills.push(skill);
-                        game.player.skillInventory.splice(index, 1);
-                        queueOutput(`${skill.name} moved to active skills!`);
-                        updateSkillCount();
-                        updateSkillControls();
-                    } else {
-                        queueOutput(`Rank limit reached for ${skill.rank} skills!`);
-                    }
-                } else {
-                    queueOutput('Active skills limit reached!');
-                }
-            } else {
-                queueOutput('Cannot move skills during battle!');
-            }
-        }
-
-        function moveToInventory(skill, index) {
-            if (game.gameState !== "battle") {
-                game.player.skillInventory.push(skill);
-                game.player.skills.splice(index, 1);
-                queueOutput(`${skill.name} moved to inventory!`);
-                updateSkillCount();
-                updateSkillControls();
-            } else {
-                queueOutput('Cannot move skills during battle!');
-            }
-        }
-
-        function startBattle() {
-            if (game.gameState !== "battle") {
-                let enemyType = Math.random() < 0.5 ? new Mob("Wild Dog", 8, 8, "D-Rank", { Feral: "D-Rank" }, [new Skills().findSkill("Bite")]) : new Mob("Training Dummy", 6, 6, "D-Rank", { Neutral: "D-Rank" }, [new Skills().findSkill("Healing Stance")]);
-                game.enemy = enemyType;
-                game.gameState = "battle";
-                // Fill active skills to 10 if possible
-                while (game.player.skills.length < 10 && game.player.skills.length + game.player.skillInventory.length > game.player.skills.length) {
-                    let randIndex = Math.floor(Math.random() * game.player.skillInventory.length);
-                    game.player.skills.push(game.player.skillInventory.splice(randIndex, 1)[0]);
-                }
-                updateStatus();
-                game.battleScene = { queueOutput: queueOutput };
-                queueOutput(`<span class="battle-ready">BATTLE BEGINS! ${game.player.name} vs. ${game.enemy.name}</span>`);
-                setTimeout(() => determineTurnOrder(), 1000);
-            } else {
-                queueOutput('Battle already in progress!');
-            }
-        }
-
-        function determineTurnOrder() {
-            let coinFlip = Math.random() < 0.5;
-            let first = coinFlip ? game.player.name : game.enemy.name;
-            let second = coinFlip ? game.enemy.name : game.player.name;
-            queueOutput(`${second} is off guard!`);
-            setTimeout(() => takeTurn(first), 2000);
-        }
-
-        function takeTurn(name) {
-            queueOutput(`${name}'s turn`);
-            setTimeout(() => {
-                let user = name === game.player.name ? game.player : game.enemy;
-                let target = name === game.player.name ? game.enemy : game.player;
-                applyStatusEffects(user);
-                let skillSet = new Skills();
-                let usableSkills = user.skills.filter(skill => skillSet.canUseSkill(user, skill));
-                let skill = usableSkills.length > 0 ? usableSkills[Math.floor(Math.random() * usableSkills.length)] : null;
-                if (user.statusEffects.some(e => e.name === "READY")) {
-                    let barrageSkill = skillSet.findSkill("Barrage");
-                    if (barrageSkill) barrageSkill.skillFunction(user, target, game.battleScene);
-                    user.statusEffects = user.statusEffects.filter(e => e.name !== "READY");
-                }
-                if (skill && !user.statusEffects.some(e => e.name === "Numb")) {
-                    let burnReduction = user.statusEffects.some(e => e.name === "Burn") ? 1 : 0;
-                    if (burnReduction && skill !== skillSet.findSkill("Healing Stance")) {
-                        skill.skillFunction = function(u, t, s) {
-                            let original = skillSet.findSkill(skill.name).skillFunction;
-                            let result = original(u, t, s);
-                            if (t.hp > 0 && !result) {
-                                s.queueOutput(`${t.name} feels exhausted from Burn, reducing skill damage!`);
-                            }
-                            return result;
-                        };
-                    }
-                    skill.skillFunction(user, target, game.battleScene);
-                } else if (user.statusEffects.some(e => e.name === "Numb")) {
-                    queueOutput(`${user.name} is stunned by Numb!`);
-                    user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
-                }
-                if (game.player.hp > 0 && game.enemy.hp > 0) {
-                    setTimeout(() => takeTurn(target.name), 2000);
-                } else {
-                    endBattle();
-                }
-            }, 2000);
-        }
-
-        function applyStatusEffects(entity) {
-            entity.statusEffects = entity.statusEffects.filter(effect => {
-                if (effect.name === "Burn" || effect.name === "Doom" || effect.name === "Bleed") {
-                    entity.hp -= effect.damage;
-                    effect.duration--;
-                    queueOutput(`${entity.name} takes ${effect.damage} damage from ${effect.name}!`);
+            function startBattle() {
+                if (game.gameState !== "battle") {
+                    game.enemy = new Mob("Wild Dog", 8, 8, "D-Rank", { Feral: "D-Rank" }, [new Skills().findSkill("Bite")]);
+                    game.gameState = "battle";
                     updateStatus();
-                } else if (effect.name === "Healing") {
-                    let heal = entity.hp < entity.maxHp ? effect.damage : 0;
-                    entity.hp = Math.min(entity.maxHp, entity.hp + heal);
-                    effect.duration--;
-                    if (heal > 0) queueOutput(`${entity.name} heals ${heal} HP from ${effect.name}!`);
-                    updateStatus();
-                } else if (effect.name === "ShadowCloneEffect") {
-                    if (effect.new) {
-                        effect.new = false;
-                    } else if (effect.duration > 0) {
-                        effect.duration--;
-                    }
-                } else if (effect.name === "Swap" || effect.name === "DoubleImage" || effect.name === "Dome" || effect.name === "RockBarrier") {
-                    effect.duration--;
-                } else if (effect.name === "Numb" || effect.name === "READY") {
-                    effect.duration--;
-                } else if (effect.name === "Release") {
-                    effect.duration--;
+                    queueOutput(`BATTLE BEGINS! ${game.player.name} vs. ${game.enemy.name}`);
                 }
-                return effect.duration > 0;
-            });
-        }
+            }
 
-        function queueOutput(msg) {
-            game.outputQueue.push(msg);
-            if (!game.isOutputting) processOutputQueue();
-        }
-
-        function processOutputQueue() {
-            game.isOutputting = true;
-            if (game.outputQueue.length > 0) {
-                let msg = game.outputQueue.shift();
+            function queueOutput(msg) {
                 game.output.push(msg);
-                let outputDiv = document.getElementById("output");
-                outputDiv.innerHTML = game.output.join("<br>");
-                outputDiv.scrollTop = outputDiv.scrollHeight; // Auto-scroll
-                setTimeout(processOutputQueue, 1000);
-            } else {
-                game.isOutputting = false;
+                document.getElementById("output").innerHTML = game.output.join("<br>");
+                document.getElementById("output").scrollTop = document.getElementById("output").scrollHeight;
             }
-        }
-
-        function endBattle() {
-            game.gameState = "postBattle";
-            queueOutput(`<span class="battle-ready">Battle ended!</span>`);
-            game.player.hp = game.player.maxHp; // Heal to full HP
-            game.player.statusEffects = []; // Clear status effects
-            performJutsuSelection(1);
-        }
+        });
     </script>
 </body>
 </html>
