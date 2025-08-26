@@ -1,8 +1,14 @@
 const Log = {
     debug: function(message) {
-        console.log(`[DEBUG ${new Date().toLocaleTimeString('en-US', { timeZone: 'America/New_York' })}]: ${message}`);
+        let debugMessage = `<span class='debug-log'>[DEBUG ${new Date().toLocaleTimeString('en-US', { timeZone: 'America/New_York' })}]: ${message}</span>`;
+        game.output.push(debugMessage);
+        document.getElementById("output").innerHTML = game.output.join("<br>");
+        document.getElementById("output").scrollTop = document.getElementById("output").scrollHeight;
     },
     error: function(message) {
-        console.error(`[ERROR ${new Date().toLocaleTimeString('en-US', { timeZone: 'America/New_York' })}]: ${message}`);
+        let errorMessage = `<span class='debug-log'>[ERROR ${new Date().toLocaleTimeString('en-US', { timeZone: 'America/New_York' })}]: ${message}</span>`;
+        game.output.push(errorMessage);
+        document.getElementById("output").innerHTML = game.output.join("<br>");
+        document.getElementById("output").scrollTop = document.getElementById("output").scrollHeight;
     }
 };
