@@ -121,7 +121,7 @@
                 Rank: "Student",
                 ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank", Fire: "D-Rank", Lightning: "D-Rank", Earth: "D-Rank", Water: "D-Rank", Wind: "D-Rank", Feral: "D-Rank" },
                 skills: [],
-                skillInventory: [new Skills().findSkill("Barrage")],
+                skillInventory: [],
                 statusEffects: []
             },
             enemy: null,
@@ -142,7 +142,7 @@
                     Rank: "Student",
                     ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank", Fire: "D-Rank", Lightning: "D-Rank", Earth: "D-Rank", Water: "D-Rank", Wind: "D-Rank", Feral: "D-Rank" },
                     skills: [],
-                    skillInventory: [new Skills().findSkill("Barrage")],
+                    skillInventory: [],
                     statusEffects: []
                 },
                 enemy: null,
@@ -196,7 +196,7 @@
         }
 
         function startGame() {
-            game.output = ["Train to earn gold and skills! Aim for 10 skills to become a Genin! Click to choose styles!"];
+            game.output = ["Welcome to ShinobiWay, Shinobi! You can Rank Up 2 available Fighting Styles during Rank Up to unlock new Jutsu."];
             document.getElementById("output").innerHTML = game.output.join("<br>");
             game.gameState = "chooseStyles";
             initiateStyleSelection();
