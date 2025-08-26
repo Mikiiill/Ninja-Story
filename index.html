@@ -38,25 +38,29 @@
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            let game = {
-                gameState: "start",
-                output: []
-            };
+        let game;
 
-            function startGame() {
-                if (game.gameState === "start") {
-                    game.output = ["Game started! Train to earn gold and skills!"];
-                    document.getElementById("output").innerHTML = game.output.join("<br>");
-                    game.gameState = "chooseStyles";
-                    document.getElementById("start-controls").innerHTML = "";
-                }
+        function startGame() {
+            if (game && game.gameState === "start") {
+                game.output = ["Game started! Train to earn gold and skills!"];
+                document.getElementById("output").innerHTML = game.output.join("<br>");
+                game.gameState = "chooseStyles";
+                document.getElementById("start-controls").innerHTML = "";
             }
+        }
 
-            function queueOutput(msg) {
+        function queueOutput(msg) {
+            if (game) {
                 game.output.push(msg);
                 document.getElementById("output").innerHTML = game.output.join("<br>");
             }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            game = {
+                gameState: "start",
+                output: []
+            };
         });
     </script>
 </body>
