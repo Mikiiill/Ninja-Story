@@ -95,14 +95,14 @@
         function updateSkillCount() {
             let totalCards = 0;
             for (let skill in game.player.skillCounts) {
-                totalCards += game.player.skillCounts[skill];
+                totalCards += game.player.skillCounts[skill] || 0;
             }
             document.getElementById("skill-count").innerText = `Skill cards: ${totalCards} | Gold: ${game.player.gold}`;
         }
 
         function updateStatus() {
-            document.getElementById("player-status").innerHTML = `Shinobi [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>]`;
-            document.getElementById("enemy-status").innerHTML = `Enemy [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>]`;
+            document.getElementById("player-status").innerHTML = `Shinobi [HP: <span class="player-hp">${isNaN(game.player.hp) ? 0 : game.player.hp}/${game.player.maxHp}</span>]`;
+            document.getElementById("enemy-status").innerHTML = `Enemy [HP: <span class="enemy-hp">${isNaN(game.enemy.hp) ? 0 : game.enemy.hp}/${game.enemy.maxHp}</span>]`;
         }
 
         function startGame() {
@@ -212,7 +212,7 @@
                 let count = game.player.skillCounts[jutsu] || 0;
                 if (count < 4) {
                     game.player.skillInventory.push(jutsu);
-                    game.player.skillCounts[jutsu] = count + 1;
+                    game.player.skillCounts[jutsu] = (game.player.skillCounts[jutsu] || 0) + 1;
                     log(jutsu + ' added to skill inventory!');
                     updateSkillCount();
                     document.getElementById("jutsu-controls").innerHTML = "";
@@ -247,7 +247,7 @@
             if (option === "Train" && game.gameState !== "battle") {
                 startBattle();
             } else if (option === "Manage Skills") {
-                if (document.getElementById("skill-controls").innerHTML === "") {
+                if (document.getElementById("skill-controls").innerHTML === "<div class='section' id='active-skills'><h3>Active Skills</h3></div><div class='section' id='skill-inventory'><h3>Skill Inventory</h3></div>") {
                     updateSkillControls();
                 } else {
                     document.getElementById("skill-controls").innerHTML = "<div class='section' id='active-skills'><h3>Active Skills</h3></div><div class='section' id='skill-inventory'><h3>Skill Inventory</h3></div>";
@@ -264,8 +264,10 @@
             if (game.gameState === "main") {
                 let activeSkills = [];
                 for (let skill in game.player.skillCounts) {
-                    for (let i = 0; i < game.player.skillCounts[skill]; i++) {
-                        activeSkills.push({ name: skill, index: i });
+                    for (let i = 0; i < game.player.skillCounts[skill] || 0; i++) {
+                        if (game.player.skills.includes(skill)) {
+                            activeSkills.push({ name: skill, index: i });
+                        }
                     }
                 }
                 activeSkills.forEach((skillObj, index) => {
@@ -303,12 +305,7 @@
         }
 
         function moveToInventory(skill, index) {
-            let activeSkills = [];
-            for (let s in game.player.skillCounts) {
-                for (let i = 0; i < game.player.skillCounts[s]; i++) {
-                    activeSkills.push(s);
-                }
-            }
+            let activeSkills = game.player.skills;
             if (index < activeSkills.length) {
                 game.player.skillInventory.push(skill);
                 game.player.skills.splice(index, 1);
@@ -325,7 +322,7 @@
         function startBattle() {
             if (game.gameState !== "battle") {
                 let enemyType = Math.random() < 0.5 ? "Wild Dog" : "Training Dummy";
-                game.enemy = { ...game.enemies[enemyType], name: enemyType };
+                game.enemy = { ...game.enemies[enemyType], name: enemyType, statusEffects: [] };
                 game.gameState = "battle";
                 updateStatus();
                 log('Entering battle...');
@@ -351,14 +348,14 @@
                     applyStatusEffects(game.player);
                     let skill = game.player.skills.length > 0 ? game.player.skills[Math.floor(Math.random() * game.player.skills.length)] : null;
                     if (skill) {
-                        useSkill(skill, game.enemy);
+                        useSkill(skill, game.enemy, game.player);
                     }
                     setTimeout(() => takeTurn(game.enemy.name), 3000);
                 } else {
                     applyStatusEffects(game.enemy);
                     let skill = game.enemy.skills.length > 0 ? game.enemy.skills[Math.floor(Math.random() * game.enemy.skills.length)] : null;
                     if (skill) {
-                        useSkill(skill, game.player);
+                        useSkill(skill, game.player, game.enemy);
                     }
                     if (game.player.hp > 0 && game.enemy.hp > 0) {
                         setTimeout(() => takeTurn(game.player.name), 3000);
@@ -386,28 +383,38 @@
             });
         }
 
-        function useSkill(skill, target) {
-            document.getElementById("output").innerHTML += `<br>${game.player.name} uses ${skill}! ${game.asciiArt[skill] || ""}`;
+        function useSkill(skill, target, user) {
+            document.getElementById("output").innerHTML += `<br>${user.name} uses ${skill}! ${game.asciiArt[skill] || ""}`;
             setTimeout(() => {
-                if (target.statusEffects.some(e => (e.name === "Substitution" || e.name === "Clone") && !game.jutsuRequirements[skill]?.attributes?.includes("Support"))) {
-                    target.statusEffects = target.statusEffects.filter(e => e.name !== "Substitution" && e.name !== "Clone");
-                    document.getElementById("output").innerHTML += `<br>${target.name}'s ${target.statusEffects.length > 0 ? "Clone" : "Substitution"} blocks ${skill}! Turn ends.`;
+                let isSupport = game.jutsuRequirements[skill]?.attributes?.includes("Support");
+                if (target.statusEffects.some(e => (e.name === "Substitution" || e.name === "Clone") && !isSupport)) {
+                    let triggered = target.statusEffects.find(e => e.name === "Substitution" || e.name === "Clone");
+                    target.statusEffects = target.statusEffects.filter(e => e !== triggered);
+                    document.getElementById("output").innerHTML += `<br>${target.name}'s ${triggered.name} blocks ${skill}! Turn ends.`;
                     return;
                 }
-                if (game.player.statusEffects.some(e => e.name === "Shadow Clone" && !game.jutsuRequirements[skill]?.attributes?.includes("Support"))) {
-                    game.player.statusEffects = game.player.statusEffects.filter(e => e.name !== "Shadow Clone");
-                    document.getElementById("output").innerHTML += `<br>Shadow Clone uses Barrage!`;
-                    useSkill("Barrage", target);
+                if (user.statusEffects.some(e => e.name === "Shadow Clone" && !isSupport)) {
+                    let cloneCount = user.statusEffects.filter(e => e.name === "Shadow Clone").length;
+                    user.statusEffects = user.statusEffects.filter(e => e.name !== "Shadow Clone");
+                    for (let i = 0; i < cloneCount; i++) {
+                        document.getElementById("output").innerHTML += `<br>Shadow Clone uses Barrage!`;
+                        target.hp -= 1; // Barrage damage
+                        document.getElementById("output").innerHTML += `<br>${target.name} takes 1 damage from Barrage!`;
+                    }
+                    updateStatus();
                 }
-                let damage = 2;
                 if (skill === "Healing Stance") {
-                    game.player.statusEffects.push({ name: "Regen", type: "heal", heal: 1, duration: 3, source: "Healing Stance" });
-                    document.getElementById("output").innerHTML += `<br>${game.player.name} gains Regen!`;
+                    user.statusEffects.push({ name: "Regen", type: "heal", heal: 1, duration: 3, source: "Healing Stance" });
+                    document.getElementById("output").innerHTML += `<br>${user.name} gains Regen!`;
                 } else if (skill === "Bite") {
-                    game.player.hp = Math.min(game.player.maxHp, game.player.hp + 1);
+                    user.hp = Math.min(user.maxHp, user.hp + 1);
                     target.statusEffects.push({ name: "Bleed", type: "dot", damage: 1, duration: 2, source: "Bite" });
-                    document.getElementById("output").innerHTML += `<br>${game.player.name} heals 1 HP from Bite! ${target.name} gains Bleed!`;
-                } else {
+                    document.getElementById("output").innerHTML += `<br>${user.name} heals 1 HP from Bite! ${target.name} gains Bleed!`;
+                } else if (skill === "Shadow Clone Jutsu") {
+                    user.statusEffects.push({ name: "Shadow Clone", type: "special", duration: Infinity, source: "Shadow Clone Jutsu" });
+                    document.getElementById("output").innerHTML += `<br>${user.name} gains a Shadow Clone!`;
+                } else if (!isSupport) {
+                    let damage = 1; // Standardized damage for non-support skills
                     target.hp -= damage;
                     document.getElementById("output").innerHTML += `<br>${target.name} takes ${damage} damage!`;
                 }
