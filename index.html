@@ -196,7 +196,7 @@
         }
 
         function startGame() {
-            game.output = ["Welcome to ShinobiWay, Shinobi! You can Rank Up 2 available Fighting Styles during Rank Up to unlock new Jutsu."];
+            game.output = ["Welcome to ShinobiWay, <span class='output-text-player'>Shinobi</span>! You can Rank Up 2 available Fighting Styles during Rank Up to unlock new Jutsu."];
             document.getElementById("output").innerHTML = game.output.join("<br>");
             game.gameState = "chooseStyles";
             initiateStyleSelection();
