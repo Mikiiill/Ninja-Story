@@ -8,7 +8,7 @@
             background-image: url('https://mikiiill.github.io/ShinobiWay/Back.png');
             background-repeat: no-repeat;
             background-size: cover;
-            background-color: #000; /* Fallback color to fill white space */
+            background-color: #000;
             color: #fff;
             font-family: Arial, sans-serif;
             margin: 0;
@@ -39,7 +39,7 @@
             margin: 10px;
             padding: 10px;
             border: 2px solid #fff;
-            background-color: #333; /* Same as battle text for readability */
+            background-color: #333;
         }
         button {
             background-color: #555;
@@ -58,24 +58,12 @@
             cursor: not-allowed;
             opacity: 0.6;
         }
-        .ninjutsu {
-            background-color: #000080;
-        }
-        .genjutsu {
-            background-color: #800080;
-        }
-        .taijutsu {
-            background-color: #228b22;
-        }
-        .fire {
-            background-color: #ff0000;
-        }
-        .lightning {
-            background-color: #ffa500;
-        }
-        .earth {
-            background-color: #8b4513;
-        }
+        .ninjutsu { background-color: #000080; }
+        .genjutsu { background-color: #800080; }
+        .taijutsu { background-color: #228b22; }
+        .fire { background-color: #ff0000; }
+        .lightning { background-color: #ffa500; }
+        .earth { background-color: #8b4513; }
         .start-button {
             background-color: #555;
             color: #fff;
@@ -90,65 +78,20 @@
             font-size: 1.2rem;
             padding: 5px 10px;
         }
-        .output-text-player {
-            color: #00ff00;
-        }
-        .output-text-enemy {
-            color: #ff00ff;
-        }
-        .output-text-neutral {
-            color: #ccc;
-        }
-        .status-burn {
-            color: #ff0000;
-        }
-        .status-numb {
-            color: #ffa500;
-        }
-        .status-bleed {
-            color: #ff00ff;
-        }
-        .status-regen {
-            color: #00ff00;
-        }
-        .status-doom {
-            color: #ffffff;
-        }
-        .status-shadowcloneeffect {
-            color: #800080;
-        }
-        .status-substitution {
-            color: #8b4513;
-        }
-        .status-dome {
-            color: #228b22;
-        }
-        .sprite {
-            width: 50px;
-            height: 50px;
-            vertical-align: middle;
-        }
-        .player-hp {
-            color: #00ff00;
-        }
-        .enemy-hp {
-            color: #ff00ff;
-        }
-        .skills-popup {
-            background: #333;
-            color: #fff;
-            padding: 20px;
-            border: 2px solid #fff;
-        }
-        .close-button {
-            background: #555;
-            color: #fff;
-            border: 2px solid #fff;
-            font-size: 1.2rem;
-            padding: 5px 10px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
+        .output-text-player { color: #00ff00; }
+        .output-text-enemy { color: #ff00ff; }
+        .output-text-neutral { color: #ccc; }
+        .status-burn { color: #ff0000; }
+        .status-numb { color: #ffa500; }
+        .status-bleed { color: #ff00ff; }
+        .status-regen { color: #00ff00; }
+        .status-doom { color: #ffffff; }
+        .status-shadowcloneeffect { color: #800080; }
+        .status-substitution { color: #8b4513; }
+        .status-dome { color: #228b22; }
+        .sprite { width: 50px; height: 50px; vertical-align: middle; }
+        .player-hp { color: #00ff00; }
+        .enemy-hp { color: #ff00ff; }
     </style>
 </head>
 <body>
@@ -172,7 +115,7 @@
                 Rank: "Student",
                 ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank", Fire: "D-Rank", Lightning: "D-Rank", Earth: "D-Rank", Water: "D-Rank", Wind: "D-Rank", Feral: "D-Rank" },
                 skills: [],
-                skillInventory: [new Skills().findSkill("Barrage")], // Start with 1 Barrage
+                skillInventory: [new Skills().findSkill("Barrage")],
                 statusEffects: []
             },
             enemy: null,
@@ -203,9 +146,10 @@
         }
 
         function updateStatus() {
-            let playerEffects = game.player.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`).join("");
+            let playerEffects = [...new Set(game.player.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("");
             document.getElementById("player-status").innerHTML = `Shinobi [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] ${playerEffects}`;
-            document.getElementById("enemy-status").innerHTML = game.enemy ? `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>]` : "Enemy [HP: <span class='enemy-hp'>0/0</span>]";
+            let enemyEffects = game.enemy ? [...new Set(game.enemy.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("") : "";
+            document.getElementById("enemy-status").innerHTML = game.enemy ? `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>] ${enemyEffects}` : "Enemy [HP: <span class='enemy-hp'>0/0</span>]";
         }
 
         function updateSkillCount() {
@@ -280,7 +224,11 @@
                     showMainScreen();
                 }
             } else {
-                queueOutput('Initial jutsu selection complete, returning to main screen...');
+                // Add extra Barrage card after initial selection
+                let barrageSkill = new Skills().findSkill("Barrage");
+                game.player.skillInventory.push(barrageSkill);
+                game.player.skillInventory.push(barrageSkill); // Two more for total of 4
+                queueOutput("Extra Barrage cards added to your inventory for a total of 4!");
                 showMainScreen();
             }
         }
@@ -324,7 +272,7 @@
             if (option === "Train" && game.gameState !== "battle") {
                 startBattle();
             } else if (option === "Manage Skills") {
-                if (document.getElementById("skill-controls").innerHTML === "") {
+                if (document.getElementById("skill-controls").innerHTML === "" && game.gameState !== "battle") {
                     updateSkillControls();
                 } else {
                     document.getElementById("skill-controls").innerHTML = "";
@@ -392,9 +340,16 @@
 
         function startBattle() {
             if (game.gameState !== "battle") {
-                let enemyType = Math.random() < 0.5 ? new Mob("Wild Dog", 8, 8, "D-Rank", { Feral: "C-Rank" }, [new Skills().findSkill("Bite")]) : new Mob("Training Dummy", 6, 6, "D-Rank", { Neutral: "D-Rank" }, [new Skills().findSkill("Healing Stance")]);
+                let enemyType;
+                if (game.player.Rank === "Genin") {
+                    enemyType = new Mob("Genin Opponent", 12, 12, "C-Rank", { Ninjutsu: "C-Rank", Taijutsu: "C-Rank" }, generateEnemySkills("C-Rank", { Ninjutsu: "C-Rank", Taijutsu: "C-Rank" }));
+                } else {
+                    enemyType = Math.random() < 0.5 ? new Mob("Wild Dog", 8, 8, "D-Rank", { Feral: "C-Rank" }, [new Skills().findSkill("Bite")]) : new Mob("Training Dummy", 6, 6, "D-Rank", { Neutral: "D-Rank" }, [new Skills().findSkill("Healing Stance")]);
+                }
                 game.enemy = enemyType;
                 game.gameState = "battle";
+                // Clear skill management during battle
+                document.getElementById("skill-controls").innerHTML = "";
                 // Fill active skills to 10 if possible
                 while (game.player.skills.length < 10 && game.player.skillInventory.length > 0) {
                     let randIndex = Math.floor(Math.random() * game.player.skillInventory.length);
@@ -407,6 +362,20 @@
             } else {
                 queueOutput('Battle already in progress!');
             }
+        }
+
+        function generateEnemySkills(rank, styles) {
+            let skillSet = new Skills();
+            let availableSkills = skillSet.skills.filter(skill => 
+                Object.keys(skill.requirements).every(style => styles[style] && compareRanks(styles[style], skill.requirements[style]) >= 0) &&
+                skill.rank === rank
+            );
+            let selectedSkills = [];
+            for (let i = 0; i < 4 && availableSkills.length > 0; i++) {
+                let index = Math.floor(Math.random() * availableSkills.length);
+                selectedSkills.push(availableSkills.splice(index, 1)[0]);
+            }
+            return selectedSkills.length > 0 ? selectedSkills : [skillSet.findSkill("Healing Stance")];
         }
 
         function determineTurnOrder() {
@@ -475,9 +444,9 @@
                     } else if (effect.duration > 0) {
                         effect.duration--;
                     }
-                } else if (effect.name === "Swap" || effect.name === "DoubleImage" || effect.name === "Dome" || effect.name === "RockBarrier") {
+                } else if (effect.name === "Swap" || effect.name === "DoubleImage" || effect.name === "Dome") {
                     effect.duration--;
-                } else if (effect.name === "Numb" || effect.name === "READY") {
+                } else if (effect.name === "Numb" || effect.name === "READY" || effect.name === "DynamicEntryProc") {
                     effect.duration--;
                 } else if (effect.name === "Release") {
                     effect.duration--;
@@ -583,16 +552,15 @@
             }
 
             barrage(user, target, scene) {
-                let baseDamage = Math.floor(Math.random() * 2) + 1; // 1-2 damage
-                let comboDamage = Math.floor(Math.random() * 2) + 1; // 1-2 damage
+                let baseDamage = Math.floor(Math.random() * 2) + 1;
+                let comboDamage = Math.floor(Math.random() * 2) + 1;
                 target.hp = Math.max(0, Math.min(target.maxHp, target.hp - baseDamage));
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> attacks <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> with <span class="output-text-neutral">Barrage</span> and hits for ${baseDamage} damage!`);
+                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> attacks <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> with <span class="output-text-neutral">Barrage</span> for ${baseDamage} damage!`);
                 if (target.hp > 0) {
                     target.hp = Math.max(0, Math.min(target.maxHp, target.hp - comboDamage));
                     scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> combos ${target.name} for ${comboDamage} damage!`);
                 }
-                if (target.hp <= 0) return true;
-                return false;
+                return target.hp <= 0;
             }
 
             substitutionJutsu(user, target, scene) {
@@ -628,8 +596,7 @@
                 target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
                 target.statusEffects.push(new StatusEffect("Doom", 5, 1));
                 scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-genjutsu">Demonic Vision</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-doom">Doom 💀</span>!`);
-                if (target.hp <= 0) return true;
-                return false;
+                return target.hp <= 0;
             }
 
             healingStance(user, target, scene) {
@@ -651,8 +618,7 @@
                 target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
                 target.statusEffects.push(new StatusEffect("Burn", 1, 2));
                 scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Flame Throw Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burn">Burn 🔥</span>!`);
-                if (target.hp <= 0) return true;
-                return false;
+                return target.hp <= 0;
             }
 
             staticFieldJutsu(user, target, scene) {
@@ -661,8 +627,7 @@
                 user.statusEffects.push(new StatusEffect("Numb", 1));
                 target.statusEffects.push(new StatusEffect("Numb", 1));
                 scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-lightning">Static Field Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-numb">Numb ⚡️</span> on both!`);
-                if (target.hp <= 0) return true;
-                return false;
+                return target.hp <= 0;
             }
 
             fireballJutsu(user, target, scene) {
@@ -670,8 +635,7 @@
                 target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
                 target.statusEffects.push(new StatusEffect("Burn", 1, 1));
                 scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Fireball Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burn">Burn 🔥</span>!`);
-                if (target.hp <= 0) return true;
-                return false;
+                return target.hp <= 0;
             }
 
             dynamicEntry(user, target, scene) {
@@ -683,8 +647,6 @@
                 if (nextSkill && !user.statusEffects.some(e => e.name === "DynamicEntryProc")) {
                     user.statusEffects.push(new StatusEffect("DynamicEntryProc", 1));
                     nextSkill.skillFunction(user, target, scene);
-                } else if (user.statusEffects.some(e => e.name === "DynamicEntryProc")) {
-                    user.statusEffects = user.statusEffects.filter(e => e.name !== "DynamicEntryProc");
                 }
                 return target.hp <= 0;
             }
