@@ -426,15 +426,15 @@
         }
 
         function startGame() {
-            if (game.gameState === "start") {
-                game.output = ["Train to earn gold and skills! Aim for 10 skills to become a Genin!"];
-                document.getElementById("output").innerHTML = game.output.join("<br>");
-                game.gameState = "chooseStyles";
-                setupStyleButtons();
-                updateSkillCount();
-                document.getElementById("start-controls").innerHTML = "";
-            }
-        }
+    if (game.gameState === "start") {
+        game.output = ["Train to earn gold and skills! Aim for 10 skills to become a Genin!"];
+        document.getElementById("output").innerHTML = game.output.join("<br>");
+        game.gameState = "chooseStyles";
+        setupStyleButtons();
+        updateSkillCount();
+        document.getElementById("start-controls").innerHTML = "";
+    }
+}
 
         function setupStyleButtons() {
             let controls = document.getElementById("style-controls");
