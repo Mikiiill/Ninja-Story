@@ -91,6 +91,7 @@
         .status-shadowcloneeffect { color: #800080; }
         .status-substitution { color: #8b4513; }
         .status-dome { color: #228b22; }
+        .battle-ready { color: #fff; font-weight: bold; }
         .sprite { width: 50px; height: 50px; vertical-align: middle; }
         .player-hp { color: #00ff00; }
         .enemy-hp { color: #ff00ff; }
@@ -112,6 +113,7 @@
     <script src="Characters.js"></script>
     <script src="Battle.js"></script>
     <script src="RANKUP.js"></script>
+    <script src="Log.js"></script>
     <script>
         let game = {
             player: {
@@ -170,6 +172,7 @@
         function processOutputQueue() {
             if (game.outputQueue.length === 0) {
                 game.isOutputting = false;
+                Log.debug(`Output queue processed, gameState: ${game.gameState}`);
                 return;
             }
             game.isOutputting = true;
@@ -191,12 +194,12 @@
             let totalCards = game.player.skills.length + game.player.skillInventory.length;
             if (totalCards >= 10 && game.player.Rank === "Student") {
                 game.player.Rank = "Genin";
-                queueOutput("Promoted to Genin!");
+                queueOutput("<span class='battle-ready'>Promoted to Genin!</span>");
             }
         }
 
         function startGame() {
-            game.output = ["Welcome to ShinobiWay, <span class='output-text-player'>Shinobi</span>! You can Rank Up 2 available Fighting Styles during Rank Up to unlock new Jutsu."];
+            game.output = ["<span class='output-text-neutral'>Welcome to ShinobiWay, <span class='output-text-player'>Shinobi</span>! You can Rank Up 2 available Fighting Styles during Rank Up to unlock new Jutsu.</span>"];
             document.getElementById("output").innerHTML = game.output.join("<br>");
             game.gameState = "chooseStyles";
             initiateStyleSelection();
