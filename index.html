@@ -106,7 +106,7 @@
         .status-bleed {
             color: #ff00ff;
         }
-        .status-healing {
+        .status-regen {
             color: #00ff00;
         }
         .status-doom {
@@ -118,7 +118,7 @@
         .status-substitution {
             color: #8b4513;
         }
-        .status-rockbarrier {
+        .status-dome {
             color: #228b22;
         }
         .sprite {
@@ -243,7 +243,8 @@
                         document.getElementById("style-controls").innerHTML = "";
                         setupInitialJutsuSelection();
                     } else {
-                        queueOutput(`You have ${2 - Object.values(game.player.ninjaStyles).filter(r => r !== "D-Rank").length} points remaining to upgrade another style.`);
+                        let remainingPoints = 2 - Object.values(game.player.ninjaStyles).filter(r => r !== "D-Rank").length;
+                        queueOutput(`You have ${remainingPoints} point${remainingPoints === 1 ? '' : 's'} remaining to upgrade another style.`);
                     }
                 }
             }
@@ -392,7 +393,6 @@
                 let enemyType = Math.random() < 0.5 ? new Mob("Wild Dog", 8, 8, "D-Rank", { Feral: "D-Rank" }, [new Skills().findSkill("Bite")]) : new Mob("Training Dummy", 6, 6, "D-Rank", { Neutral: "D-Rank" }, [new Skills().findSkill("Healing Stance")]);
                 game.enemy = enemyType;
                 game.gameState = "battle";
-                // Fill active skills to 10 if possible
                 while (game.player.skills.length < 10 && game.player.skillInventory.length > 0) {
                     let randIndex = Math.floor(Math.random() * game.player.skillInventory.length);
                     game.player.skills.push(game.player.skillInventory.splice(randIndex, 1)[0]);
@@ -460,7 +460,7 @@
                     effect.duration--;
                     queueOutput(`${entity.name} takes ${effect.damage} damage from ${effect.name}!`);
                     updateStatus();
-                } else if (effect.name === "Healing") {
+                } else if (effect.name === "Regen") {
                     let heal = entity.hp < entity.maxHp ? effect.damage : 0;
                     entity.hp = Math.min(entity.maxHp, entity.hp + heal);
                     effect.duration--;
@@ -472,7 +472,7 @@
                     } else if (effect.duration > 0) {
                         effect.duration--;
                     }
-                } else if (effect.name === "Swap" || effect.name === "DoubleImage" || effect.name === "Dome" || effect.name === "RockBarrier") {
+                } else if (effect.name === "Swap" || effect.name === "DoubleImage" || effect.name === "Dome" || effect.name === "Dome") {
                     effect.duration--;
                 } else if (effect.name === "Numb" || effect.name === "READY") {
                     effect.duration--;
@@ -630,14 +630,14 @@
             healingStance(user, target, scene) {
                 let heal = user.hp < user.maxHp ? 1 : 0;
                 user.hp = Math.max(0, Math.min(user.maxHp, user.hp + heal));
-                user.statusEffects.push(new StatusEffect("Healing", 3, 1));
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> enters <span class="output-text-neutral">Healing Stance</span>${heal > 0 ? `, healing ${heal} HP` : ""} <span class="status-healing">🌿</span>!`);
+                user.statusEffects.push(new StatusEffect("Regen", 3, 1));
+                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> enters <span class="output-text-neutral">Healing Stance</span>${heal > 0 ? `, healing ${heal} HP` : ""} <span class="status-regen">🌿</span>!`);
                 return true;
             }
 
             earthDomeJutsu(user, target, scene) {
-                user.statusEffects.push(new StatusEffect("EarthDome", 2));
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> raises <span class="output-text-earth">Earth Dome Jutsu</span> <span class="status-rockbarrier">🪨</span>!`);
+                user.statusEffects.push(new StatusEffect("Dome", 2));
+                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> raises <span class="output-text-earth">Earth Dome Jutsu</span> <span class="status-dome">🪨</span>!`);
                 return true;
             }
 
