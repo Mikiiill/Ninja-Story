@@ -191,7 +191,7 @@
             let playerEffects = [...new Set(game.player.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("");
             document.getElementById("player-status").innerHTML = `Shinobi [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] ${playerEffects}`;
             let enemyEffects = game.enemy ? [...new Set(game.enemy.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("") : "";
-            document.getElementById("enemy-status").innerHTML = game.enemy ? `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>] ${enemyEffects}` : "Enemy [HP: <span class='enemy-hp'>0/0</span>]`;
+            document.getElementById("enemy-status").innerHTML = game.enemy ? `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>] ${enemyEffects}` : "Enemy [HP: <span class='enemy-hp'>0/0</span>]";
         }
 
         function updateSkillCount() {
@@ -203,9 +203,11 @@
         }
 
         function startGame() {
+            Log.debug("Start Game button clicked");
             game.output = ["<span class='output-text-neutral'>Welcome to ShinobiWay, <span class='output-text-player'>Shinobi</span>! You can Rank Up 2 available Fighting Styles during Rank Up to unlock new Jutsu.</span>"];
             document.getElementById("output").innerHTML = game.output.join("<br>");
             game.gameState = "chooseStyles";
+            Log.debug(`Game state set to ${game.gameState}`);
             initiateStyleSelection();
             updateSkillCount();
             document.getElementById("start-controls").innerHTML = "";
