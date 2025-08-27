@@ -30,7 +30,7 @@ function ArriveVillage(villageName) {
         let choice = prompt(`Travel to: ${options.join(", ")}`);
         if (choice && options.includes(choice)) {
             game.battleNum = 0; // Reset battle count for new travel
-            game.player.lastVillage = choice; // Update destination
+            game.player.lastVillage = choice; // Update destination before fights
             startTravelFight();
         }
     };
