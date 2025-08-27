@@ -1,4 +1,5 @@
 function initiateStyleSelection() {
+    Log.debug("Initiating style selection");
     let controls = document.getElementById("style-controls");
     controls.innerHTML = "";
     let styles = ["Ninjutsu", "Genjutsu", "Taijutsu", "Fire", "Lightning", "Earth"];
@@ -30,12 +31,14 @@ function selectStyle(style, button) {
 }
 
 function setupInitialJutsuSelection() {
+    Log.debug("Setting up initial Jutsu selection");
     game.gameState = "chooseInitialJutsu";
-    performJutsuSelection(3);
+    performJutsuSelection(3, () => ArriveVillage("Newb Village"));
 }
 
 function performJutsuSelection(times, callback) {
     if (times > 0) {
+        Log.debug(`Performing Jutsu selection, remaining times: ${times}`);
         let controls = document.getElementById("jutsu-controls");
         controls.innerHTML = "";
         let skillSet = new Skills();
@@ -57,6 +60,7 @@ function performJutsuSelection(times, callback) {
             if (callback) callback();
         }
     } else {
+        Log.debug("Jutsu selection completed");
         if (callback) callback();
     }
 }
