@@ -19,7 +19,7 @@ function ArriveVillage(villageName) {
                     Log.debug("Train button clicked");
                     if ((game.player.Rank === "Student" && game.player.skills.length >= 4) || game.player.Rank !== "Student") {
                         let enemy = generateTrainingEnemy();
-                        startBattle(enemy, "training");
+                        startBattle(game.player, enemy); // Updated to match new Battle.js signature
                     } else {
                         queueOutput("<span class='output-text-neutral'>Cannot train: Student needs 4 skills!</span>");
                     }
