@@ -1,11 +1,8 @@
-function startBattle() {
+function startBattle(enemyType, fightType = "event") {
     if (game.gameState !== "battle") {
-        let enemyType = generateEnemy();
         game.enemy = enemyType;
         game.gameState = "battle";
-        // Clear skill management during battle
         document.getElementById("skill-controls").innerHTML = "";
-        // Fill active skills to 10 if possible
         while (game.player.skills.length < 10 && game.player.skillInventory.length > 0) {
             let randIndex = Math.floor(Math.random() * game.player.skillInventory.length);
             game.player.skills.push(game.player.skillInventory.splice(randIndex, 1)[0]);
@@ -16,21 +13,21 @@ function startBattle() {
         queueOutput("<span class='battle-ready'>BATTLE BEGINS!</span>");
         queueOutput(`<span class='output-text-player'>${game.player.name}</span> vs. <span class='output-text-enemy'>${game.enemy.name}</span>`);
         queueOutput(""); // Empty line after names
-        setTimeout(() => determineTurnOrder(), 1000);
+        setTimeout(() => determineTurnOrder(fightType), 1000);
     } else {
         queueOutput("<span class='output-text-neutral'>Battle already in progress!</span>");
     }
 }
 
-function determineTurnOrder() {
+function determineTurnOrder(fightType) {
     let coinFlip = Math.random() < 0.5;
     let first = coinFlip ? game.player.name : game.enemy.name;
     let second = coinFlip ? game.enemy.name : game.player.name;
     queueOutput(`<span class='output-text-neutral'>${second} is off guard!</span>`);
-    setTimeout(() => takeTurn(first), 2000);
+    setTimeout(() => takeTurn(first, fightType), 2000);
 }
 
-function takeTurn(name) {
+function takeTurn(name, fightType) {
     queueOutput(`<span class='output-text-${name === game.player.name ? 'player' : 'enemy'}'>${name}</span>'s turn`);
     setTimeout(() => {
         let user = name === game.player.name ? game.player : game.enemy;
@@ -62,9 +59,9 @@ function takeTurn(name) {
             skill.skillFunction(user, target, game.battleScene);
         }
         if (game.player.hp > 0 && game.enemy.hp > 0) {
-            setTimeout(() => takeTurn(target.name), 2000);
+            setTimeout(() => takeTurn(target.name, fightType), 2000);
         } else {
-            endBattle();
+            endBattle(fightType);
         }
     }, 2000);
 }
@@ -99,10 +96,54 @@ function applyStatusEffects(entity) {
     });
 }
 
-function endBattle() {
+function endBattle(fightType) {
     game.gameState = "postBattle";
     queueOutput("<span class='battle-ready'>Battle ended!</span>");
     game.player.hp = game.player.maxHp;
     game.player.statusEffects = [];
-    performJutsuSelection(1);
+    if (fightType === "training") {
+        performJutsuSelection(1, () => ArriveVillage(game.player.lastVillage));
+    } else if (fightType === "travel") {
+        game.battleNum++;
+        if (game.battleNum <= 4) {
+            startTravelFight();
+        } else {
+            ArriveVillage(game.player.lastVillage); // Arrive at new village after 4 fights
+        }
+    } else {
+        performJutsuSelection(1); // Default for event fights
+    }
+}
+
+function generateTrainingEnemy() {
+    let enemies = [
+        { name: "Training Dummy", hp: 10, maxHp: 10, ninjaStyles: { Taijutsu: "D-Rank", Ninjutsu: "D-Rank" }, skills: [], gold: 5 },
+        { name: "Thief", hp: 10, maxHp: 10, ninjaStyles: { Taijutsu: "C-Rank", Ninjutsu: "D-Rank" }, skills: [], gold: 10 },
+        { name: "Rabid Dog", hp: 10, maxHp: 10, ninjaStyles: { Feral: "C-Rank", Taijutsu: "D-Rank" }, skills: [], gold: 8 }
+    ];
+    let enemy = JSON.parse(JSON.stringify(enemies[Math.floor(Math.random() * enemies.length)]));
+    let skillSet = new Skills();
+    enemy.skills = skillSet.skills.filter(skill => skillSet.canUseSkill(enemy, skill)).slice(0, 2); // Limit to 2 skills
+    return enemy;
+}
+
+function startTravelFight() {
+    let rankStyles = {
+        "Genin": { hp: 12, styles: { Ninjutsu: "C-Rank", Taijutsu: "C-Rank", Genjutsu: "D-Rank", Fire: "D-Rank", Lightning: "D-Rank", Earth: "D-Rank" }, gold: 15 },
+        "Chuunin": { hp: 20, styles: { Ninjutsu: "B-Rank", Taijutsu: "B-Rank", Genjutsu: "C-Rank", Fire: "C-Rank", Lightning: "C-Rank", Earth: "C-Rank" }, gold: 30 }
+    };
+    let rankData = rankStyles[game.player.Rank] || rankStyles["Genin"];
+    let enemy = {
+        name: `Bandit ${Math.floor(Math.random() * 100)}`,
+        hp: rankData.hp,
+        maxHp: rankData.hp,
+        ninjaStyles: rankData.styles,
+        skills: [],
+        gold: rankData.gold
+    };
+    let skillSet = new Skills();
+    enemy.skills = skillSet.skills.filter(skill => skillSet.canUseSkill(enemy, skill)).slice(0, 3);
+    game.player.gold += enemy.gold;
+    queueOutput(`<span class='output-text-neutral'>Earned ${enemy.gold} gold from the fight!</span>`);
+    startBattle(enemy, "travel");
 }
