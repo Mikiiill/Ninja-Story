@@ -2,25 +2,22 @@ let battleQueue = [];
 
 function startBattle(enemy, mode) {
     if (game.gameState !== "battle") {
-        let enemyType = enemy || generateTrainingEnemy(); // Use provided enemy or generate one
+        let enemyType = enemy || generateTrainingEnemy();
         game.enemy = enemyType;
         game.gameState = "battle";
-        // Clear skill management during battle
         document.getElementById("skill-controls").innerHTML = "";
-        // Hide village controls during battle
         let controls = document.getElementById("main-controls");
         if (controls) controls.style.display = "none";
-        // Fill active skills to 10 if possible
         while (game.player.skills.length < 10 && game.player.skillInventory.length > 0) {
             let randIndex = Math.floor(Math.random() * game.player.skillInventory.length);
             game.player.skills.push(game.player.skillInventory.splice(randIndex, 1)[0]);
         }
         updateStatus();
         game.battleScene = { queueOutput: queueOutput };
-        queueOutput(""); // Empty line before battle start
+        queueOutput("");
         queueOutput("<span class='battle-ready'>BATTLE BEGINS!</span>");
         queueOutput(`<span class='output-text-player'>${game.player.name}</span> vs. <span class='output-text-enemy'>${game.enemy.name}</span>`);
-        queueOutput(""); // Empty line after names
+        queueOutput("");
         setTimeout(() => determineTurnOrder(), 1000);
     } else {
         queueOutput("<span class='output-text-neutral'>Battle already in progress!</span>");
@@ -32,7 +29,7 @@ function determineTurnOrder() {
     let first = coinFlip ? game.player.name : game.enemy.name;
     let second = coinFlip ? game.enemy.name : game.player.name;
     queueOutput(`<span class='output-text-neutral'>${second} is off guard!</span>`);
-    battleQueue = [first, second]; // Initialize queue
+    battleQueue = [first, second];
     processBattleQueue();
 }
 
@@ -41,7 +38,7 @@ function processBattleQueue() {
         let name = battleQueue.shift();
         takeTurn(name);
     } else if (game.player.hp > 0 && game.enemy.hp > 0) {
-        battleQueue = [game.player.name, game.enemy.name]; // Reset queue
+        battleQueue = [game.player.name, game.enemy.name];
         processBattleQueue();
     } else {
         endBattle();
@@ -56,7 +53,12 @@ function takeTurn(name) {
         let skillSet = new Skills();
 
         // Start of Turn: Apply DoT effects
-        applyStatusEffects(user);
+        try {
+            applyStatusEffects(user);
+        } catch (e) {
+            console.error("Error in applyStatusEffects:", e);
+            queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> encountered an error during status effects!`);
+        }
 
         // Numb check to skip skill phase
         if (user.statusEffects.some(e => e.name === "Numb")) {
@@ -66,8 +68,8 @@ function takeTurn(name) {
             return;
         }
 
-        let skill = user.skills[Math.floor(Math.random() * user.skills.length)]; // Draw skill
-        let isSupportSkill = skillSet.findSkill(skill.name)?.support || false; // Check support status
+        let skill = user.skills[Math.floor(Math.random() * user.skills.length)] || skillSet.findSkill("Barrage"); // Fallback to Barrage
+        let isSupportSkill = skillSet.findSkill(skill.name)?.support || false;
 
         // Active Effects (before skill use)
         let burnReduction = user.statusEffects.some(e => e.name === "Burn") ? 1 : 0;
@@ -100,18 +102,25 @@ function takeTurn(name) {
         }
 
         // Triggered Effects (check target's status effects)
-        if (target.statusEffects.some(e => e.name === "Swap") && !isSupportSkill) { // Fixed to "Swap" for Substitution
+        if (target.statusEffects.some(e => e.name === "Swap") && !isSupportSkill) {
             queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span> uses Substitution to dodge the attack with a log!`);
             target.statusEffects = target.statusEffects.filter(e => e.name !== "Swap");
         } else if (target.statusEffects.some(e => e.name === "ShadowCloneEffect")) {
             queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span>'s Shadow Clone absorbs the attack!`);
             target.statusEffects = target.statusEffects.filter(e => e.name !== "ShadowCloneEffect");
         } else {
-            // Force Healing Stance for Training Dummy
-            if (user.name === "Training Dummy" && user.skills.length === 1 && user.skills[0].name === "Healing Stance") {
-                user.skills[0].skillFunction(user, target, game.battleScene);
-            } else {
-                skill.skillFunction(user, target, game.battleScene);
+            try {
+                // Force Healing Stance for Training Dummy
+                if (user.name === "Training Dummy" && user.skills.length === 1 && user.skills[0].name === "Healing Stance") {
+                    user.skills[0].skillFunction(user, target, game.battleScene);
+                } else {
+                    skill.skillFunction(user, target, game.battleScene);
+                }
+            } catch (e) {
+                console.error("Error in skill execution:", e);
+                let barrageSkill = skillSet.findSkill("Barrage");
+                if (barrageSkill) barrageSkill.skillFunction(user, target, game.battleScene);
+                queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> fell back to Barrage due to an error!`);
             }
         }
 
@@ -158,7 +167,6 @@ function endBattle() {
     queueOutput("<span class='battle-ready'>Battle ended!</span>");
     game.player.hp = game.player.maxHp;
     game.player.statusEffects = [];
-    // Perform jutsu selection before arriving at village
     performJutsuSelection(1, false, () => ArriveVillage(game.player.lastVillage));
 }
 
