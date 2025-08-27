@@ -19,13 +19,7 @@ function ArriveVillage(villageName) {
                     Log.debug("Train button clicked");
                     if ((game.player.Rank === "Student" && game.player.skills.length >= 4) || game.player.Rank !== "Student") {
                         let enemy = generateTrainingEnemy();
-                        if (enemy) {
-                            Log.debug(`Generated enemy: ${enemy.name} with HP ${enemy.hp}`);
-                            startBattle(enemy, "training");
-                        } else {
-                            Log.error("Failed to generate training enemy");
-                            queueOutput("<span class='output-text-neutral'>Error: No enemy generated for training.</span>");
-                        }
+                        startBattle(enemy, "training");
                     } else {
                         queueOutput("<span class='output-text-neutral'>Cannot train: Student needs 4 skills!</span>");
                     }
@@ -46,20 +40,14 @@ function ArriveVillage(villageName) {
                     let equippedDiv = document.createElement("div");
                     equippedDiv.innerHTML = "<strong>Equipped Skills:</strong><br>";
                     game.player.skills.forEach(skill => {
-                        let count = game.player.skills.filter(s => s.name === skill.name).length;
                         let skillButton = document.createElement("button");
-                        skillButton.innerText = skill.name + (count > 1 ? ` (x${count})` : "");
+                        skillButton.innerText = skill.name;
                         skillButton.className = `output-text-${skill.style}`;
                         skillButton.onclick = () => {
-                            let skillCount = game.player.skills.filter(s => s.name === skill.name).length;
-                            if (game.player.skillInventory.length + (skillCount - 1) <= 10) {
-                                game.player.skills = game.player.skills.filter(s => s !== skill);
-                                game.player.skillInventory.push(...Array(skillCount).fill(skill)); // Preserve all copies
-                                queueOutput(`<span class='output-text-${skill.style}'>${skill.name}</span> moved to inventory!`);
-                                skillsButton.onclick();
-                            } else {
-                                queueOutput("<span class='output-text-neutral'>Inventory full (10 max)!</span>");
-                            }
+                            game.player.skillInventory.push(skill);
+                            game.player.skills = game.player.skills.filter(s => s !== skill);
+                            queueOutput(`<span class='output-text-${skill.style}'>${skill.name}</span> moved to inventory!`);
+                            skillsButton.onclick();
                         };
                         equippedDiv.appendChild(skillButton);
                     });
@@ -67,20 +55,14 @@ function ArriveVillage(villageName) {
                     let inventoryDiv = document.createElement("div");
                     inventoryDiv.innerHTML = "<strong>Inventory:</strong><br>";
                     game.player.skillInventory.forEach(skill => {
-                        let count = game.player.skillInventory.filter(s => s.name === skill.name).length;
                         let skillButton = document.createElement("button");
-                        skillButton.innerText = skill.name + (count > 1 ? ` (x${count})` : "");
+                        skillButton.innerText = skill.name;
                         skillButton.className = `output-text-${skill.style}`;
                         skillButton.onclick = () => {
-                            let invCount = game.player.skillInventory.filter(s => s.name === skill.name).length;
-                            if (game.player.skills.length + invCount <= 10) {
-                                game.player.skillInventory = game.player.skillInventory.filter(s => s.name !== skill.name || game.player.skillInventory.indexOf(s) !== game.player.skillInventory.lastIndexOf(s));
-                                game.player.skills.push(...Array(invCount).fill(skill)); // Equip all copies
-                                queueOutput(`<span class='output-text-${skill.style}'>${skill.name}</span> equipped!`);
-                                skillsButton.onclick();
-                            } else {
-                                queueOutput("<span class='output-text-neutral'>Skill limit (10) reached!</span>");
-                            }
+                            game.player.skills.push(skill);
+                            game.player.skillInventory = game.player.skillInventory.filter(s => s !== skill);
+                            queueOutput(`<span class='output-text-${skill.style}'>${skill.name}</span> equipped!`);
+                            skillsButton.onclick();
                         };
                         inventoryDiv.appendChild(skillButton);
                     });
