@@ -39,30 +39,34 @@ function ArriveVillage(villageName) {
                     skillsControls.innerHTML = "";
                     let equippedDiv = document.createElement("div");
                     equippedDiv.innerHTML = "<strong>Equipped Skills:</strong><br>";
-                    game.player.skills.forEach(skill => {
+                    game.player.skills.forEach((skill, index) => {
                         let skillButton = document.createElement("button");
                         skillButton.innerText = skill.name;
                         skillButton.className = `output-text-${skill.style}`;
                         skillButton.onclick = () => {
                             game.player.skillInventory.push(skill);
-                            game.player.skills = game.player.skills.filter(s => s !== skill);
+                            game.player.skills.splice(index, 1); // Remove only the clicked instance
                             queueOutput(`<span class='output-text-${skill.style}'>${skill.name}</span> moved to inventory!`);
-                            skillsButton.onclick();
+                            skillsButton.onclick(); // Refresh
                         };
                         equippedDiv.appendChild(skillButton);
                     });
                     if (game.player.skills.length === 0) equippedDiv.innerHTML += "None";
                     let inventoryDiv = document.createElement("div");
                     inventoryDiv.innerHTML = "<strong>Inventory:</strong><br>";
-                    game.player.skillInventory.forEach(skill => {
+                    game.player.skillInventory.forEach((skill, index) => {
                         let skillButton = document.createElement("button");
                         skillButton.innerText = skill.name;
                         skillButton.className = `output-text-${skill.style}`;
                         skillButton.onclick = () => {
-                            game.player.skills.push(skill);
-                            game.player.skillInventory = game.player.skillInventory.filter(s => s !== skill);
-                            queueOutput(`<span class='output-text-${skill.style}'>${skill.name}</span> equipped!`);
-                            skillsButton.onclick();
+                            if (game.player.skills.length < 10) {
+                                game.player.skills.push(skill);
+                                game.player.skillInventory.splice(index, 1); // Remove only the clicked instance
+                                queueOutput(`<span class='output-text-${skill.style}'>${skill.name}</span> equipped!`);
+                                skillsButton.onclick(); // Refresh
+                            } else {
+                                queueOutput("<span class='output-text-neutral'>Skill limit (10) reached!</span>");
+                            }
                         };
                         inventoryDiv.appendChild(skillButton);
                     });
