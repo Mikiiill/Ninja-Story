@@ -2,7 +2,6 @@ let battleQueue = [];
 
 function startBattle(user, target) {
     if (game.gameState !== "battle") {
-        // Set global user and target if not provided
         game.user = user || game.player;
         game.target = target || generateTrainingEnemy();
         game.gameState = "battle";
@@ -19,7 +18,7 @@ function startBattle(user, target) {
         queueOutput("<span class='battle-ready'>BATTLE BEGINS!</span>");
         queueOutput(`<span class='output-text-player'>${game.user.name}</span> vs. <span class='output-text-enemy'>${game.target.name}</span>`);
         queueOutput("");
-        console.log("Starting battle with:", { user: game.user.name, target: game.target.name }); // Debug log
+        console.log("Starting battle with:", { user: game.user.name, target: game.target.name });
         setTimeout(() => determineTurnOrder(), 1000);
     } else {
         queueOutput("<span class='output-text-neutral'>Battle already in progress!</span>");
@@ -32,7 +31,7 @@ function determineTurnOrder() {
     let second = coinFlip ? game.target : game.user;
     queueOutput(`<span class='output-text-neutral'>${second.name} is off guard!</span>`);
     battleQueue = [first, second];
-    console.log("Turn order determined:", { first: first.name, second: second.name }); // Debug log
+    console.log("Turn order determined:", { first: first.name, second: second.name });
     processBattleQueue();
 }
 
@@ -41,7 +40,7 @@ function processBattleQueue() {
         let currentUser = battleQueue.shift();
         takeTurn(currentUser);
     } else if (game.user.hp > 0 && game.target.hp > 0) {
-        battleQueue = [game.target, game.user]; // Switch turns
+        battleQueue = [game.target, game.user];
         processBattleQueue();
     } else {
         endBattle();
@@ -49,7 +48,7 @@ function processBattleQueue() {
 }
 
 function takeTurn(user) {
-    game.user = user; // Set current user
+    game.user = user;
     game.target = (user === game.user) ? game.target : game.user;
     queueOutput(`<span class='output-text-${user === game.user ? 'player' : 'enemy'}'>${user.name}</span>'s turn`);
     setTimeout(() => {
@@ -95,6 +94,11 @@ function deathCheck(user) {
 function skillAction(user) {
     let skillSet = new Skills();
     let skill = user.skills[Math.floor(Math.random() * user.skills.length)];
+    if (!skill) {
+        queueOutput(`<span class='output-text-${user === game.user ? 'player' : 'enemy'}'>${user.name}</span> has no skills to use!`);
+        endTurn();
+        return;
+    }
     let isSupportSkill = skillSet.findSkill(skill.name)?.support || false;
     queueOutput(`<span class='output-text-${user === game.user ? 'player' : 'enemy'}'>${user.name}</span> uses ${skill.name}!`);
 
@@ -179,4 +183,4 @@ function endBattle() {
 
 function startTravelFight() {
     startBattle(game.player, generateTravelEnemy());
-}
+        }
