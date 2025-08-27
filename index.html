@@ -126,7 +126,7 @@
                 Rank: "Student",
                 ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank", Fire: "D-Rank", Lightning: "D-Rank", Earth: "D-Rank", Water: "D-Rank", Wind: "D-Rank", Feral: "D-Rank" },
                 skills: [],
-                skillInventory: [],
+                skillInventory: [], // Will add two Barrage Jutsu here in startGame
                 statusEffects: [],
                 lastVillage: "Newb Village"
             },
@@ -212,6 +212,13 @@
                 Log.debug(`Game state set to ${game.gameState}`);
                 initiateStyleSelection();
                 updateSkillCount();
+                // Add two free Barrage Jutsu to inventory
+                let skillSet = new Skills();
+                let barrageSkill = skillSet.findSkill("Barrage");
+                if (barrageSkill) {
+                    game.player.skillInventory.push(barrageSkill);
+                    game.player.skillInventory.push(barrageSkill);
+                }
                 document.getElementById("start-controls").innerHTML = "";
             } catch (error) {
                 Log.error(`Error in startGame: ${error.message}`);
