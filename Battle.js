@@ -108,6 +108,7 @@ function endBattle(fightType) {
         if (game.battleNum <= 4) {
             startTravelFight();
         } else {
+            game.player.lastVillage = game.player.lastVillage; // Set to chosen destination (already updated in travelButton onclick)
             ArriveVillage(game.player.lastVillage); // Arrive at new village after 4 fights
         }
     } else {
@@ -130,20 +131,4 @@ function generateTrainingEnemy() {
 function startTravelFight() {
     let rankStyles = {
         "Genin": { hp: 12, styles: { Ninjutsu: "C-Rank", Taijutsu: "C-Rank", Genjutsu: "D-Rank", Fire: "D-Rank", Lightning: "D-Rank", Earth: "D-Rank" }, gold: 15 },
-        "Chuunin": { hp: 20, styles: { Ninjutsu: "B-Rank", Taijutsu: "B-Rank", Genjutsu: "C-Rank", Fire: "C-Rank", Lightning: "C-Rank", Earth: "C-Rank" }, gold: 30 }
-    };
-    let rankData = rankStyles[game.player.Rank] || rankStyles["Genin"];
-    let enemy = {
-        name: `Bandit ${Math.floor(Math.random() * 100)}`,
-        hp: rankData.hp,
-        maxHp: rankData.hp,
-        ninjaStyles: rankData.styles,
-        skills: [],
-        gold: rankData.gold
-    };
-    let skillSet = new Skills();
-    enemy.skills = skillSet.skills.filter(skill => skillSet.canUseSkill(enemy, skill)).slice(0, 3);
-    game.player.gold += enemy.gold;
-    queueOutput(`<span class='output-text-neutral'>Earned ${enemy.gold} gold from the fight!</span>`);
-    startBattle(enemy, "travel");
-}
+        "Chuun
