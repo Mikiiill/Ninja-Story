@@ -34,7 +34,7 @@ function setupInitialJutsuSelection() {
     performJutsuSelection(3);
 }
 
-function performJutsuSelection(times) {
+function performJutsuSelection(times, callback) {
     if (times > 0) {
         let controls = document.getElementById("jutsu-controls");
         controls.innerHTML = "";
@@ -49,25 +49,25 @@ function performJutsuSelection(times) {
             randomJutsu.forEach(jutsu => {
                 let button = document.createElement("button");
                 button.innerText = jutsu.name;
-                button.onclick = function() { selectJutsu(jutsu, () => performJutsuSelection(times - 1)); };
+                button.onclick = function() { selectJutsu(jutsu, () => performJutsuSelection(times - 1, callback)); };
                 controls.appendChild(button);
             });
         } else {
             queueOutput("<span class='output-text-neutral'>No jutsu available based on styles and ranks.</span>");
-            addInitialBarrageCards();
+            if (callback) callback();
         }
     } else {
-        addInitialBarrageCards();
+        if (callback) callback();
     }
 }
 
 function selectJutsu(jutsu, callback) {
     if (game.gameState === "chooseInitialJutsu" || game.gameState === "postBattle") {
-        if (confirm(`Select <span class='output-text-${jutsu.style || 'neutral'}'>${jutsu.name}</span>?`)) {
+        if (confirm(`Select <span class='output-text-${jutsu.style}'>${jutsu.name}</span>?`)) {
             let count = game.player.skills.filter(s => s.name === jutsu.name).length + game.player.skillInventory.filter(s => s.name === jutsu.name).length;
             if (count < 3 || (game.player.skills.length + game.player.skillInventory.length < 10 && (jutsu.rank === "D-Rank" || jutsu.rank === "C-Rank"))) {
                 game.player.skillInventory.push(jutsu);
-                queueOutput(`<span class='output-text-${jutsu.style}'>${jutsu.name}</span> added to skill inventory!`); // Fixed to use jutsu.style directly
+                queueOutput(`<span class='output-text-${jutsu.style}'>${jutsu.name}</span> added to skill inventory!`);
                 updateSkillCount();
                 document.getElementById("jutsu-controls").innerHTML = "";
                 if (callback) callback();
@@ -80,31 +80,4 @@ function selectJutsu(jutsu, callback) {
             }
         }
     }
-}
-
-function addInitialBarrageCards() {
-    let barrageSkill = new Skills().findSkill("Barrage");
-    game.player.skillInventory.push(barrageSkill);
-    game.player.skillInventory.push(barrageSkill); // Total of 2 Barrage cards
-    queueOutput("You received 2 free <span class='output-text-neutral'>Barrage</span> cards to start!");
-    // Ensure output queue is processed before proceeding
-    processOutputQueue(); // Force immediate processing
-    if (!game.isOutputting && game.outputQueue.length === 0) {
-        Log.debug("Output queue cleared, proceeding to complete rank-up");
-        completeRankUp();
-    } else {
-        let checkQueue = setInterval(() => {
-            if (!game.isOutputting && game.outputQueue.length === 0) {
-                clearInterval(checkQueue);
-                Log.debug("Output queue cleared after delay, proceeding to complete rank-up");
-                completeRankUp();
-            }
-        }, 100);
-    }
-}
-
-function completeRankUp() {
-    game.gameState = "main";
-    Log.debug(`Completing rank-up, new gameState: ${game.gameState}`);
-    showMainScreen();
 }
