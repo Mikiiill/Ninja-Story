@@ -1,8 +1,9 @@
 function ArriveVillage(villageName) {
+    game.gameState = "main"; // Set state first
+    Log.debug(`State set to ${game.gameState} before setup`);
     game.player.lastVillage = villageName;
     game.player.hp = game.player.maxHp;
     game.player.statusEffects = [];
-    game.gameState = "main"; // Set to main state after arrival
     queueOutput(`<span class='output-text-neutral'>Arrived at <span class='battle-ready'>${villageName}</span>! HP restored, status effects cleared.</span>`);
     let controls = document.getElementById("main-controls");
     controls.innerHTML = "";
