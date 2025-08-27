@@ -127,7 +127,7 @@
                 Rank: "Student",
                 ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank", Fire: "D-Rank", Lightning: "D-Rank", Earth: "D-Rank", Water: "D-Rank", Wind: "D-Rank", Feral: "D-Rank" },
                 skills: [],
-                skillInventory: [], // Two Barrage Jutsu added in startGame
+                skillInventory: [],
                 statusEffects: [],
                 lastVillage: "Newb Village"
             },
@@ -138,6 +138,20 @@
             battleScene: null,
             outputQueue: [],
             isOutputting: false
+        };
+
+        game.asciiMap = {
+            "Burn": "🔥",
+            "Numb": "⚡️",
+            "Bleed": "🩸",
+            "Regen": "🌿",
+            "Doom": "💀",
+            "ShadowCloneEffect": "👥",
+            "Substitution": "🪵",
+            "DoubleImage": "🌫️",
+            "Dome": "🪨",
+            "READY": "",
+            "Release": "🌀"
         };
 
         function resetGameState() {
