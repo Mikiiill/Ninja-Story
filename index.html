@@ -109,7 +109,9 @@
     <div class="controls" id="style-controls"></div>
     <div class="controls" id="jutsu-controls"></div>
     <div class="controls" id="skill-controls"></div>
-    <div class="controls" id="main-controls"></div>
+    <div class="controls" id="main-controls">
+        <button class="train-button" id="train-button" onclick="startBattle(game.player, generateTrainingEnemy())">Train</button>
+    </div>
     <div class="controls" id="travel-controls" style="display:none;"></div>
 
     <script src="Jutsu.js"></script>
@@ -131,6 +133,8 @@
                 statusEffects: [],
                 lastVillage: "Newb Village"
             },
+            user: null, // Added to support battle system
+            target: null, // Added to support battle system
             enemy: null,
             battleNum: 1,
             output: [],
@@ -167,6 +171,8 @@
                     statusEffects: [],
                     lastVillage: "Newb Village"
                 },
+                user: null,
+                target: null,
                 enemy: null,
                 battleNum: 1,
                 output: [],
@@ -180,7 +186,7 @@
             document.getElementById("style-controls").innerHTML = "";
             document.getElementById("jutsu-controls").innerHTML = "";
             document.getElementById("skill-controls").innerHTML = "";
-            document.getElementById("main-controls").innerHTML = "";
+            document.getElementById("main-controls").innerHTML = '<button class="train-button" id="train-button" onclick="startBattle(game.player, generateTrainingEnemy())">Train</button>';
             document.getElementById("travel-controls").innerHTML = "";
             updateStatus();
         }
@@ -239,6 +245,28 @@
             } catch (error) {
                 Log.error(`Error in startGame: ${error.message}`);
             }
+        }
+
+        function generateTrainingEnemy() {
+            return {
+                name: "Training Dummy",
+                hp: 10,
+                maxHp: 10,
+                skills: [new Skills().findSkill("Healing Stance")],
+                skillInventory: [],
+                statusEffects: [],
+                lastVillage: "Newb Village"
+            };
+        }
+
+        // Placeholder for other functions (e.g., ArriveVillage, performJutsuSelection) if not in other scripts
+        function ArriveVillage(village) {
+            game.player.lastVillage = village;
+            game.player.hp = game.player.maxHp;
+            game.player.statusEffects = [];
+            queueOutput(`Arrived at ${village}! HP restored, status effects cleared.`);
+            document.getElementById("main-controls").style.display = "block";
+            updateStatus();
         }
     </script>
 </body>
