@@ -5,6 +5,9 @@ function startBattle(enemy, mode) {
         game.gameState = "battle";
         // Clear skill management during battle
         document.getElementById("skill-controls").innerHTML = "";
+        // Hide village controls during battle
+        let controls = document.getElementById("main-controls");
+        if (controls) controls.style.display = "none";
         // Fill active skills to 10 if possible
         while (game.player.skills.length < 10 && game.player.skillInventory.length > 0) {
             let randIndex = Math.floor(Math.random() * game.player.skillInventory.length);
@@ -37,7 +40,7 @@ function takeTurn(name) {
         let target = name === game.player.name ? game.enemy : game.player;
         applyStatusEffects(user);
         let skillSet = new Skills();
-        let usableSkills = user.skills; // No filter, all active skills are usable
+        let usableSkills = user.skills; // All active skills are usable
         let skill = usableSkills.length > 0 ? usableSkills[Math.floor(Math.random() * usableSkills.length)] : null;
         if (user.statusEffects.some(e => e.name === "Numb")) {
             queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> is stunned by <span class='status-numb'>Numb ⚡️</span> and skips their skill phase!`);
@@ -56,14 +59,19 @@ function takeTurn(name) {
                         s.queueOutput(`<span class='output-text-${t === game.player ? 'player' : 'enemy'}'>${t.name}</span> feels exhausted from Burn, reducing skill damage!`);
                     }
                     return result;
-                }.bind(skillSet); // Bind to maintain context
+                }.bind(skillSet);
             }
             // Check for defensive effects like Substitution
             if (target.statusEffects.some(e => e.name === "Substitution")) {
                 queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span> uses Substitution to block the attack!`);
                 target.statusEffects = target.statusEffects.filter(e => e.name !== "Substitution");
             } else {
-                skill.skillFunction(user, target, game.battleScene);
+                // Force Healing Stance for Training Dummy if it's the only skill
+                if (user.name === "Training Dummy" && user.skills.length === 1 && user.skills[0].name === "Healing Stance") {
+                    user.skills[0].skillFunction(user, target, game.battleScene);
+                } else {
+                    skill.skillFunction(user, target, game.battleScene);
+                }
             }
         }
         if (game.player.hp > 0 && game.enemy.hp > 0) {
@@ -106,6 +114,9 @@ function applyStatusEffects(entity) {
 
 function endBattle() {
     game.gameState = "postBattle";
+    // Restore village controls
+    let controls = document.getElementById("main-controls");
+    if (controls) controls.style.display = "block";
     queueOutput("<span class='battle-ready'>Battle ended!</span>");
     game.player.hp = game.player.maxHp;
     game.player.statusEffects = [];
@@ -114,4 +125,4 @@ function endBattle() {
 
 function startTravelFight() {
     startBattle(generateTravelEnemy(), "travel");
-}
+                                          }
