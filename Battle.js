@@ -37,7 +37,7 @@ function takeTurn(name) {
         let target = name === game.player.name ? game.enemy : game.player;
         applyStatusEffects(user);
         let skillSet = new Skills();
-        let usableSkills = user.skills.filter(skill => skillSet.canUseSkill(user, skill));
+        let usableSkills = user.skills; // No filter, all active skills are usable
         let skill = usableSkills.length > 0 ? usableSkills[Math.floor(Math.random() * usableSkills.length)] : null;
         if (user.statusEffects.some(e => e.name === "Numb")) {
             queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> is stunned by <span class='status-numb'>Numb ⚡️</span> and skips their skill phase!`);
@@ -49,17 +49,22 @@ function takeTurn(name) {
         } else if (skill) {
             let burnReduction = user.statusEffects.some(e => e.name === "Burn") ? 1 : 0;
             if (burnReduction && skill !== skillSet.findSkill("Healing Stance")) {
+                let originalFunction = skillSet.findSkill(skill.name).skillFunction;
                 skill.skillFunction = function(u, t, s) {
-                    let original = skillSet.findSkill(skill.name).skillFunction;
-                    let result = original(u, t, s);
+                    let result = originalFunction(u, t, s);
                     if (t.hp > 0 && !result) {
                         s.queueOutput(`<span class='output-text-${t === game.player ? 'player' : 'enemy'}'>${t.name}</span> feels exhausted from Burn, reducing skill damage!`);
                     }
                     return result;
-                };
+                }.bind(skillSet); // Bind to maintain context
             }
-            let skillStyle = skill.style || "neutral";
-            skill.skillFunction(user, target, game.battleScene);
+            // Check for defensive effects like Substitution
+            if (target.statusEffects.some(e => e.name === "Substitution")) {
+                queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span> uses Substitution to block the attack!`);
+                target.statusEffects = target.statusEffects.filter(e => e.name !== "Substitution");
+            } else {
+                skill.skillFunction(user, target, game.battleScene);
+            }
         }
         if (game.player.hp > 0 && game.enemy.hp > 0) {
             setTimeout(() => takeTurn(target.name), 2000);
@@ -104,7 +109,7 @@ function endBattle() {
     queueOutput("<span class='battle-ready'>Battle ended!</span>");
     game.player.hp = game.player.maxHp;
     game.player.statusEffects = [];
-    performJutsuSelection(1); // Assuming this is defined elsewhere to unlock new jutsu post-battle
+    performJutsuSelection(1); // Assuming this is defined elsewhere
 }
 
 function startTravelFight() {
