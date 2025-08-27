@@ -110,6 +110,7 @@
     <div class="controls" id="jutsu-controls"></div>
     <div class="controls" id="skill-controls"></div>
     <div class="controls" id="main-controls"></div>
+    <div class="controls" id="travel-controls" style="display:none;"></div>
 
     <script src="Jutsu.js"></script>
     <script src="Characters.js"></script>
@@ -126,7 +127,7 @@
                 Rank: "Student",
                 ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank", Fire: "D-Rank", Lightning: "D-Rank", Earth: "D-Rank", Water: "D-Rank", Wind: "D-Rank", Feral: "D-Rank" },
                 skills: [],
-                skillInventory: [], // Will add two Barrage Jutsu here in startGame
+                skillInventory: [], // Two Barrage Jutsu added in startGame
                 statusEffects: [],
                 lastVillage: "Newb Village"
             },
@@ -166,6 +167,7 @@
             document.getElementById("jutsu-controls").innerHTML = "";
             document.getElementById("skill-controls").innerHTML = "";
             document.getElementById("main-controls").innerHTML = "";
+            document.getElementById("travel-controls").innerHTML = "";
             updateStatus();
         }
 
