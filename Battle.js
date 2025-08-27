@@ -40,11 +40,12 @@ function takeTurn(name) {
         let target = name === game.player.name ? game.enemy : game.player;
         applyStatusEffects(user);
         let skillSet = new Skills();
-        let usableSkills = user.skills; // All active skills are usable
+        let usableSkills = user.skills; // All active skills are automatically usable
         let skill = usableSkills.length > 0 ? usableSkills[Math.floor(Math.random() * usableSkills.length)] : null;
         if (user.statusEffects.some(e => e.name === "Numb")) {
             queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> is stunned by <span class='status-numb'>Numb ⚡️</span> and skips their skill phase!`);
-            user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
+            user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb"); // Remove Numb and end turn
+            return; // End turn immediately
         } else if (user.statusEffects.some(e => e.name === "READY")) {
             let barrageSkill = skillSet.findSkill("Barrage");
             if (barrageSkill) barrageSkill.skillFunction(user, target, game.battleScene);
@@ -73,6 +74,8 @@ function takeTurn(name) {
                     skill.skillFunction(user, target, game.battleScene);
                 }
             }
+        } else if (usableSkills.length === 0) {
+            queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> has no skills to use!`);
         }
         if (game.player.hp > 0 && game.enemy.hp > 0) {
             setTimeout(() => takeTurn(target.name), 2000);
@@ -114,9 +117,10 @@ function applyStatusEffects(entity) {
 
 function endBattle() {
     game.gameState = "postBattle";
-    // Restore village controls
+    // Restore village controls and clear battle UI
     let controls = document.getElementById("main-controls");
     if (controls) controls.style.display = "block";
+    document.getElementById("skill-controls").innerHTML = ""; // Ensure no residual battle UI
     queueOutput("<span class='battle-ready'>Battle ended!</span>");
     game.player.hp = game.player.maxHp;
     game.player.statusEffects = [];
@@ -125,4 +129,4 @@ function endBattle() {
 
 function startTravelFight() {
     startBattle(generateTravelEnemy(), "travel");
-                                          }
+}
