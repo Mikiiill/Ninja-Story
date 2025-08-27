@@ -38,47 +38,49 @@ function takeTurn(name) {
     setTimeout(() => {
         let user = name === game.player.name ? game.player : game.enemy;
         let target = name === game.player.name ? game.enemy : game.player;
-        applyStatusEffects(user); // Start of Turn effects (e.g., Bleed, Regen)
-        let skillSet = new Skills();
-        let skill = user.skills[Math.floor(Math.random() * user.skills.length)]; // Direct card draw
+        applyStatusEffects(user); // Start of Turn: Apply DoT effects (Bleed, Burn, Regen)
 
-        // Active Effects (check user's status effects before skill use)
-        let burnReduction = user.statusEffects.some(e => e.name === "Burn") ? 1 : 0;
-        if (user.statusEffects.some(e => e.name === "READY")) {
-            let barrageSkill = skillSet.findSkill("Barrage");
-            if (barrageSkill) barrageSkill.skillFunction(user, target, game.battleScene);
-            user.statusEffects = user.statusEffects.filter(e => e.name !== "READY");
-        } else if (user.statusEffects.some(e => e.name === "Numb")) {
+        let skillSet = new Skills();
+        let skill = user.skills[Math.floor(Math.random() * user.skills.length)]; // Draw a skill immediately
+
+        // Numb check at start to skip skill phase if present
+        if (user.statusEffects.some(e => e.name === "Numb")) {
             queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> is stunned by <span class='status-numb'>Numb ⚡️</span> and skips their skill phase!`);
             user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb"); // Remove Numb
-            setTimeout(() => takeTurn(target.name), 2000); // End turn and proceed
-            return;
         } else {
-            // Apply Active effect modifications
-            if (burnReduction && skill !== skillSet.findSkill("Healing Stance")) {
-                let originalFunction = skillSet.findSkill(skill.name).skillFunction;
-                skill.skillFunction = function(u, t, s) {
-                    let result = originalFunction(u, t, s);
-                    if (t.hp > 0 && !result) {
-                        s.queueOutput(`<span class='output-text-${t === game.player ? 'player' : 'enemy'}'>${t.name}</span> feels exhausted from Burn, reducing skill damage!`);
-                    }
-                    return result;
-                }.bind(skillSet);
-            }
-
-            // Triggered Effects (check target's status effects before applying skill)
-            if (target.statusEffects.some(e => e.name === "Substitution") && skill.name !== "Healing Stance") {
-                queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span> uses Substitution to dodge the attack with a log!`);
-                target.statusEffects = target.statusEffects.filter(e => e.name !== "Substitution");
-            } else if (target.statusEffects.some(e => e.name === "ShadowCloneEffect")) {
-                queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span>'s Shadow Clone absorbs the attack!`);
-                target.statusEffects = target.statusEffects.filter(e => e.name !== "ShadowCloneEffect");
+            // Active Effects (check user's status effects before skill use)
+            let burnReduction = user.statusEffects.some(e => e.name === "Burn") ? 1 : 0;
+            if (user.statusEffects.some(e => e.name === "READY")) {
+                let barrageSkill = skillSet.findSkill("Barrage");
+                if (barrageSkill) barrageSkill.skillFunction(user, target, game.battleScene);
+                user.statusEffects = user.statusEffects.filter(e => e.name !== "READY");
             } else {
-                // Force Healing Stance for Training Dummy if it's the only skill
-                if (user.name === "Training Dummy" && user.skills.length === 1 && user.skills[0].name === "Healing Stance") {
-                    user.skills[0].skillFunction(user, target, game.battleScene);
+                // Apply Active effect modifications
+                if (burnReduction && skill !== skillSet.findSkill("Healing Stance")) {
+                    let originalFunction = skillSet.findSkill(skill.name).skillFunction;
+                    skill.skillFunction = function(u, t, s) {
+                        let result = originalFunction(u, t, s);
+                        if (t.hp > 0 && !result) {
+                            s.queueOutput(`<span class='output-text-${t === game.player ? 'player' : 'enemy'}'>${t.name}</span> feels exhausted from Burn, reducing skill damage!`);
+                        }
+                        return result;
+                    }.bind(skillSet);
+                }
+
+                // Triggered Effects (check target's status effects before applying skill)
+                if (target.statusEffects.some(e => e.name === "Substitution") && skill.name !== "Healing Stance") {
+                    queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span> uses Substitution to dodge the attack with a log!`);
+                    target.statusEffects = target.statusEffects.filter(e => e.name !== "Substitution");
+                } else if (target.statusEffects.some(e => e.name === "ShadowCloneEffect")) {
+                    queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span>'s Shadow Clone absorbs the attack!`);
+                    target.statusEffects = target.statusEffects.filter(e => e.name !== "ShadowCloneEffect");
                 } else {
-                    skill.skillFunction(user, target, game.battleScene);
+                    // Force Healing Stance for Training Dummy if it's the only skill
+                    if (user.name === "Training Dummy" && user.skills.length === 1 && user.skills[0].name === "Healing Stance") {
+                        user.skills[0].skillFunction(user, target, game.battleScene);
+                    } else {
+                        skill.skillFunction(user, target, game.battleScene);
+                    }
                 }
             }
         }
@@ -136,4 +138,4 @@ function endBattle() {
 
 function startTravelFight() {
     startBattle(generateTravelEnemy(), "travel");
-}
+               }
