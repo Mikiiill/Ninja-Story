@@ -38,20 +38,19 @@ function takeTurn(name) {
     setTimeout(() => {
         let user = name === game.player.name ? game.player : game.enemy;
         let target = name === game.player.name ? game.enemy : game.player;
-        applyStatusEffects(user);
+        applyStatusEffects(user); // Start of Turn effects (e.g., Bleed, Regen)
         let skillSet = new Skills();
         let usableSkills = user.skills; // All active skills are automatically usable
         let skill = usableSkills.length > 0 ? usableSkills[Math.floor(Math.random() * usableSkills.length)] : null;
-        if (user.statusEffects.some(e => e.name === "Numb")) {
-            queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> is stunned by <span class='status-numb'>Numb ⚡️</span> and skips their skill phase!`);
-            user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb"); // Remove Numb and end turn
-            return; // End turn immediately
-        } else if (user.statusEffects.some(e => e.name === "READY")) {
+
+        // Active Effects (check user's status effects before skill use)
+        let burnReduction = user.statusEffects.some(e => e.name === "Burn") ? 1 : 0;
+        if (user.statusEffects.some(e => e.name === "READY")) {
             let barrageSkill = skillSet.findSkill("Barrage");
             if (barrageSkill) barrageSkill.skillFunction(user, target, game.battleScene);
             user.statusEffects = user.statusEffects.filter(e => e.name !== "READY");
         } else if (skill) {
-            let burnReduction = user.statusEffects.some(e => e.name === "Burn") ? 1 : 0;
+            // Apply Active effect modifications
             if (burnReduction && skill !== skillSet.findSkill("Healing Stance")) {
                 let originalFunction = skillSet.findSkill(skill.name).skillFunction;
                 skill.skillFunction = function(u, t, s) {
@@ -62,10 +61,14 @@ function takeTurn(name) {
                     return result;
                 }.bind(skillSet);
             }
-            // Check for defensive effects like Substitution
-            if (target.statusEffects.some(e => e.name === "Substitution")) {
-                queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span> uses Substitution to block the attack!`);
+
+            // Triggered Effects (check target's status effects before applying skill)
+            if (target.statusEffects.some(e => e.name === "Substitution") && skill.name !== "Healing Stance") {
+                queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span> uses Substitution to dodge the attack with a log!`);
                 target.statusEffects = target.statusEffects.filter(e => e.name !== "Substitution");
+            } else if (target.statusEffects.some(e => e.name === "ShadowCloneEffect")) {
+                queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span>'s Shadow Clone absorbs the attack!`);
+                target.statusEffects = target.statusEffects.filter(e => e.name !== "ShadowCloneEffect");
             } else {
                 // Force Healing Stance for Training Dummy if it's the only skill
                 if (user.name === "Training Dummy" && user.skills.length === 1 && user.skills[0].name === "Healing Stance") {
@@ -77,6 +80,13 @@ function takeTurn(name) {
         } else if (usableSkills.length === 0) {
             queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> has no skills to use!`);
         }
+
+        if (user.statusEffects.some(e => e.name === "Numb")) {
+            queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> is stunned by <span class='status-numb'>Numb ⚡️</span> and skips their skill phase!`);
+            user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb"); // Remove Numb and end turn
+            return; // End turn immediately
+        }
+
         if (game.player.hp > 0 && game.enemy.hp > 0) {
             setTimeout(() => takeTurn(target.name), 2000);
         } else {
