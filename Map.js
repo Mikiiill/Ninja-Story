@@ -15,18 +15,22 @@ function ArriveVillage(villageName) {
             trainButton.innerText = "Train";
             trainButton.className = "train-button";
             trainButton.onclick = () => {
-                if (game.gameState === "In Village" && game.player.skills.length >= 4 && game.player.Rank === "Student") {
+                if (game.gameState === "In Village") {
                     Log.debug("Train button clicked");
-                    let enemy = generateTrainingEnemy();
-                    Log.debug(`Generated enemy: ${enemy.name} with HP ${enemy.hp}`);
-                    startBattle(enemy, "training");
-                } else if (game.gameState === "In Village" && game.player.Rank !== "Student") {
-                    Log.debug("Train button clicked");
-                    let enemy = generateTrainingEnemy();
-                    Log.debug(`Generated enemy: ${enemy.name} with HP ${enemy.hp}`);
-                    startBattle(enemy, "training");
+                    if ((game.player.Rank === "Student" && game.player.skills.length >= 4) || game.player.Rank !== "Student") {
+                        let enemy = generateTrainingEnemy();
+                        if (enemy) {
+                            Log.debug(`Generated enemy: ${enemy.name} with HP ${enemy.hp}`);
+                            startBattle(enemy, "training");
+                        } else {
+                            Log.error("Failed to generate training enemy");
+                            queueOutput("<span class='output-text-neutral'>Error: No enemy generated for training.</span>");
+                        }
+                    } else {
+                        queueOutput("<span class='output-text-neutral'>Cannot train: Student needs 4 skills!</span>");
+                    }
                 } else {
-                    queueOutput("<span class='output-text-neutral'>Cannot train: Student needs 4 skills, or outside village!</span>");
+                    queueOutput("<span class='output-text-neutral'>Cannot train outside village!</span>");
                 }
             };
             controls.appendChild(trainButton);
@@ -42,14 +46,15 @@ function ArriveVillage(villageName) {
                     let equippedDiv = document.createElement("div");
                     equippedDiv.innerHTML = "<strong>Equipped Skills:</strong><br>";
                     game.player.skills.forEach(skill => {
+                        let count = game.player.skills.filter(s => s.name === skill.name).length;
                         let skillButton = document.createElement("button");
-                        skillButton.innerText = skill.name + (game.player.skills.filter(s => s.name === skill.name).length > 1 ? ` (x${game.player.skills.filter(s => s.name === skill.name).length})` : "");
+                        skillButton.innerText = skill.name + (count > 1 ? ` (x${count})` : "");
                         skillButton.className = `output-text-${skill.style}`;
                         skillButton.onclick = () => {
-                            let count = game.player.skills.filter(s => s.name === skill.name).length;
-                            if (game.player.skillInventory.length + (count - 1) <= 10) {
+                            let skillCount = game.player.skills.filter(s => s.name === skill.name).length;
+                            if (game.player.skillInventory.length + (skillCount - 1) <= 10) {
                                 game.player.skills = game.player.skills.filter(s => s !== skill);
-                                game.player.skillInventory.push(...Array(count).fill(skill)); // Preserve all copies
+                                game.player.skillInventory.push(...Array(skillCount).fill(skill)); // Preserve all copies
                                 queueOutput(`<span class='output-text-${skill.style}'>${skill.name}</span> moved to inventory!`);
                                 skillsButton.onclick();
                             } else {
@@ -69,7 +74,7 @@ function ArriveVillage(villageName) {
                         skillButton.onclick = () => {
                             let invCount = game.player.skillInventory.filter(s => s.name === skill.name).length;
                             if (game.player.skills.length + invCount <= 10) {
-                                game.player.skillInventory = game.player.skillInventory.filter(s => s.name !== skill.name);
+                                game.player.skillInventory = game.player.skillInventory.filter(s => s.name !== skill.name || game.player.skillInventory.indexOf(s) !== game.player.skillInventory.lastIndexOf(s));
                                 game.player.skills.push(...Array(invCount).fill(skill)); // Equip all copies
                                 queueOutput(`<span class='output-text-${skill.style}'>${skill.name}</span> equipped!`);
                                 skillsButton.onclick();
@@ -99,7 +104,7 @@ function ArriveVillage(villageName) {
             travelButton.innerText = "Travel";
             travelButton.className = "travel-button";
             travelButton.onclick = () => {
-                if (game.gameState === "In Village" && game.player.skills.length >= 4 && game.player.Rank === "Student") {
+                if (game.gameState === "In Village") {
                     Log.debug("Travel button clicked");
                     let travelControls = document.getElementById("travel-controls");
                     travelControls.style.display = "flex";
@@ -111,35 +116,17 @@ function ArriveVillage(villageName) {
                         villageButton.innerText = village;
                         villageButton.onclick = () => {
                             if (confirm(`Confirm travel to ${village}?`)) {
-                                game.battleNum = 0;
-                                game.player.lastVillage = village;
-                                Log.debug(`Starting travel fight to ${village}`);
-                                startTravelFight();
-                                travelControls.style.display = "none";
-                            }
-                        };
-                        travelControls.appendChild(villageButton);
-                    });
-                    let cancelButton = document.createElement("button");
-                    cancelButton.innerText = "Cancel";
-                    cancelButton.onclick = () => { travelControls.style.display = "none"; };
-                    travelControls.appendChild(cancelButton);
-                } else if (game.gameState === "In Village" && game.player.Rank !== "Student") {
-                    Log.debug("Travel button clicked");
-                    let travelControls = document.getElementById("travel-controls");
-                    travelControls.style.display = "flex";
-                    let villages = ["Newb Village", "Hidden Leaf", "Sand Village"];
-                    let areas = MapData[villageName]?.areas || [];
-                    let options = [...villages, ...areas];
-                    options.forEach(village => {
-                        let villageButton = document.createElement("button");
-                        villageButton.innerText = village;
-                        villageButton.onclick = () => {
-                            if (confirm(`Confirm travel to ${village}?`)) {
-                                game.battleNum = 0;
-                                game.player.lastVillage = village;
-                                Log.debug(`Starting travel fight to ${village}`);
-                                startTravelFight();
+                                if ((game.player.Rank === "Student" && game.player.skills.length >= 4) || game.player.Rank !== "Student") {
+                                    game.battleNum = 0;
+                                    game.player.lastVillage = village;
+                                    Log.debug(`Starting travel fight to ${village}`);
+                                    startTravelFight();
+                                    travelControls.style.display = "none";
+                                } else {
+                                    queueOutput("<span class='output-text-neutral'>Cannot travel: Student needs 4 skills!</span>");
+                                    travelControls.style.display = "none";
+                                }
+                            } else {
                                 travelControls.style.display = "none";
                             }
                         };
@@ -150,7 +137,7 @@ function ArriveVillage(villageName) {
                     cancelButton.onclick = () => { travelControls.style.display = "none"; };
                     travelControls.appendChild(cancelButton);
                 } else {
-                    queueOutput("<span class='output-text-neutral'>Cannot travel: Student needs 4 skills, or outside village!</span>");
+                    queueOutput("<span class='output-text-neutral'>Cannot travel outside village!</span>");
                 }
             };
             controls.appendChild(travelButton);
