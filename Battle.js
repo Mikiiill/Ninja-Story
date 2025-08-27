@@ -40,8 +40,7 @@ function takeTurn(name) {
         let target = name === game.player.name ? game.enemy : game.player;
         applyStatusEffects(user); // Start of Turn effects (e.g., Bleed, Regen)
         let skillSet = new Skills();
-        let usableSkills = user.skills; // All active skills are automatically usable
-        let skill = usableSkills.length > 0 ? usableSkills[Math.floor(Math.random() * usableSkills.length)] : null;
+        let skill = user.skills[Math.floor(Math.random() * user.skills.length)]; // Direct card draw
 
         // Active Effects (check user's status effects before skill use)
         let burnReduction = user.statusEffects.some(e => e.name === "Burn") ? 1 : 0;
@@ -49,7 +48,12 @@ function takeTurn(name) {
             let barrageSkill = skillSet.findSkill("Barrage");
             if (barrageSkill) barrageSkill.skillFunction(user, target, game.battleScene);
             user.statusEffects = user.statusEffects.filter(e => e.name !== "READY");
-        } else if (skill) {
+        } else if (user.statusEffects.some(e => e.name === "Numb")) {
+            queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> is stunned by <span class='status-numb'>Numb ⚡️</span> and skips their skill phase!`);
+            user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb"); // Remove Numb
+            setTimeout(() => takeTurn(target.name), 2000); // End turn and proceed
+            return;
+        } else {
             // Apply Active effect modifications
             if (burnReduction && skill !== skillSet.findSkill("Healing Stance")) {
                 let originalFunction = skillSet.findSkill(skill.name).skillFunction;
@@ -77,16 +81,9 @@ function takeTurn(name) {
                     skill.skillFunction(user, target, game.battleScene);
                 }
             }
-        } else if (usableSkills.length === 0) {
-            queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> has no skills to use!`);
         }
 
-        if (user.statusEffects.some(e => e.name === "Numb")) {
-            queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> is stunned by <span class='status-numb'>Numb ⚡️</span> and skips their skill phase!`);
-            user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb"); // Remove Numb and end turn
-            return; // End turn immediately
-        }
-
+        // Ensure next turn is always scheduled
         if (game.player.hp > 0 && game.enemy.hp > 0) {
             setTimeout(() => takeTurn(target.name), 2000);
         } else {
