@@ -1,5 +1,10 @@
 function initiateStyleSelection() {
+    game.gameState = "chooseStyles"; // Explicitly set state
     let controls = document.getElementById("style-controls");
+    if (!controls) {
+        console.error("style-controls element not found!");
+        return;
+    }
     controls.innerHTML = "";
     let styles = ["Ninjutsu", "Genjutsu", "Taijutsu", "Fire", "Lightning", "Earth"];
     styles.forEach((style) => {
@@ -9,10 +14,12 @@ function initiateStyleSelection() {
         button.onclick = () => selectStyle(style, button);
         controls.appendChild(button);
     });
+    console.log("Style selection buttons created:", styles); // Debug log
 }
 
 function selectStyle(style, button) {
-    if (game.gameState === "chooseStyles" && game.player.ninjaStyles[style] && game.player.ninjaStyles[style] === "D-Rank" && Object.values(game.player.ninjaStyles).length < 2) {
+    console.log(`Clicked ${style}, current state: ${game.gameState}`); // Debug click
+    if (game.gameState === "chooseStyles" && game.player.ninjaStyles[style] && game.player.ninjaStyles[style] === "D-Rank" && Object.values(game.player.ninjaStyles).filter(r => r !== "D-Rank").length < 2) {
         if (confirm(`Upgrade ${style} to C-Rank?`)) {
             game.player.ninjaStyles[style] = "C-Rank";
             queueOutput(`<span class="output-text-${style.toLowerCase()}">${style}</span> trained to C-Rank!`);
@@ -26,6 +33,8 @@ function selectStyle(style, button) {
                 queueOutput(`You have ${remainingPoints} point${remainingPoints === 1 ? '' : 's'} remaining to upgrade another style.`);
             }
         }
+    } else {
+        console.log(`Style selection blocked for ${style}:`, { state: game.gameState, rank: game.player.ninjaStyles[style], count: Object.values(game.player.ninjaStyles).filter(r => r !== "D-Rank").length });
     }
 }
 
