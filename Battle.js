@@ -2,8 +2,9 @@ let battleQueue = [];
 
 function startBattle(user, target) {
     if (game.gameState !== "battle") {
-        game.user = user;
-        game.target = target;
+        // Set global user and target if not provided
+        game.user = user || game.player;
+        game.target = target || generateTrainingEnemy();
         game.gameState = "battle";
         document.getElementById("skill-controls").innerHTML = "";
         let controls = document.getElementById("main-controls");
@@ -18,6 +19,7 @@ function startBattle(user, target) {
         queueOutput("<span class='battle-ready'>BATTLE BEGINS!</span>");
         queueOutput(`<span class='output-text-player'>${game.user.name}</span> vs. <span class='output-text-enemy'>${game.target.name}</span>`);
         queueOutput("");
+        console.log("Starting battle with:", { user: game.user.name, target: game.target.name }); // Debug log
         setTimeout(() => determineTurnOrder(), 1000);
     } else {
         queueOutput("<span class='output-text-neutral'>Battle already in progress!</span>");
@@ -30,6 +32,7 @@ function determineTurnOrder() {
     let second = coinFlip ? game.target : game.user;
     queueOutput(`<span class='output-text-neutral'>${second.name} is off guard!</span>`);
     battleQueue = [first, second];
+    console.log("Turn order determined:", { first: first.name, second: second.name }); // Debug log
     processBattleQueue();
 }
 
@@ -175,5 +178,5 @@ function endBattle() {
 }
 
 function startTravelFight() {
-    startBattle(generateTravelEnemy(), game.player);
-                    }
+    startBattle(game.player, generateTravelEnemy());
+}
