@@ -73,7 +73,7 @@
             font-size: 1.5rem;
             padding: 10px 20px;
         }
-        .skills-button, .train-button {
+        .skills-button, .train-button, .travel-button, .shop-button {
             background-color: #555;
             color: #fff;
             border: 2px solid #fff;
@@ -115,6 +115,7 @@
     <script src="Battle.js"></script>
     <script src="RANKUP.js"></script>
     <script src="Log.js"></script>
+    <script src="Map.js"></script>
     <script>
         let game = {
             player: {
@@ -125,7 +126,8 @@
                 ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank", Fire: "D-Rank", Lightning: "D-Rank", Earth: "D-Rank", Water: "D-Rank", Wind: "D-Rank", Feral: "D-Rank" },
                 skills: [],
                 skillInventory: [],
-                statusEffects: []
+                statusEffects: [],
+                lastVillage: "Newb Village"
             },
             enemy: null,
             battleNum: 1,
@@ -146,7 +148,8 @@
                     ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank", Fire: "D-Rank", Lightning: "D-Rank", Earth: "D-Rank", Water: "D-Rank", Wind: "D-Rank", Feral: "D-Rank" },
                     skills: [],
                     skillInventory: [],
-                    statusEffects: []
+                    statusEffects: [],
+                    lastVillage: "Newb Village"
                 },
                 enemy: null,
                 battleNum: 1,
@@ -188,7 +191,7 @@
             let playerEffects = [...new Set(game.player.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("");
             document.getElementById("player-status").innerHTML = `Shinobi [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] ${playerEffects}`;
             let enemyEffects = game.enemy ? [...new Set(game.enemy.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("") : "";
-            document.getElementById("enemy-status").innerHTML = game.enemy ? `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>] ${enemyEffects}` : "Enemy [HP: <span class='enemy-hp'>0/0</span>]";
+            document.getElementById("enemy-status").innerHTML = game.enemy ? `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>] ${enemyEffects}` : "Enemy [HP: <span class='enemy-hp'>0/0</span>]`;
         }
 
         function updateSkillCount() {
