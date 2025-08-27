@@ -15,13 +15,13 @@ function ArriveVillage(villageName) {
             trainButton.innerText = "Train";
             trainButton.className = "train-button";
             trainButton.onclick = () => {
-                if (game.gameState === "In Village") {
+                if (game.gameState === "In Village" && game.player.skills.length > 0) { // Require at least one skill
                     Log.debug("Train button clicked");
                     let enemy = generateTrainingEnemy();
                     Log.debug(`Generated enemy: ${enemy.name} with HP ${enemy.hp}`);
                     startBattle(enemy, "training");
                 } else {
-                    queueOutput("<span class='output-text-neutral'>Cannot train outside village!</span>");
+                    queueOutput("<span class='output-text-neutral'>Cannot train without equipped skills or outside village!</span>");
                 }
             };
             controls.appendChild(trainButton);
@@ -91,23 +91,24 @@ function ArriveVillage(villageName) {
             travelButton.innerText = "Travel";
             travelButton.className = "travel-button";
             travelButton.onclick = () => {
-                if (game.gameState === "In Village") {
+                if (game.gameState === "In Village" && game.player.skills.length > 0) { // Require at least one skill
                     Log.debug("Travel button clicked");
                     let villages = ["Newb Village", "Hidden Leaf", "Sand Village"];
                     let areas = MapData[villageName]?.areas || [];
                     let options = [...villages, ...areas];
-                    let choice = prompt(`Travel to: ${options.join(", ")}`).trim(); // Trim to handle extra spaces
+                    let choice = prompt(`Travel to: ${options.join(", ")}`).trim().toLowerCase(); // Case-insensitive
                     Log.debug(`Travel choice: ${choice}, Options: ${options.join(", ")}`);
-                    if (choice && options.includes(choice)) {
+                    let validChoice = options.find(opt => opt.toLowerCase() === choice);
+                    if (validChoice) {
                         game.battleNum = 0; // Reset battle count for new travel
-                        game.player.lastVillage = choice; // Update destination before fights
-                        Log.debug(`Starting travel fight to ${choice}`);
+                        game.player.lastVillage = validChoice; // Update destination before fights
+                        Log.debug(`Starting travel fight to ${validChoice}`);
                         startTravelFight();
                     } else {
                         queueOutput("<span class='output-text-neutral'>Invalid travel destination!</span>");
                     }
                 } else {
-                    queueOutput("<span class='output-text-neutral'>Cannot travel outside village!</span>");
+                    queueOutput("<span class='output-text-neutral'>Cannot travel without equipped skills or outside village!</span>");
                 }
             };
             controls.appendChild(travelButton);
