@@ -10,6 +10,7 @@ function startBattle(player, enemy) {
             let randIndex = Math.floor(Math.random() * player.skillInventory.length);
             player.skills.push(player.skillInventory.splice(randIndex, 1)[0]);
         }
+        game.enemy = enemy; // Sync enemy for UI
         updateStatus();
         game.battleScene = { queueOutput: queueOutput };
         queueOutput("");
@@ -25,21 +26,18 @@ function startBattle(player, enemy) {
 
 function determineTurnOrder(player, enemy) {
     let coinFlip = Math.random() < 0.5;
-    game.user = coinFlip ? player : enemy; // First turn player
-    game.target = coinFlip ? enemy : player; // Second turn player
+    game.user = coinFlip ? player : enemy;
+    game.target = coinFlip ? enemy : player;
     queueOutput(`<span class='output-text-neutral'>${game.target.name} is off guard!</span>`);
-    battleQueue = [game.user, game.target];
+    battleQueue = [game.user];
     console.log("Turn order determined:", { user: game.user.name, target: game.target.name });
     processBattleQueue();
 }
 
 function processBattleQueue() {
-    if (battleQueue.length > 0) {
-        let currentUser = battleQueue.shift();
+    if (battleQueue.length > 0 && game.user.hp > 0 && game.target.hp > 0) {
+        let currentUser = battleQueue[0];
         takeTurn(currentUser);
-    } else if (game.user.hp > 0 && game.target.hp > 0) {
-        battleQueue = [game.target, game.user];
-        processBattleQueue();
     } else {
         endBattle();
     }
@@ -48,7 +46,7 @@ function processBattleQueue() {
 function takeTurn(user) {
     game.user = user;
     game.target = (user === game.user) ? game.target : game.user; // Ensure target is correct
-    queueOutput(`<span class='output-text-${user === game.user ? 'player' : 'enemy'}'>${user.name}</span>'s turn`);
+    queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span>'s turn`);
     setTimeout(() => {
         startEffectCheck(user);
         if (user.hp > 0) {
@@ -62,12 +60,12 @@ function startEffectCheck(user) {
     user.statusEffects = user.statusEffects.map(effect => {
         if (effect.startOfTurn && (effect.name === "Burn" || effect.name === "Doom" || effect.name === "Bleed" || effect.name === "Poison")) {
             user.hp -= effect.damage;
-            queueOutput(`<span class='output-text-${user === game.user ? 'player' : 'enemy'}'>${user.name}</span> takes ${effect.damage} damage from <span class='status-${effect.name.toLowerCase().replace(" ", "")}'>${effect.name}</span>!`);
+            queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> takes ${effect.damage} damage from <span class='status-${effect.name.toLowerCase().replace(" ", "")}'>${effect.name}</span>!`);
             updateStatus();
         } else if (effect.startOfTurn && effect.name === "Regen") {
             let heal = user.hp < user.maxHp ? effect.damage : 0;
             user.hp = Math.min(user.maxHp, user.hp + heal);
-            if (heal > 0) queueOutput(`<span class='output-text-${user === game.user ? 'player' : 'enemy'}'>${user.name}</span> heals ${heal} HP from <span class='status-${effect.name.toLowerCase().replace(" ", "")}'>${effect.name}</span>!`);
+            if (heal > 0) queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> heals ${heal} HP from <span class='status-${effect.name.toLowerCase().replace(" ", "")}'>${effect.name}</span>!`);
             updateStatus();
         }
         effect.duration--;
@@ -75,13 +73,14 @@ function startEffectCheck(user) {
     }).filter(effect => effect.duration > 0);
 
     if (user.statusEffects.some(e => e.name === "Numb")) {
-        queueOutput(`<span class='output-text-${user === game.user ? 'player' : 'enemy'}'>${user.name}</span> is stunned by <span class='status-numb'>Numb ⚡️</span> and skips their skill phase!`);
+        queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> is stunned by <span class='status-numb'>Numb ⚡️</span> and skips their skill phase!`);
         user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
         endTurn();
     }
 }
 
 function deathCheck() {
+    updateStatus(); // Ensure UI reflects current HP
     if (game.user.hp <= 0) {
         queueOutput(`<span class='output-text-${game.user === game.player ? 'player' : 'enemy'}'>${game.user.name}</span> has been defeated! <span class='output-text-${game.target === game.player ? 'player' : 'enemy'}'>${game.target.name}</span> wins!`);
         endBattle();
@@ -95,12 +94,12 @@ function skillAction(user) {
     let skillSet = new Skills();
     let skill = user.skills[Math.floor(Math.random() * user.skills.length)];
     if (!skill) {
-        queueOutput(`<span class='output-text-${user === game.user ? 'player' : 'enemy'}'>${user.name}</span> has no skills to use!`);
+        queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> has no skills to use!`);
         endTurn();
         return;
     }
     let isSupportSkill = skillSet.findSkill(skill.name)?.support || false;
-    queueOutput(`<span class='output-text-${user === game.user ? 'player' : 'enemy'}'>${user.name}</span> uses ${skill.name}!`);
+    queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> uses ${skill.name}!`);
 
     if (isSupportSkill) {
         skill.skillFunction(user, game.target, game.battleScene);
@@ -111,10 +110,10 @@ function skillAction(user) {
             skill.skillFunction(user, game.target, game.battleScene);
         } catch (e) {
             console.error("Error in skill execution:", e);
-            queueOutput(`<span class='output-text-${user === game.user ? 'player' : 'enemy'}'>${user.name}</span> encountered an error with ${skill.name}!`);
+            queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> encountered an error with ${skill.name}!`);
         }
     }
-    deathCheck(); // Check for death after skill action
+    deathCheck();
     endTurn();
 }
 
@@ -128,7 +127,7 @@ function activeEffectCheck(user) {
             } else if (effect.name === "ShadowCloneEffect") {
                 let cloneCount = user.statusEffects.filter(e => e.name === "ShadowCloneEffect").length;
                 for (let i = 0; i < cloneCount; i++) {
-                    queueOutput(`<span class='output-text-${user === game.user ? 'player' : 'enemy'}'>Shadow Clone ${i + 1} uses Barrage on ${game.target.name}!</span>`);
+                    queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>Shadow Clone ${i + 1} uses Barrage on ${game.target.name}!</span>`);
                     let barrageSkill = skillSet.findSkill("Barrage");
                     if (barrageSkill) barrageSkill.skillFunction(user, game.target, game.battleScene);
                 }
@@ -145,17 +144,17 @@ function triggeredEffectCheck(user, target) {
     if (effect) {
         switch (effect.name) {
             case "ShadowCloneEffect":
-                queueOutput(`<span class='output-text-${target === game.user ? 'player' : 'enemy'}'>${target.name}</span>'s Shadow Clone absorbs the attack!`);
+                queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span>'s Shadow Clone absorbs the attack!`);
                 target.statusEffects = target.statusEffects.filter(e => e.name !== "ShadowCloneEffect");
                 break;
             case "Swap":
-                queueOutput(`<span class='output-text-${target === game.user ? 'player' : 'enemy'}'>${target.name}</span> uses Substitution to dodge the attack with a log!`);
+                queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span> uses Substitution to dodge the attack with a log!`);
                 target.statusEffects = target.statusEffects.filter(e => e.name !== "Swap");
                 return; // End skill early
             case "Dome":
             case "DoubleImage":
             case "Release":
-                queueOutput(`<span class='output-text-${target === game.user ? 'player' : 'enemy'}'>${target.name}</span> uses ${effect.name} to mitigate the attack!`);
+                queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span> uses ${effect.name} to mitigate the attack!`);
                 target.statusEffects = target.statusEffects.filter(e => e.name !== effect.name);
                 break;
         }
@@ -166,7 +165,8 @@ function endTurn() {
     let temp = game.user;
     game.user = game.target;
     game.target = temp;
-    processBattleQueue();
+    updateStatus(); // Sync UI after swap
+    setTimeout(() => processBattleQueue(), 2000); // Delay for next turn
 }
 
 function endBattle() {
@@ -175,14 +175,35 @@ function endBattle() {
     if (controls) controls.style.display = "block";
     document.getElementById("skill-controls").innerHTML = "";
     queueOutput("<span class='battle-ready'>Battle ended!</span>");
-    game.user.hp = game.user.maxHp;
-    game.user.statusEffects = [];
-    game.target.hp = game.target.maxHp;
-    game.target.statusEffects = [];
-    performJutsuSelection(1, false, () => ArriveVillage(game.user.lastVillage));
+    if (game.target.hp <= 0) {
+        if (game.battleType === "training") {
+            performJutsuSelection(1, false, () => ArriveVillage(game.user.lastVillage));
+        } else if (game.battleType === "travel") {
+            game.player.travelFightsCompleted = (game.player.travelFightsCompleted || 0) + 1;
+            queueOutput(`<span class='output-text-neutral'>Travel fight completed! ${game.player.travelFightsCompleted}/4 fights done.</span>`);
+            if (game.player.travelFightsCompleted < 4) {
+                startTravelFight();
+            } else {
+                let targetIsVillage = MapData[game.player.lastVillage]?.areas.includes(game.target.lastVillage) ? false : true;
+                if (targetIsVillage) {
+                    game.player.lastVillage = game.target.lastVillage;
+                    ArriveVillage(game.player.lastVillage);
+                } else {
+                    game.gameState = "inArea";
+                    queueOutput(`<span class='output-text-neutral'>Arrived at ${game.target.lastVillage}! State set to inArea.</span>`);
+                    let eventControls = document.getElementById("travel-controls");
+                    eventControls.style.display = "flex";
+                    eventControls.innerHTML = `<button onclick="startEventFight()">Start Event Fight</button><button onclick="talkToNPC()">Talk to NPC</button><button onclick="returnToVillage()">Return to ${game.player.lastVillage}</button>`;
+                }
+            }
+        }
+    } else if (game.user.hp <= 0) {
+        ArriveVillage(game.user.lastVillage);
+    }
 }
 
 function startTravelFight() {
+    game.battleType = "travel";
     startBattle(game.player, generateTravelEnemy());
 }
 
@@ -197,3 +218,18 @@ function generateTravelEnemy() {
         lastVillage: game.player.lastVillage
     };
 }
+
+function startEventFight() {
+    // Placeholder for event fight logic
+    queueOutput("<span class='output-text-neutral'>Event fight started! (Placeholder)</span>");
+}
+
+function talkToNPC() {
+    // Placeholder for NPC interaction
+    queueOutput("<span class='output-text-neutral'>Talking to NPC! (Placeholder)</span>");
+}
+
+function returnToVillage() {
+    game.gameState = "In Village";
+    ArriveVillage(game.player.lastVillage);
+                                }
