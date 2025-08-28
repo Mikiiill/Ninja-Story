@@ -1,46 +1,5 @@
-let game = {
-    gameState: "initial",
-    player: null,
-    enemy: null,
-    user: null,
-    target: null,
-    battleScene: null,
-    battleType: null
-};
-
-function initializeGame() {
-    game.player = {
-        name: "Shinobi",
-        hp: 10,
-        maxHp: 10,
-        skills: [],
-        skillInventory: [],
-        statusEffects: [],
-        ninjaStyles: {},
-        lastVillage: "Newb Village",
-        exp: 0,
-        maxExp: 10
-    };
-    // Wrap hp in Proxy for real-time updates
-    game.player = new Proxy(game.player, {
-        set(target, property, value) {
-            if (property === "hp" && target[property] !== value) {
-                target[property] = value;
-                updateStatus();
-            } else {
-                target[property] = value;
-            }
-            return true;
-        }
-    });
-    game.enemy = null;
-    addInitialBarrageCards();
-}
-
-function addInitialBarrageCards() {
-    let skillSet = new Skills();
-    game.player.skillInventory = [skillSet.findSkill("Barrage"), skillSet.findSkill("Barrage")]; // Exactly 2 Barrage cards
-}
+// Battle-specific logic only
+let game = window.game; // Reference the global game object from index.html
 
 function startBattle(player, enemy) {
     if (game.gameState !== "battle") {
@@ -52,7 +11,17 @@ function startBattle(player, enemy) {
             let randIndex = Math.floor(Math.random() * player.skillInventory.length);
             player.skills.push(player.skillInventory.splice(randIndex, 1)[0]);
         }
-        game.enemy = enemy;
+        game.enemy = new Proxy(enemy, {
+            set(target, property, value) {
+                if (property === "hp" && target[property] !== value) {
+                    target[property] = value;
+                    updateStatus();
+                } else {
+                    target[property] = value;
+                }
+                return true;
+            }
+        });
         updateStatus();
         game.battleScene = { queueOutput: queueOutput };
         queueOutput("");
@@ -321,4 +290,4 @@ function ArriveVillage(village) {
     if (controls) controls.style.display = "block";
     queueOutput(`Arrived at ${village}! HP restored, status effects cleared.`);
     console.log("[DEBUG]: Arrived at", village, "controls set up, gameState:", game.gameState);
-                }
+}
