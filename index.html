@@ -224,22 +224,18 @@
         }
 
         function startGame() {
-            try {
-                game.output = ["<span class='output-text-neutral'>Welcome to ShinobiWay, <span class='output-text-player'>Shinobi</span>! You can Rank Up 2 available Fighting Styles during Rank Up to unlock new Jutsu.</span>"];
-                document.getElementById("output").innerHTML = game.output.join("<br>");
-                game.gameState = "chooseStyles";
-                initiateStyleSelection(); // Assuming this is defined in RANKUP.js
-                updateSkillCount();
-                let skillSet = new Skills();
-                let barrageSkill = skillSet.findSkill("Barrage");
-                if (barrageSkill) {
-                    game.player.skillInventory.push(barrageSkill);
-                    game.player.skillInventory.push(barrageSkill);
-                }
-                document.getElementById("start-controls").innerHTML = "";
-            } catch (error) {
-                queueOutput("<span class='error-log'>Error in startGame: " + error.message + "</span>");
+            game.output = ["<span class='output-text-neutral'>Welcome to ShinobiWay, <span class='output-text-player'>Shinobi</span>! You can Rank Up 2 available Fighting Styles during Rank Up to unlock new Jutsu.</span>"];
+            document.getElementById("output").innerHTML = game.output.join("<br>");
+            game.gameState = "chooseStyles";
+            initiateStyleSelection(); // Defined in RANKUP.js
+            updateSkillCount();
+            let skillSet = new Skills();
+            let barrageSkill = skillSet.findSkill("Barrage");
+            if (barrageSkill) {
+                game.player.skillInventory.push(barrageSkill);
+                game.player.skillInventory.push(barrageSkill);
             }
+            document.getElementById("start-controls").innerHTML = "";
         }
 
         function generateTrainingEnemy() {
