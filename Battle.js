@@ -46,6 +46,7 @@ function takeTurn(user) {
 }
 
 function startEffectCheck(user) {
+    console.log(`[DEBUG]: Checking startOfTurn effects for ${user.name}`);
     user.statusEffects.forEach(effect => {
         if (effect.startOfTurn && effect.startOfTurnFunction) {
             let endTurn = effect.startOfTurnFunction(user, game.target, game.battleScene);
@@ -98,8 +99,9 @@ function skillAction(user) {
             queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> encountered an error with ${skill.name}!`);
         }
     }
-    deathCheck();
-    endTurn();
+    deathcheck();
+    endTurn(); // Ensure turn ends regardless of skill type
+    
 }
 
 function activeEffectCheck(user) {
