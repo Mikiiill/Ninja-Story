@@ -37,7 +37,7 @@ class Skills {
             new BattleSkill("Barrage", ["Taijutsu"], {}, this.barrage.bind(this), "neutral", false, "D-Rank"),
             new BattleSkill("Substitution Jutsu", [], { Ninjutsu: "D-Rank", Taijutsu: "D-Rank" }, this.substitutionJutsu.bind(this), "neutral", true, "D-Rank"),
             new BattleSkill("Shadow Clone Jutsu", ["Ninjutsu"], { Ninjutsu: "C-Rank" }, this.shadowCloneJutsu.bind(this), "neutral", true, "C-Rank"),
-            new BattleSkill("Demonic Vision", ["Genjutsu"], { Genjutsu: "C-Rank" }, this.demonicVision.bind(this), "illusion", false, "C-Rank"),
+            new BattleSkill("Demonic Vision", ["Genjutsu"], { Genjutsu: "C-Rank" }, this.demonicVision.bind(this), "genjutsu", false, "C-Rank"),
             new BattleSkill("Healing Stance", ["Ninjutsu"], {}, this.healingStance.bind(this), "neutral", true, "D-Rank"),
             new BattleSkill("Earth Dome Jutsu", ["Earth", "Ninjutsu"], { Earth: "C-Rank" }, this.earthDomeJutsu.bind(this), "earth", true, "C-Rank"),
             new BattleSkill("Flame Throw Jutsu", ["Fire", "Ninjutsu"], { Fire: "C-Rank", Ninjutsu: "C-Rank" }, this.flameThrowJutsu.bind(this), "fire", false, "B-Rank"),
@@ -46,7 +46,7 @@ class Skills {
             new BattleSkill("Dynamic Entry", ["Taijutsu"], { Taijutsu: "C-Rank" }, this.dynamicEntry.bind(this), "neutral", false, "C-Rank"),
             new BattleSkill("Falcon Drop", ["Taijutsu"], { Taijutsu: "B-Rank" }, this.falconDrop.bind(this), "neutral", false, "B-Rank"),
             new BattleSkill("Rock Smash Jutsu", ["Earth", "Taijutsu"], { Earth: "B-Rank" }, this.rockSmashJutsu.bind(this), "earth", false, "B-Rank"),
-            new BattleSkill("Genjutsu Release", ["Genjutsu"], { Genjutsu: "B-Rank" }, this.genjutsuRelease.bind(this), "illusion", true, "B-Rank"),
+            new BattleSkill("Genjutsu Release", ["Genjutsu"], { Genjutsu: "B-Rank" }, this.genjutsuRelease.bind(this), "genjutsu", true, "B-Rank"),
             new BattleSkill("Lightning Edge", ["Lightning", "Ninjutsu"], { Lightning: "C-Rank", Ninjutsu: "C-Rank" }, this.lightningEdge.bind(this), "lightning", false, "B-Rank"),
             new BattleSkill("Bite", ["Feral"], { Feral: "C-Rank" }, this.bite.bind(this), "feral", false, "C-Rank")
         ];
@@ -159,10 +159,10 @@ class Skills {
     earthDomeJutsu(user, target, scene) {
         user.statusEffects.push(new StatusEffect("Dome", 2, 0, false, false, true, null, null, 
             (user, target, scene, skillStyle) => { // Triggered: mitigate non-Genjutsu
-                if (skillStyle !== "illusion") {
+                if (skillStyle !== "genjutsu") {
                     scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> uses Earth Dome to mitigate the attack!`);
                     user.statusEffects = user.statusEffects.filter(e => e.name !== "Dome");
-                    return false; // Continue skill
+                    return false; // Continue
                 }
                 return false; // Allow Genjutsu to proceed
             }));
@@ -188,13 +188,13 @@ class Skills {
     staticFieldJutsu(user, target, scene) {
         let damage = Math.floor(Math.random() * 2) + 2;
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-        user.statusEffects.push(new StatusEffect("Numb", 1, 0, false, false, false, 
+        user.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
             (user, target, scene) => { // Start of turn: stun user
                 scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> is stunned by Numb and skips their turn!`);
                 user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
                 return true; // End turn early
             }));
-        target.statusEffects.push(new StatusEffect("Numb", 1, 0, false, false, false, 
+        target.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
             (user, target, scene) => { // Start of turn: stun target
                 scene.queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span> is stunned by Numb and skips their turn!`);
                 target.statusEffects = target.statusEffects.filter(e => e.name !== "Numb");
@@ -222,16 +222,18 @@ class Skills {
     dynamicEntry(user, target, scene) {
         let damage = 1;
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-        let usableSkills = user.skills.filter(skill => !skill.support && skill !== this.findSkill("Dynamic Entry"));
-        let nextSkill = usableSkills.length > 0 ? usableSkills[Math.floor(Math.random() * usableSkills.length)] : null;
         scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-neutral">Dynamic Entry</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage!`);
-        if (nextSkill && !user.statusEffects.some(e => e.name === "DynamicEntryProc")) {
-            user.statusEffects.push(new StatusEffect("DynamicEntryProc", 1, 0, false, true, false, null, 
-                (user, target, scene) => { // Active: trigger next skill
-                    nextSkill.skillFunction(user, target, scene);
-                    user.statusEffects = user.statusEffects.filter(e => e.name !== "DynamicEntryProc");
-                    return false; // Continue turn
-                }));
+        // Add DynamicEntryProc to prevent self-chaining
+        if (!user.statusEffects.some(e => e.name === "DynamicEntryProc")) {
+            user.statusEffects.push(new StatusEffect("DynamicEntryProc", 1, 0, false, false, false, null, null, null));
+            let usableSkills = user.skills.filter(skill => !skill.support && skill !== this.findSkill("Dynamic Entry"));
+            let nextSkill = usableSkills.length > 0 ? usableSkills[Math.floor(Math.random() * usableSkills.length)] : null;
+            if (nextSkill) {
+                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> chains with ${nextSkill.name}!`);
+                nextSkill.skillFunction(user, target, scene);
+            }
+            // Remove DynamicEntryProc after the chain to allow reuse next turn
+            user.statusEffects = user.statusEffects.filter(e => e.name !== "DynamicEntryProc");
         }
         return target.hp <= 0;
     }
@@ -240,7 +242,7 @@ class Skills {
         let damage = 2;
         user.hp = Math.max(0, Math.min(user.maxHp, user.hp - 2));
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-        target.statusEffects.push(new StatusEffect("Numb", 1, 0, false, false, false, 
+        target.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
             (user, target, scene) => { // Start of turn: stun target
                 scene.queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span> is stunned by Numb and skips their turn!`);
                 target.statusEffects = target.statusEffects.filter(e => e.name !== "Numb");
@@ -269,7 +271,7 @@ class Skills {
         user.statusEffects = user.statusEffects.filter(e => e.name !== "Doom");
         user.statusEffects.push(new StatusEffect("Release", 1, 0, false, false, true, null, null, 
             (user, target, scene, skillStyle) => { // Triggered: resist Genjutsu
-                if (skillStyle === "illusion") {
+                if (skillStyle === "genjutsu") {
                     scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> uses Release to resist the Genjutsu attack!`);
                     user.statusEffects = user.statusEffects.filter(e => e.name !== "Release");
                     return false; // Continue skill (resist only Genjutsu)
