@@ -114,8 +114,8 @@
 
     <script src="Jutsu.js"></script>
     <script src="Characters.js"></script>
+    <script src="RANKUP.js"></script> <!-- Moved before Battle.js -->
     <script src="Battle.js"></script>
-    <script src="RANKUP.js"></script>
     <script src="Log.js"></script>
     <script src="Map.js"></script>
 
@@ -224,18 +224,22 @@
         }
 
         function startGame() {
-            game.output = ["<span class='output-text-neutral'>Welcome to ShinobiWay, <span class='output-text-player'>Shinobi</span>! You can Rank Up 2 available Fighting Styles during Rank Up to unlock new Jutsu.</span>"];
-            document.getElementById("output").innerHTML = game.output.join("<br>");
-            game.gameState = "chooseStyles";
-            initiateStyleSelection(); // Defined in RANKUP.js
-            updateSkillCount();
-            let skillSet = new Skills();
-            let barrageSkill = skillSet.findSkill("Barrage");
-            if (barrageSkill) {
-                game.player.skillInventory.push(barrageSkill);
-                game.player.skillInventory.push(barrageSkill);
+            if (typeof initiateStyleSelection === 'function') {
+                game.output = ["<span class='output-text-neutral'>Welcome to ShinobiWay, <span class='output-text-player'>Shinobi</span>! You can Rank Up 2 available Fighting Styles during Rank Up to unlock new Jutsu.</span>"];
+                document.getElementById("output").innerHTML = game.output.join("<br>");
+                game.gameState = "chooseStyles";
+                initiateStyleSelection();
+                updateSkillCount();
+                let skillSet = new Skills();
+                let barrageSkill = skillSet.findSkill("Barrage");
+                if (barrageSkill) {
+                    game.player.skillInventory.push(barrageSkill);
+                    game.player.skillInventory.push(barrageSkill);
+                }
+                document.getElementById("start-controls").innerHTML = "";
+            } else {
+                queueOutput("<span class='error-log'>Error: initiateStyleSelection is not defined. Please check script load order.</span>");
             }
-            document.getElementById("start-controls").innerHTML = "";
         }
 
         function generateTrainingEnemy() {
