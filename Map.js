@@ -19,7 +19,8 @@ function ArriveVillage(villageName) {
                     Log.debug("Train button clicked");
                     if ((game.player.Rank === "Student" && game.player.skills.length >= 4) || game.player.Rank !== "Student") {
                         let enemy = generateTrainingEnemy();
-                        startBattle(game.player, enemy); // Updated to match new Battle.js signature
+                        game.battleType = "training"; // Set battle type
+                        startBattle(game.player, enemy);
                     } else {
                         queueOutput("<span class='output-text-neutral'>Cannot train: Student needs 4 skills!</span>");
                     }
@@ -45,9 +46,9 @@ function ArriveVillage(villageName) {
                         skillButton.className = `output-text-${skill.style}`;
                         skillButton.onclick = () => {
                             game.player.skillInventory.push(skill);
-                            game.player.skills.splice(index, 1); // Remove only the clicked instance
+                            game.player.skills.splice(index, 1);
                             queueOutput(`<span class='output-text-${skill.style}'>${skill.name}</span> moved to inventory!`);
-                            skillsButton.onclick(); // Refresh
+                            skillsButton.onclick();
                         };
                         equippedDiv.appendChild(skillButton);
                     });
@@ -61,9 +62,9 @@ function ArriveVillage(villageName) {
                         skillButton.onclick = () => {
                             if (game.player.skills.length < 10) {
                                 game.player.skills.push(skill);
-                                game.player.skillInventory.splice(index, 1); // Remove only the clicked instance
+                                game.player.skillInventory.splice(index, 1);
                                 queueOutput(`<span class='output-text-${skill.style}'>${skill.name}</span> equipped!`);
-                                skillsButton.onclick(); // Refresh
+                                skillsButton.onclick();
                             } else {
                                 queueOutput("<span class='output-text-neutral'>Skill limit (10) reached!</span>");
                             }
@@ -104,8 +105,9 @@ function ArriveVillage(villageName) {
                             if (confirm(`Confirm travel to ${village}?`)) {
                                 if ((game.player.Rank === "Student" && game.player.skills.length >= 4) || game.player.Rank !== "Student") {
                                     game.battleNum = 0;
-                                    game.player.lastVillage = village;
-                                    Log.debug(`Starting travel fight to ${village}`);
+                                    game.player.lastVillage = village; // Update last village
+                                    let isArea = areas.includes(village);
+                                    Log.debug(`Starting travel fight to ${village}, isArea: ${isArea}`);
                                     startTravelFight();
                                     travelControls.style.display = "none";
                                 } else {
