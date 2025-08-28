@@ -1,34 +1,4 @@
-let game = {
-    gameState: "initial",
-    player: null,
-    enemy: null,
-    user: null,
-    target: null,
-    battleScene: null,
-    battleType: null
-};
-
-function initializeGame() {
-    game.player = {
-        name: "Shinobi",
-        hp: 10,
-        maxHp: 10,
-        skills: [],
-        skillInventory: [],
-        statusEffects: [],
-        ninjaStyles: {},
-        lastVillage: "Newb Village",
-        exp: 0,
-        maxExp: 10
-    };
-    game.enemy = null;
-    addInitialBarrageCards();
-}
-
-function addInitialBarrageCards() {
-    let skillSet = new Skills();
-    game.player.skillInventory = [skillSet.findSkill("Barrage"), skillSet.findSkill("Barrage")]; // Exactly 2 Barrage cards
-}
+let game = window.game; // Reference the global game object from index.html
 
 function startBattle(player, enemy) {
     if (game.gameState !== "battle") {
@@ -40,7 +10,17 @@ function startBattle(player, enemy) {
             let randIndex = Math.floor(Math.random() * player.skillInventory.length);
             player.skills.push(player.skillInventory.splice(randIndex, 1)[0]);
         }
-        game.enemy = enemy;
+        game.enemy = new Proxy(enemy, {
+            set(target, property, value) {
+                if (property === "hp" && target[property] !== value) {
+                    target[property] = value;
+                    updateStatus();
+                } else {
+                    target[property] = value;
+                }
+                return true;
+            }
+        });
         updateStatus();
         game.battleScene = { queueOutput: queueOutput };
         queueOutput("");
@@ -84,14 +64,12 @@ function startEffectCheck(user) {
             if (effect.startOfTurn && effect.startOfTurnFunction) {
                 console.log(`[DEBUG]: Processing ${effect.name} for ${user.name}`);
                 let endTurn = effect.startOfTurnFunction(user, game.target, game.battleScene);
-                updateStatus(); // Update after each effect
                 if (endTurn) allEffectsProcessed = false;
             }
         });
         if (user.statusEffects.some(e => e.name === "Numb" && e.startOfTurnFunction)) {
             console.log("[DEBUG]: Processing Numb for", user.name);
             user.statusEffects.find(e => e.name === "Numb").startOfTurnFunction(user, game.target, game.battleScene);
-            updateStatus(); // Update after Numb
             user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
             allEffectsProcessed = false;
         }
@@ -134,16 +112,15 @@ function skillAction(user) {
     if (isSupportSkill || skill.name === "Lightning Edge") {
         try {
             skill.skillFunction(user, game.target, game.battleScene);
-            updateStatus(); // Update after support skill
         } catch (e) {
             console.error("[ERROR]: Support skill execution failed:", e);
+            queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> encountered an error with ${skill.name}!`);
         }
     } else {
         activeEffectCheck(user);
         triggeredEffectCheck(user, game.target, skill.style);
         try {
             let skillResult = skill.skillFunction(user, game.target, game.battleScene);
-            updateStatus(); // Update after each skill
             console.log("[DEBUG]: Skill", skill.name, "executed with result:", skillResult, "Status Effects:", user.statusEffects, game.target.statusEffects);
         } catch (e) {
             console.error("[ERROR]: Skill execution failed:", e);
@@ -159,7 +136,6 @@ function activeEffectCheck(user) {
         user.statusEffects.forEach(effect => {
             if (effect.active && effect.activeFunction) {
                 effect.activeFunction(user, game.target, game.battleScene);
-                updateStatus(); // Update after active effect
             }
         });
     } catch (e) {
@@ -172,7 +148,6 @@ function triggeredEffectCheck(user, target, skillStyle) {
         target.statusEffects.forEach(effect => {
             if (effect.triggered && effect.triggeredFunction) {
                 let endSkill = effect.triggeredFunction(user, target, game.battleScene, skillStyle);
-                updateStatus(); // Update after triggered effect
                 if (endSkill) return;
             }
         });
@@ -245,11 +220,11 @@ function generateTravelEnemy() {
         name: "Rabid Dog",
         hp: 8,
         maxHp: 8,
-        skills: [new Skills().findSkill("Bite")], // Updated to Bite
+        skills: [new Skills().findSkill("Bite")],
         skillInventory: [],
         statusEffects: [],
         lastVillage: game.player.lastVillage,
-        ninjaStyles: { Feral: "C-Rank" } // Added for Bite requirement
+        ninjaStyles: { Feral: "C-Rank" }
     };
 }
 
@@ -314,4 +289,4 @@ function ArriveVillage(village) {
     if (controls) controls.style.display = "block";
     queueOutput(`Arrived at ${village}! HP restored, status effects cleared.`);
     console.log("[DEBUG]: Arrived at", village, "controls set up, gameState:", game.gameState);
-        }
+}
