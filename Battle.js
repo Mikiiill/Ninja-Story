@@ -27,12 +27,14 @@ function determineTurnOrder(player, enemy) {
     game.user = coinFlip ? player : enemy;
     game.target = coinFlip ? enemy : player;
     queueOutput(`<span class='output-text-neutral'>${game.target.name} is off guard!</span>`);
-    console.log("Turn order determined:", { user: game.user.name, target: game.target.name });
+    console.log("[DEBUG]: Turn order determined:", { user: game.user.name, target: game.target.name });
     takeTurn(game.user);
 }
 
 function takeTurn(user) {
-    if (game.user.hp <= 0 || game.target.hp <= 0) {
+    console.log("[DEBUG]: Entering takeTurn for", user.name);
+    if (!game.user || !game.target || game.user.hp <= 0 || game.target.hp <= 0) {
+        console.log("[DEBUG]: Battle end condition met, exiting takeTurn");
         endBattle();
         return;
     }
@@ -42,6 +44,9 @@ function takeTurn(user) {
     startEffectCheck(user);
     if (user.hp > 0) {
         skillAction(user);
+    } else {
+        console.log("[DEBUG]: User HP <= 0, skipping skillAction");
+        endTurn();
     }
 }
 
@@ -99,9 +104,8 @@ function skillAction(user) {
             queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> encountered an error with ${skill.name}!`);
         }
     }
-    deathcheck();
     endTurn(); // Ensure turn ends regardless of skill type
-    
+    deathCheck();
 }
 
 function activeEffectCheck(user) {
@@ -122,11 +126,17 @@ function triggeredEffectCheck(user, target, skillStyle) {
 }
 
 function endTurn() {
+    console.log("[DEBUG]: Ending turn, swapping user and target");
     let temp = game.user;
     game.user = game.target;
     game.target = temp;
     updateStatus(); // Sync UI after swap
-    setTimeout(() => takeTurn(game.user), 2000); // Directly start next turn
+    if (game.user && game.target && game.user.hp > 0 && game.target.hp > 0) {
+        setTimeout(() => takeTurn(game.user), 2000); // Directly start next turn
+    } else {
+        console.log("[DEBUG]: End condition met, not scheduling next turn");
+        endBattle();
+    }
 }
 
 function endBattle() {
