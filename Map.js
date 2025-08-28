@@ -75,7 +75,7 @@ function ArriveVillage(villageName) {
                     skillsControls.appendChild(equippedDiv);
                     skillsControls.appendChild(inventoryDiv);
                     let doneButton = document.createElement("button");
-                    doneButton.innerText = "Done";
+                    doneButton.innerText = "Close";
                     doneButton.onclick = () => {
                         skillsControls.innerHTML = "";
                         queueOutput("<span class='output-text-neutral'>Skill management closed.</span>");
@@ -120,10 +120,10 @@ function ArriveVillage(villageName) {
                         };
                         travelControls.appendChild(villageButton);
                     });
-                    let cancelButton = document.createElement("button");
-                    cancelButton.innerText = "Cancel";
-                    cancelButton.onclick = () => { travelControls.style.display = "none"; };
-                    travelControls.appendChild(cancelButton);
+                    let closeButton = document.createElement("button");
+                    closeButton.innerText = "Close";
+                    closeButton.onclick = () => { travelControls.style.display = "none"; };
+                    travelControls.appendChild(closeButton);
                 } else {
                     queueOutput("<span class='output-text-neutral'>Cannot travel outside village!</span>");
                 }
