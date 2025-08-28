@@ -42,21 +42,16 @@ function takeTurn(user) {
     game.target = (user === game.user) ? game.target : game.user; // Ensure target is correct
     queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span>'s turn`);
     startEffectCheck(user);
-    if (user.hp > 0) {
-        skillAction(user);
-    } else {
-        console.log("[DEBUG]: User HP <= 0, skipping skillAction");
-        endTurn();
-    }
 }
 
 function startEffectCheck(user) {
     console.log(`[DEBUG]: Checking startOfTurn effects for ${user.name}`);
+    let shouldContinue = true;
     user.statusEffects.forEach(effect => {
         if (effect.startOfTurn && effect.startOfTurnFunction) {
             let endTurn = effect.startOfTurnFunction(user, game.target, game.battleScene);
             if (endTurn) {
-                endTurn();
+                shouldContinue = false;
                 return; // Exit early if effect ends turn
             }
         }
@@ -64,10 +59,13 @@ function startEffectCheck(user) {
     if (user.statusEffects.some(e => e.name === "Numb" && e.startOfTurnFunction)) {
         user.statusEffects.find(e => e.name === "Numb").startOfTurnFunction(user, game.target, game.battleScene);
         user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
-        endTurn();
-        return; // Exit early if Numbed
+        shouldContinue = false;
     }
-    // Continue to skill action if not Numbed
+    if (shouldContinue && user.hp > 0) {
+        skillAction(user);
+    } else {
+        endTurn();
+    }
 }
 
 function deathCheck() {
@@ -202,4 +200,4 @@ function talkToNPC() {
 function returnToVillage() {
     game.gameState = "In Village";
     ArriveVillage(game.player.lastVillage);
-}
+                        }
