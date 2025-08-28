@@ -1,5 +1,3 @@
-let battleQueue = [];
-
 function startBattle(player, enemy) {
     if (game.gameState !== "battle") {
         game.gameState = "battle";
@@ -29,30 +27,22 @@ function determineTurnOrder(player, enemy) {
     game.user = coinFlip ? player : enemy;
     game.target = coinFlip ? enemy : player;
     queueOutput(`<span class='output-text-neutral'>${game.target.name} is off guard!</span>`);
-    battleQueue = [game.user];
     console.log("Turn order determined:", { user: game.user.name, target: game.target.name });
-    processBattleQueue();
-}
-
-function processBattleQueue() {
-    if (battleQueue.length > 0 && game.user.hp > 0 && game.target.hp > 0) {
-        let currentUser = battleQueue[0];
-        takeTurn(currentUser);
-    } else {
-        endBattle();
-    }
+    takeTurn(game.user);
 }
 
 function takeTurn(user) {
+    if (game.user.hp <= 0 || game.target.hp <= 0) {
+        endBattle();
+        return;
+    }
     game.user = user;
     game.target = (user === game.user) ? game.target : game.user; // Ensure target is correct
     queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span>'s turn`);
-    setTimeout(() => {
-        startEffectCheck(user);
-        if (user.hp > 0) {
-            skillAction(user);
-        }
-    }, 2000);
+    startEffectCheck(user);
+    if (user.hp > 0) {
+        skillAction(user);
+    }
 }
 
 function startEffectCheck(user) {
@@ -62,6 +52,7 @@ function startEffectCheck(user) {
             user.hp -= effect.damage;
             queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> takes ${effect.damage} damage from <span class='status-${effect.name.toLowerCase().replace(" ", "")}'>${effect.name}</span>!`);
             updateStatus();
+            deathCheck();
         } else if (effect.startOfTurn && effect.name === "Regen") {
             let heal = user.hp < user.maxHp ? effect.damage : 0;
             user.hp = Math.min(user.maxHp, user.hp + heal);
@@ -76,7 +67,9 @@ function startEffectCheck(user) {
         queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> is stunned by <span class='status-numb'>Numb ⚡️</span> and skips their skill phase!`);
         user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
         endTurn();
+        return; // Exit early if Numbed
     }
+    // Continue to skill action if not Numbed
 }
 
 function deathCheck() {
@@ -166,7 +159,7 @@ function endTurn() {
     game.user = game.target;
     game.target = temp;
     updateStatus(); // Sync UI after swap
-    setTimeout(() => processBattleQueue(), 2000); // Delay for next turn
+    setTimeout(() => takeTurn(game.user), 2000); // Directly start next turn
 }
 
 function endBattle() {
@@ -200,6 +193,8 @@ function endBattle() {
     } else if (game.user.hp <= 0) {
         ArriveVillage(game.user.lastVillage);
     }
+    game.user = null; // Clear to prevent stale data
+    game.target = null;
 }
 
 function startTravelFight() {
@@ -220,16 +215,14 @@ function generateTravelEnemy() {
 }
 
 function startEventFight() {
-    // Placeholder for event fight logic
     queueOutput("<span class='output-text-neutral'>Event fight started! (Placeholder)</span>");
 }
 
 function talkToNPC() {
-    // Placeholder for NPC interaction
     queueOutput("<span class='output-text-neutral'>Talking to NPC! (Placeholder)</span>");
 }
 
 function returnToVillage() {
     game.gameState = "In Village";
     ArriveVillage(game.player.lastVillage);
-                                }
+        }
