@@ -58,7 +58,7 @@
     <script src="Battle.js"></script>
 
     <script>
-        let game = {
+        var game = {
             gameState: "initial",
             player: null,
             enemy: null,
@@ -98,7 +98,7 @@
         }
 
         function addInitialBarrageCards() {
-            let skillSet = new Skills();
+            var skillSet = new Skills();
             game.player.skillInventory = [skillSet.findSkill("Barrage"), skillSet.findSkill("Barrage")]; // Exactly 2 Barrage cards
         }
 
