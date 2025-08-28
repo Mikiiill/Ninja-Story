@@ -313,4 +313,4 @@ class Skills {
 function compareRanks(rank1, rank2) {
     const ranks = ["D-Rank", "C-Rank", "B-Rank", "A-Rank", "S-Rank"];
     return ranks.indexOf(rank1) - ranks.indexOf(rank2);
-                            }
+                                                              }
