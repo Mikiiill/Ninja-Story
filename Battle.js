@@ -8,7 +8,7 @@ function startBattle(player, enemy) {
             let randIndex = Math.floor(Math.random() * player.skillInventory.length);
             player.skills.push(player.skillInventory.splice(randIndex, 1)[0]);
         }
-        game.enemy = enemy; // Sync enemy for UI
+        game.enemy = enemy;
         updateStatus();
         game.battleScene = { queueOutput: queueOutput };
         queueOutput("");
@@ -39,7 +39,7 @@ function takeTurn(user) {
         return;
     }
     game.user = user;
-    game.target = (user === game.user) ? game.target : game.user; // Ensure target is correct
+    game.target = (user === game.user) ? game.target : game.user;
     queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span>'s turn`);
     startEffectCheck(user);
 }
@@ -47,19 +47,22 @@ function takeTurn(user) {
 function startEffectCheck(user) {
     console.log(`[DEBUG]: Checking startOfTurn effects for ${user.name}`, user.statusEffects);
     let allEffectsProcessed = true;
-    user.statusEffects.forEach(effect => {
-        if (effect.startOfTurn && effect.startOfTurnFunction) {
-            console.log(`[DEBUG]: Processing ${effect.name} for ${user.name}`);
-            let endTurn = effect.startOfTurnFunction(user, game.target, game.battleScene);
-            if (endTurn) {
-                allEffectsProcessed = false;
+    try {
+        user.statusEffects.forEach(effect => {
+            if (effect.startOfTurn && effect.startOfTurnFunction) {
+                console.log(`[DEBUG]: Processing ${effect.name} for ${user.name}`);
+                let endTurn = effect.startOfTurnFunction(user, game.target, game.battleScene);
+                if (endTurn) allEffectsProcessed = false;
             }
+        });
+        if (user.statusEffects.some(e => e.name === "Numb" && e.startOfTurnFunction)) {
+            console.log("[DEBUG]: Processing Numb for", user.name);
+            user.statusEffects.find(e => e.name === "Numb").startOfTurnFunction(user, game.target, game.battleScene);
+            user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
+            allEffectsProcessed = false;
         }
-    });
-    if (user.statusEffects.some(e => e.name === "Numb" && e.startOfTurnFunction)) {
-        console.log("[DEBUG]: Processing Numb for", user.name);
-        user.statusEffects.find(e => e.name === "Numb").startOfTurnFunction(user, game.target, game.battleScene);
-        user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
+    } catch (e) {
+        console.error("[ERROR]: Start effect check failed:", e);
         allEffectsProcessed = false;
     }
     if (allEffectsProcessed && user.hp > 0) {
@@ -71,7 +74,7 @@ function startEffectCheck(user) {
 
 function deathCheck() {
     try {
-        updateStatus(); // Ensure UI reflects current HP
+        updateStatus();
         if (game.user.hp <= 0) {
             queueOutput(`<span class='output-text-${game.user === game.player ? 'player' : 'enemy'}'>${game.user.name}</span> has been defeated! <span class='output-text-${game.target === game.player ? 'player' : 'enemy'}'>${game.target.name}</span> wins!`);
             endBattle();
@@ -94,7 +97,6 @@ function skillAction(user) {
     }
     let isSupportSkill = skillSet.findSkill(skill.name)?.support || false;
     queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> uses ${skill.name}!`);
-
     if (isSupportSkill || skill.name === "Lightning Edge") {
         try {
             skill.skillFunction(user, game.target, game.battleScene);
@@ -103,16 +105,17 @@ function skillAction(user) {
         }
     } else {
         activeEffectCheck(user);
-        triggeredEffectCheck(user, game.target, skill.style); // Pass skill style
+        triggeredEffectCheck(user, game.target, skill.style);
         try {
             let skillResult = skill.skillFunction(user, game.target, game.battleScene);
             console.log("[DEBUG]: Skill", skill.name, "executed with result:", skillResult, "Status Effects:", user.statusEffects, game.target.statusEffects);
+            updateStatus(); // Sync UI after skill
         } catch (e) {
             console.error("[ERROR]: Skill execution failed:", e);
             queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> encountered an error with ${skill.name}!`);
         }
     }
-    endTurn(); // Ensure turn ends regardless of skill result
+    endTurn();
     deathCheck();
 }
 
@@ -133,7 +136,7 @@ function triggeredEffectCheck(user, target, skillStyle) {
         target.statusEffects.forEach(effect => {
             if (effect.triggered && effect.triggeredFunction) {
                 let endSkill = effect.triggeredFunction(user, target, game.battleScene, skillStyle);
-                if (endSkill) return; // End skill early if function returns true
+                if (endSkill) return;
             }
         });
     } catch (e) {
@@ -147,11 +150,11 @@ function endTurn() {
     game.user = game.target;
     game.target = temp;
     try {
-        updateStatus(); // Sync UI after swap
+        updateStatus();
     } catch (e) {
         console.error("[ERROR]: Update status failed:", e);
     }
-    setTimeout(() => takeTurn(game.user), 1000); // Always schedule next turn
+    setTimeout(() => takeTurn(game.user), 1000);
 }
 
 function endBattle() {
@@ -185,7 +188,7 @@ function endBattle() {
     } else if (game.user.hp <= 0) {
         ArriveVillage(game.user.lastVillage);
     }
-    game.user = null; // Clear to prevent stale data
+    game.user = null;
     game.target = null;
 }
 
@@ -231,10 +234,16 @@ function queueOutput(text) {
 function updateStatus() {
     try {
         console.log("[DEBUG]: Updating status", { user: game.user ? game.user.name : "null", target: game.target ? game.target.name : "null", userEffects: game.user ? game.user.statusEffects : [], targetEffects: game.target ? game.target.statusEffects : [] });
+        let playerHp = document.getElementById("player-hp");
+        let enemyHp = document.getElementById("enemy-hp");
         let log = document.getElementById("battle-log");
-        if (log && game.user && game.target) {
-            log.innerHTML += `<p>Status - ${game.user.name}: HP ${game.user.hp}/${game.user.maxHp}, Effects: ${game.user.statusEffects.map(e => e.name).join(", ")}</p>`;
-            log.innerHTML += `<p>Status - ${game.target.name}: HP ${game.target.hp}/${game.target.maxHp}, Effects: ${game.target.statusEffects.map(e => e.name).join(", ")}</p>`;
+        if (playerHp && enemyHp && game.user && game.target) {
+            playerHp.textContent = `${game.user.name} [HP: ${game.user.hp}/${game.user.maxHp}]`;
+            enemyHp.textContent = `${game.target.name} [HP: ${game.target.hp}/${game.target.maxHp}]`;
+            if (log) {
+                log.innerHTML += `<p>Status - ${game.user.name}: HP ${game.user.hp}/${game.user.maxHp}, Effects: ${game.user.statusEffects.map(e => e.name).join(", ")}</p>`;
+                log.innerHTML += `<p>Status - ${game.target.name}: HP ${game.target.hp}/${game.target.maxHp}, Effects: ${game.target.statusEffects.map(e => e.name).join(", ")}</p>`;
+            }
         }
     } catch (e) {
         console.error("[ERROR]: Update status failed:", e);
