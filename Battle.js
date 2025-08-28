@@ -46,25 +46,17 @@ function takeTurn(user) {
 }
 
 function startEffectCheck(user) {
-    let skillSet = new Skills();
-    user.statusEffects = user.statusEffects.map(effect => {
-        if (effect.startOfTurn && (effect.name === "Burn" || effect.name === "Doom" || effect.name === "Bleed" || effect.name === "Poison")) {
-            user.hp -= effect.damage;
-            queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> takes ${effect.damage} damage from <span class='status-${effect.name.toLowerCase().replace(" ", "")}'>${effect.name}</span>!`);
-            updateStatus();
-            deathCheck();
-        } else if (effect.startOfTurn && effect.name === "Regen") {
-            let heal = user.hp < user.maxHp ? effect.damage : 0;
-            user.hp = Math.min(user.maxHp, user.hp + heal);
-            if (heal > 0) queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> heals ${heal} HP from <span class='status-${effect.name.toLowerCase().replace(" ", "")}'>${effect.name}</span>!`);
-            updateStatus();
+    user.statusEffects.forEach(effect => {
+        if (effect.startOfTurn && effect.startOfTurnFunction) {
+            let endTurn = effect.startOfTurnFunction(user, game.target, game.battleScene);
+            if (endTurn) {
+                endTurn();
+                return; // Exit early if effect ends turn
+            }
         }
-        effect.duration--;
-        return effect;
-    }).filter(effect => effect.duration > 0);
-
-    if (user.statusEffects.some(e => e.name === "Numb")) {
-        queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> is stunned by <span class='status-numb'>Numb ⚡️</span> and skips their skill phase!`);
+    });
+    if (user.statusEffects.some(e => e.name === "Numb" && e.startOfTurnFunction)) {
+        user.statusEffects.find(e => e.name === "Numb").startOfTurnFunction(user, game.target, game.battleScene);
         user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
         endTurn();
         return; // Exit early if Numbed
@@ -94,11 +86,11 @@ function skillAction(user) {
     let isSupportSkill = skillSet.findSkill(skill.name)?.support || false;
     queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> uses ${skill.name}!`);
 
-    if (isSupportSkill) {
+    if (isSupportSkill || skill.name === "Lightning Edge") {
         skill.skillFunction(user, game.target, game.battleScene);
     } else {
         activeEffectCheck(user);
-        triggeredEffectCheck(user, game.target);
+        triggeredEffectCheck(user, game.target, skill.style); // Pass skill style
         try {
             skill.skillFunction(user, game.target, game.battleScene);
         } catch (e) {
@@ -111,47 +103,20 @@ function skillAction(user) {
 }
 
 function activeEffectCheck(user) {
-    let skillSet = new Skills();
     user.statusEffects.forEach(effect => {
-        if (effect.active && (effect.name === "READY" || effect.name === "ShadowCloneEffect")) {
-            if (effect.name === "READY") {
-                let barrageSkill = skillSet.findSkill("Barrage");
-                if (barrageSkill) barrageSkill.skillFunction(user, game.target, game.battleScene);
-            } else if (effect.name === "ShadowCloneEffect") {
-                let cloneCount = user.statusEffects.filter(e => e.name === "ShadowCloneEffect").length;
-                for (let i = 0; i < cloneCount; i++) {
-                    queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>Shadow Clone ${i + 1} uses Barrage on ${game.target.name}!</span>`);
-                    let barrageSkill = skillSet.findSkill("Barrage");
-                    if (barrageSkill) barrageSkill.skillFunction(user, game.target, game.battleScene);
-                }
-                user.statusEffects = user.statusEffects.filter(e => e.name !== "ShadowCloneEffect");
-            }
-            deathCheck();
+        if (effect.active && effect.activeFunction) {
+            effect.activeFunction(user, game.target, game.battleScene);
         }
     });
 }
 
-function triggeredEffectCheck(user, target) {
-    let triggeredEffects = ["ShadowCloneEffect", "Swap", "Dome", "DoubleImage", "Release"];
-    let effect = target.statusEffects.find(e => e.triggered && triggeredEffects.includes(e.name));
-    if (effect) {
-        switch (effect.name) {
-            case "ShadowCloneEffect":
-                queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span>'s Shadow Clone absorbs the attack!`);
-                target.statusEffects = target.statusEffects.filter(e => e.name !== "ShadowCloneEffect");
-                break;
-            case "Swap":
-                queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span> uses Substitution to dodge the attack with a log!`);
-                target.statusEffects = target.statusEffects.filter(e => e.name !== "Swap");
-                return; // End skill early
-            case "Dome":
-            case "DoubleImage":
-            case "Release":
-                queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span> uses ${effect.name} to mitigate the attack!`);
-                target.statusEffects = target.statusEffects.filter(e => e.name !== effect.name);
-                break;
+function triggeredEffectCheck(user, target, skillStyle) {
+    target.statusEffects.forEach(effect => {
+        if (effect.triggered && effect.triggeredFunction) {
+            let endSkill = effect.triggeredFunction(user, target, game.battleScene, skillStyle);
+            if (endSkill) return; // End skill early if function returns true
         }
-    }
+    });
 }
 
 function endTurn() {
@@ -225,4 +190,4 @@ function talkToNPC() {
 function returnToVillage() {
     game.gameState = "In Village";
     ArriveVillage(game.player.lastVillage);
-        }
+}
