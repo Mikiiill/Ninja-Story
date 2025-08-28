@@ -57,7 +57,6 @@
                 exp: 0,
                 maxExp: 10
             };
-            // Wrap hp in Proxy for real-time updates
             game.player = new Proxy(game.player, {
                 set(target, property, value) {
                     if (property === "hp" && target[property] !== value) {
