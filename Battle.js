@@ -32,7 +32,7 @@ function determineTurnOrder(player, enemy) {
 }
 
 function takeTurn(user) {
-    console.log("[DEBUG]: Entering takeTurn for", user.name);
+    console.log("[DEBUG]: Entering takeTurn for", user.name, { user: game.user, target: game.target });
     if (!game.user || !game.target || game.user.hp <= 0 || game.target.hp <= 0) {
         console.log("[DEBUG]: Battle end condition met, exiting takeTurn");
         endBattle();
@@ -45,7 +45,7 @@ function takeTurn(user) {
 }
 
 function startEffectCheck(user) {
-    console.log(`[DEBUG]: Checking startOfTurn effects for ${user.name}`);
+    console.log(`[DEBUG]: Checking startOfTurn effects for ${user.name}`, user.statusEffects);
     let shouldContinue = true;
     user.statusEffects.forEach(effect => {
         if (effect.startOfTurn && effect.startOfTurnFunction) {
@@ -69,13 +69,17 @@ function startEffectCheck(user) {
 }
 
 function deathCheck() {
-    updateStatus(); // Ensure UI reflects current HP
-    if (game.user.hp <= 0) {
-        queueOutput(`<span class='output-text-${game.user === game.player ? 'player' : 'enemy'}'>${game.user.name}</span> has been defeated! <span class='output-text-${game.target === game.player ? 'player' : 'enemy'}'>${game.target.name}</span> wins!`);
-        endBattle();
-    } else if (game.target.hp <= 0) {
-        queueOutput(`<span class='output-text-${game.target === game.player ? 'player' : 'enemy'}'>${game.target.name}</span> has been defeated! <span class='output-text-${game.user === game.player ? 'player' : 'enemy'}'>${game.user.name}</span> wins!`);
-        endBattle();
+    try {
+        updateStatus(); // Ensure UI reflects current HP
+        if (game.user.hp <= 0) {
+            queueOutput(`<span class='output-text-${game.user === game.player ? 'player' : 'enemy'}'>${game.user.name}</span> has been defeated! <span class='output-text-${game.target === game.player ? 'player' : 'enemy'}'>${game.target.name}</span> wins!`);
+            endBattle();
+        } else if (game.target.hp <= 0) {
+            queueOutput(`<span class='output-text-${game.target === game.player ? 'player' : 'enemy'}'>${game.target.name}</span> has been defeated! <span class='output-text-${game.user === game.player ? 'player' : 'enemy'}'>${game.user.name}</span> wins!`);
+            endBattle();
+        }
+    } catch (e) {
+        console.error("[ERROR]: Death check failed:", e);
     }
 }
 
@@ -91,15 +95,19 @@ function skillAction(user) {
     queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> uses ${skill.name}!`);
 
     if (isSupportSkill || skill.name === "Lightning Edge") {
-        skill.skillFunction(user, game.target, game.battleScene);
+        try {
+            skill.skillFunction(user, game.target, game.battleScene);
+        } catch (e) {
+            console.error("[ERROR]: Support skill execution failed:", e);
+        }
     } else {
         activeEffectCheck(user);
         triggeredEffectCheck(user, game.target, skill.style); // Pass skill style
         try {
             let skillResult = skill.skillFunction(user, game.target, game.battleScene);
-            console.log("[DEBUG]: Skill", skill.name, "executed with result:", skillResult);
+            console.log("[DEBUG]: Skill", skill.name, "executed with result:", skillResult, "Status Effects:", user.statusEffects, game.target.statusEffects);
         } catch (e) {
-            console.error("Error in skill execution:", e);
+            console.error("[ERROR]: Skill execution failed:", e);
             queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> encountered an error with ${skill.name}!`);
         }
     }
@@ -108,28 +116,40 @@ function skillAction(user) {
 }
 
 function activeEffectCheck(user) {
-    user.statusEffects.forEach(effect => {
-        if (effect.active && effect.activeFunction) {
-            effect.activeFunction(user, game.target, game.battleScene);
-        }
-    });
+    try {
+        user.statusEffects.forEach(effect => {
+            if (effect.active && effect.activeFunction) {
+                effect.activeFunction(user, game.target, game.battleScene);
+            }
+        });
+    } catch (e) {
+        console.error("[ERROR]: Active effect check failed:", e);
+    }
 }
 
 function triggeredEffectCheck(user, target, skillStyle) {
-    target.statusEffects.forEach(effect => {
-        if (effect.triggered && effect.triggeredFunction) {
-            let endSkill = effect.triggeredFunction(user, target, game.battleScene, skillStyle);
-            if (endSkill) return; // End skill early if function returns true
-        }
-    });
+    try {
+        target.statusEffects.forEach(effect => {
+            if (effect.triggered && effect.triggeredFunction) {
+                let endSkill = effect.triggeredFunction(user, target, game.battleScene, skillStyle);
+                if (endSkill) return; // End skill early if function returns true
+            }
+        });
+    } catch (e) {
+        console.error("[ERROR]: Triggered effect check failed:", e);
+    }
 }
 
 function endTurn() {
-    console.log("[DEBUG]: Ending turn, scheduling next turn");
+    console.log("[DEBUG]: Ending turn, scheduling next turn", { user: game.user, target: game.target });
     let temp = game.user;
     game.user = game.target;
     game.target = temp;
-    updateStatus(); // Sync UI after swap
+    try {
+        updateStatus(); // Sync UI after swap
+    } catch (e) {
+        console.error("[ERROR]: Update status failed:", e);
+    }
     setTimeout(() => takeTurn(game.user), 1000); // Always schedule next turn
 }
 
@@ -197,3 +217,21 @@ function returnToVillage() {
     game.gameState = "In Village";
     ArriveVillage(game.player.lastVillage);
 }
+
+function queueOutput(text) {
+    try {
+        let log = document.getElementById("battle-log");
+        if (log) log.innerHTML += `<p>${text}</p>`;
+    } catch (e) {
+        console.error("[ERROR]: Queue output failed:", e);
+    }
+}
+
+function updateStatus() {
+    try {
+        // Placeholder: Update UI with current HP and status effects
+        console.log("[DEBUG]: Updating status", { user: game.user, target: game.target });
+    } catch (e) {
+        console.error("[ERROR]: Update status failed:", e);
+    }
+                      }
