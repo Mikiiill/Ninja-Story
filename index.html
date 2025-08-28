@@ -5,13 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ShinobiWay</title>
     <style>
+        body {
+            background-color: #f0f0f0; /* Prevent white/black flash */
+            margin: 0;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+        }
+        #player-hp, #enemy-hp {
+            display: block;
+            margin: 5px 0;
+        }
+        #battle-log {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 5px;
+            margin: 10px 0;
+        }
+        #main-controls, #skill-controls, #travel-controls {
+            margin: 10px 0;
+        }
+        button {
+            padding: 5px 10px;
+            margin-right: 5px;
+            cursor: pointer;
+        }
         .battle-ready { color: green; font-weight: bold; }
         .output-text-player { color: blue; }
         .output-text-enemy { color: red; }
         .output-text-neutral { color: black; }
         .status-burn { color: orange; }
         .status-regen { color: green; }
-        /* Add other styles as needed */
     </style>
 </head>
 <body>
@@ -75,7 +99,11 @@
 
         function addInitialBarrageCards() {
             let skillSet = new Skills();
-            game.player.skillInventory = [skillSet.findSkill("Barrage"), skillSet.findSkill("Barrage")]; // Exactly 2 Barrage cards
+            if (skillSet) {
+                game.player.skillInventory = [skillSet.findSkill("Barrage"), skillSet.findSkill("Barrage")]; // Exactly 2 Barrage cards
+            } else {
+                console.error("[ERROR]: Skills class not loaded for initial barrage cards");
+            }
         }
 
         function startGame() {
