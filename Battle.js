@@ -248,4 +248,4 @@ function updateStatus() {
     } catch (e) {
         console.error("[ERROR]: Update status failed:", e);
     }
-        }
+            }
