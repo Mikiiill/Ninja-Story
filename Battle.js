@@ -1,3 +1,47 @@
+let game = {
+    gameState: "initial",
+    player: null,
+    enemy: null,
+    user: null,
+    target: null,
+    battleScene: null,
+    battleType: null
+};
+
+function initializeGame() {
+    game.player = {
+        name: "Shinobi",
+        hp: 10,
+        maxHp: 10,
+        skills: [],
+        skillInventory: [],
+        statusEffects: [],
+        ninjaStyles: {},
+        lastVillage: "Newb Village",
+        exp: 0,
+        maxExp: 10
+    };
+    // Wrap hp in Proxy for real-time updates
+    game.player = new Proxy(game.player, {
+        set(target, property, value) {
+            if (property === "hp" && target[property] !== value) {
+                target[property] = value;
+                updateStatus();
+            } else {
+                target[property] = value;
+            }
+            return true;
+        }
+    });
+    game.enemy = null;
+    addInitialBarrageCards();
+}
+
+function addInitialBarrageCards() {
+    let skillSet = new Skills();
+    game.player.skillInventory = [skillSet.findSkill("Barrage"), skillSet.findSkill("Barrage")]; // Exactly 2 Barrage cards
+}
+
 function startBattle(player, enemy) {
     if (game.gameState !== "battle") {
         game.gameState = "battle";
@@ -102,6 +146,7 @@ function skillAction(user) {
             skill.skillFunction(user, game.target, game.battleScene);
         } catch (e) {
             console.error("[ERROR]: Support skill execution failed:", e);
+            queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> encountered an error with ${skill.name}!`);
         }
     } else {
         activeEffectCheck(user);
@@ -109,7 +154,6 @@ function skillAction(user) {
         try {
             let skillResult = skill.skillFunction(user, game.target, game.battleScene);
             console.log("[DEBUG]: Skill", skill.name, "executed with result:", skillResult, "Status Effects:", user.statusEffects, game.target.statusEffects);
-            updateStatus(); // Sync UI after skill
         } catch (e) {
             console.error("[ERROR]: Skill execution failed:", e);
             queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> encountered an error with ${skill.name}!`);
@@ -165,7 +209,13 @@ function endBattle() {
     queueOutput("<span class='battle-ready'>Battle ended!</span>");
     if (game.target.hp <= 0) {
         if (game.battleType === "training") {
-            performJutsuSelection(1, false, () => ArriveVillage(game.user.lastVillage));
+            game.player.exp = Math.min(game.player.maxExp, game.player.exp + 1);
+            queueOutput(`<span class='output-text-neutral'>Training fight completed! EXP: ${game.player.exp}/${game.player.maxExp}</span>`);
+            if (game.player.exp === game.player.maxExp) {
+                performJutsuSelection(1, false, () => ArriveVillage(game.player.lastVillage));
+            } else {
+                ArriveVillage(game.player.lastVillage);
+            }
         } else if (game.battleType === "travel") {
             game.player.travelFightsCompleted = (game.player.travelFightsCompleted || 0) + 1;
             queueOutput(`<span class='output-text-neutral'>Travel fight completed! ${game.player.travelFightsCompleted}/4 fights done.</span>`);
@@ -202,11 +252,23 @@ function generateTravelEnemy() {
         name: "Rabid Dog",
         hp: 8,
         maxHp: 8,
-        skills: [new Skills().findSkill("Barrage")],
+        skills: [new Skills().findSkill("Bite")],
         skillInventory: [],
         statusEffects: [],
-        lastVillage: game.player.lastVillage
+        lastVillage: game.player.lastVillage,
+        ninjaStyles: { Feral: "C-Rank" }
     };
+}
+
+function startTrainingFight() {
+    game.battleType = "training";
+    const trainingMobs = [
+        { name: "Training Dummy", hp: 6, maxHp: 6, skills: [new Skills().findSkill("Healing Stance")], skillInventory: [], statusEffects: [], lastVillage: game.player.lastVillage },
+        { name: "Thief", hp: 10, maxHp: 10, skills: [new Skills().findSkill("Barrage"), new Skills().findSkill("Barrage"), new Skills().findSkill("Substitution Jutsu")], skillInventory: [], statusEffects: [], lastVillage: game.player.lastVillage },
+        { name: "Rabid Dog", hp: 8, maxHp: 8, skills: [new Skills().findSkill("Bite")], skillInventory: [], statusEffects: [], lastVillage: game.player.lastVillage, ninjaStyles: { Feral: "C-Rank" } }
+    ];
+    let randomMob = trainingMobs[Math.floor(Math.random() * trainingMobs.length)];
+    startBattle(game.player, randomMob);
 }
 
 function startEventFight() {
@@ -249,3 +311,14 @@ function updateStatus() {
         console.error("[ERROR]: Update status failed:", e);
     }
 }
+
+function ArriveVillage(village) {
+    game.gameState = "In Village";
+    game.player.hp = game.player.maxHp;
+    game.player.statusEffects = [];
+    game.player.lastVillage = village;
+    let controls = document.getElementById("main-controls");
+    if (controls) controls.style.display = "block";
+    queueOutput(`Arrived at ${village}! HP restored, status effects cleared.`);
+    console.log("[DEBUG]: Arrived at", village, "controls set up, gameState:", game.gameState);
+                }
