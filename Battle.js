@@ -46,22 +46,23 @@ function takeTurn(user) {
 
 function startEffectCheck(user) {
     console.log(`[DEBUG]: Checking startOfTurn effects for ${user.name}`, user.statusEffects);
-    let shouldContinue = true;
+    let allEffectsProcessed = true;
     user.statusEffects.forEach(effect => {
         if (effect.startOfTurn && effect.startOfTurnFunction) {
+            console.log(`[DEBUG]: Processing ${effect.name} for ${user.name}`);
             let endTurn = effect.startOfTurnFunction(user, game.target, game.battleScene);
             if (endTurn) {
-                shouldContinue = false;
-                return; // Exit early if effect ends turn
+                allEffectsProcessed = false;
             }
         }
     });
     if (user.statusEffects.some(e => e.name === "Numb" && e.startOfTurnFunction)) {
+        console.log("[DEBUG]: Processing Numb for", user.name);
         user.statusEffects.find(e => e.name === "Numb").startOfTurnFunction(user, game.target, game.battleScene);
         user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
-        shouldContinue = false;
+        allEffectsProcessed = false;
     }
-    if (shouldContinue && user.hp > 0) {
+    if (allEffectsProcessed && user.hp > 0) {
         skillAction(user);
     } else {
         endTurn();
@@ -229,9 +230,13 @@ function queueOutput(text) {
 
 function updateStatus() {
     try {
-        // Placeholder: Update UI with current HP and status effects
-        console.log("[DEBUG]: Updating status", { user: game.user, target: game.target });
+        console.log("[DEBUG]: Updating status", { user: game.user ? game.user.name : "null", target: game.target ? game.target.name : "null", userEffects: game.user ? game.user.statusEffects : [], targetEffects: game.target ? game.target.statusEffects : [] });
+        let log = document.getElementById("battle-log");
+        if (log && game.user && game.target) {
+            log.innerHTML += `<p>Status - ${game.user.name}: HP ${game.user.hp}/${game.user.maxHp}, Effects: ${game.user.statusEffects.map(e => e.name).join(", ")}</p>`;
+            log.innerHTML += `<p>Status - ${game.target.name}: HP ${game.target.hp}/${game.target.maxHp}, Effects: ${game.target.statusEffects.map(e => e.name).join(", ")}</p>`;
+        }
     } catch (e) {
         console.error("[ERROR]: Update status failed:", e);
     }
-                      }
+}
