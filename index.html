@@ -6,7 +6,7 @@
     <title>ShinobiWay</title>
     <style>
         body {
-            background-color: #f0f0f0;
+            background-color: #f0f0f0 !important; /* Force background to prevent black/white */
             margin: 0;
             padding: 10px;
             font-family: Arial, sans-serif;
@@ -59,7 +59,7 @@
 
     <script>
         let game = {
-            gameState: "initial",
+            gameState: "initial", // Explicitly set to initial to avoid "In Village" assumption
             player: null,
             enemy: null,
             user: null,
@@ -112,6 +112,8 @@
                 game.gameState = "chooseStyles"; // Trigger style selection (handled by RANKUP.js)
                 console.log("[DEBUG]: Game started, state set to chooseStyles");
                 // Assume RANKUP.js handles further flow
+                let controls = document.getElementById("main-controls");
+                if (controls) controls.style.display = "block"; // Ensure controls are visible
             } else {
                 console.log("[DEBUG]: Game already started, state:", game.gameState);
             }
