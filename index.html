@@ -118,6 +118,7 @@
     <script src="RANKUP.js"></script>
     <script src="Log.js"></script>
     <script src="Map.js"></script>
+
     <script>
         let game = {
             player: {
@@ -197,7 +198,6 @@
         function processOutputQueue() {
             if (game.outputQueue.length === 0) {
                 game.isOutputting = false;
-                Log.debug(`Output queue processed, gameState: ${game.gameState}`);
                 return;
             }
             game.isOutputting = true;
@@ -225,14 +225,11 @@
 
         function startGame() {
             try {
-                Log.debug("Start Game button clicked");
                 game.output = ["<span class='output-text-neutral'>Welcome to ShinobiWay, <span class='output-text-player'>Shinobi</span>! You can Rank Up 2 available Fighting Styles during Rank Up to unlock new Jutsu.</span>"];
                 document.getElementById("output").innerHTML = game.output.join("<br>");
                 game.gameState = "chooseStyles";
-                Log.debug(`Game state set to ${game.gameState}`);
-                initiateStyleSelection();
+                initiateStyleSelection(); // Assuming this is defined in RANKUP.js
                 updateSkillCount();
-                // Add two free Barrage Jutsu to inventory
                 let skillSet = new Skills();
                 let barrageSkill = skillSet.findSkill("Barrage");
                 if (barrageSkill) {
@@ -241,7 +238,7 @@
                 }
                 document.getElementById("start-controls").innerHTML = "";
             } catch (error) {
-                Log.error(`Error in startGame: ${error.message}`);
+                queueOutput("<span class='error-log'>Error in startGame: " + error.message + "</span>");
             }
         }
 
@@ -256,8 +253,6 @@
                 lastVillage: "Newb Village"
             };
         }
-
-        // Placeholder for other functions (e.g., ArriveVillage is in Map.js)
     </script>
 </body>
 </html>
