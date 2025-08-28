@@ -94,27 +94,34 @@ class Skills {
             return false;
         }
         user.hp = Math.max(0, Math.min(user.maxHp, user.hp - 2));
-        user.statusEffects.push(new StatusEffect("ShadowCloneEffect", 3, 0, false, true, true, null, 
-            (user, target, scene) => { // Active: clones attack
-                let cloneCount = user.statusEffects.filter(e => e.name === "ShadowCloneEffect").length;
-                for (let i = 0; i < cloneCount; i++) {
-                    scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>Shadow Clone ${i + 1} uses Barrage on ${target.name}!</span>`);
-                    let barrageSkill = this.findSkill("Barrage");
-                    if (barrageSkill) barrageSkill.skillFunction(user, target, scene);
-                }
-                user.statusEffects = user.statusEffects.filter(e => e.name !== "ShadowCloneEffect");
-                deathCheck();
-                return false; // Continue turn
-            }, 
-            (user, target, scene, skillStyle) => { // Triggered: absorb damage
-                let cloneCount = user.statusEffects.filter(e => e.name === "ShadowCloneEffect").length;
-                if (cloneCount > 0) {
-                    scene.queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span>'s Shadow Clone absorbs the attack!`);
-                    user.statusEffects.splice(user.statusEffects.findIndex(e => e.name === "ShadowCloneEffect"), 1); // Remove one clone
-                    return true; // End skill early
-                }
-                return false;
-            }));
+        try {
+            user.statusEffects.push(new StatusEffect("ShadowCloneEffect", 3, 0, false, true, true, null, 
+                (user, target, scene) => { // Active: clones attack
+                    let cloneCount = user.statusEffects.filter(e => e.name === "ShadowCloneEffect").length;
+                    for (let i = 0; i < cloneCount; i++) {
+                        scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>Shadow Clone ${i + 1} uses Barrage on ${target.name}!</span>`);
+                        let barrageSkill = this.findSkill("Barrage");
+                        if (barrageSkill) barrageSkill.skillFunction(user, target, scene);
+                    }
+                    user.statusEffects = user.statusEffects.filter(e => e.name !== "ShadowCloneEffect");
+                    deathCheck();
+                    return false; // Continue turn
+                }, 
+                (user, target, scene, skillStyle) => { // Triggered: absorb damage
+                    let cloneCount = user.statusEffects.filter(e => e.name === "ShadowCloneEffect").length;
+                    if (cloneCount > 0) {
+                        scene.queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span>'s Shadow Clone absorbs the attack!`);
+                        user.statusEffects.splice(user.statusEffects.findIndex(e => e.name === "ShadowCloneEffect"), 1); // Remove one clone
+                        return true; // End skill early
+                    }
+                    return false;
+                }));
+            console.log("[DEBUG]: Shadow Clone Jutsu added ShadowCloneEffect to", user.name, user.statusEffects);
+        } catch (e) {
+            console.error("[ERROR]: Failed to add ShadowCloneEffect:", e);
+            scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> failed to cast Shadow Clone Jutsu due to an error!`);
+            return false;
+        }
         scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-neutral">Shadow Clone Jutsu</span>, adding a clone <span class="status-shadowcloneeffect">👥</span>!`);
         return true;
     }
@@ -273,15 +280,13 @@ class Skills {
         return true;
     }
 
-
-lightningEdge(user, target, scene) {
-    let damage = Math.floor(Math.random() * 2) + 4;
-    target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-    target.statusEffects = target.statusEffects.filter(effect => !effect.triggered); // Clear only triggered effects
-    scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> strikes with <span class="output-text-lightning">Lightning Edge</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, breaking all defenses!`);
-    return target.hp <= 0;
-}
-
+    lightningEdge(user, target, scene) {
+        let damage = Math.floor(Math.random() * 2) + 4;
+        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+        target.statusEffects = target.statusEffects.filter(effect => !effect.triggered); // Clear only triggered effects
+        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> strikes with <span class="output-text-lightning">Lightning Edge</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, breaking all triggered status effects!`);
+        return target.hp <= 0;
+    }
 
     bite(user, target, scene) {
         let damage = 1;
@@ -304,4 +309,4 @@ lightningEdge(user, target, scene) {
 function compareRanks(rank1, rank2) {
     const ranks = ["D-Rank", "C-Rank", "B-Rank", "A-Rank", "S-Rank"];
     return ranks.indexOf(rank1) - ranks.indexOf(rank2);
-}
+                }
