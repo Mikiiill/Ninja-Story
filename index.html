@@ -99,11 +99,7 @@
 
         function addInitialBarrageCards() {
             let skillSet = new Skills();
-            if (skillSet) {
-                game.player.skillInventory = [skillSet.findSkill("Barrage"), skillSet.findSkill("Barrage")]; // Exactly 2 Barrage cards
-            } else {
-                console.error("[ERROR]: Skills class not loaded for initial barrage cards");
-            }
+            game.player.skillInventory = [skillSet.findSkill("Barrage"), skillSet.findSkill("Barrage")]; // Exactly 2 Barrage cards
         }
 
         function startGame() {
