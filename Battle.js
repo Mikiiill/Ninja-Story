@@ -96,13 +96,14 @@ function skillAction(user) {
         activeEffectCheck(user);
         triggeredEffectCheck(user, game.target, skill.style); // Pass skill style
         try {
-            skill.skillFunction(user, game.target, game.battleScene);
+            let skillResult = skill.skillFunction(user, game.target, game.battleScene);
+            console.log("[DEBUG]: Skill", skill.name, "executed with result:", skillResult);
         } catch (e) {
             console.error("Error in skill execution:", e);
             queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> encountered an error with ${skill.name}!`);
         }
     }
-    endTurn(); // Ensure turn ends regardless of skill type
+    endTurn(); // Ensure turn ends regardless of skill result
     deathCheck();
 }
 
@@ -124,17 +125,12 @@ function triggeredEffectCheck(user, target, skillStyle) {
 }
 
 function endTurn() {
-    console.log("[DEBUG]: Ending turn, swapping user and target");
+    console.log("[DEBUG]: Ending turn, scheduling next turn");
     let temp = game.user;
     game.user = game.target;
     game.target = temp;
     updateStatus(); // Sync UI after swap
-    if (game.user && game.target && game.user.hp > 0 && game.target.hp > 0) {
-        setTimeout(() => takeTurn(game.user), 2000); // Directly start next turn
-    } else {
-        console.log("[DEBUG]: End condition met, not scheduling next turn");
-        endBattle();
-    }
+    setTimeout(() => takeTurn(game.user), 1000); // Always schedule next turn
 }
 
 function endBattle() {
@@ -200,4 +196,4 @@ function talkToNPC() {
 function returnToVillage() {
     game.gameState = "In Village";
     ArriveVillage(game.player.lastVillage);
-                        }
+}
