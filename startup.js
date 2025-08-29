@@ -36,7 +36,6 @@ game.asciiMap = {
     "Release": "🌀"
 };
 
-// Clean reset function
 function resetGameState() {
     game = {
         player: {
@@ -61,7 +60,12 @@ function resetGameState() {
         isOutputting: false
     };
     document.getElementById("output").innerHTML = "Welcome to ShinobiWay!";
-    document.getElementById("start-controls").innerHTML = '<button class="start-button" id="start-button" onclick="startTutorial()">Start Game</button>';
+    document.getElementById("start-controls").innerHTML = `
+        <form class="name-form" id="name-form" onsubmit="startTutorial(event)">
+            <input type="text" id="name-input" class="name-input" placeholder="Enter your name, future shinobi" required>
+            <button type="submit" class="start-button">Start Game</button>
+        </form>
+    `;
     document.getElementById("style-controls").innerHTML = "";
     document.getElementById("jutsu-controls").innerHTML = "";
     document.getElementById("skill-controls").innerHTML = "";
@@ -70,7 +74,6 @@ function resetGameState() {
     updateStatus();
 }
 
-// Simplified output queue
 function queueOutput(text) {
     game.outputQueue.push(text);
     if (!game.isOutputting) processOutputQueue();
@@ -89,10 +92,9 @@ function processOutputQueue() {
         outputDiv.innerHTML = game.output.join("<br>");
         outputDiv.scrollTop = outputDiv.scrollHeight;
     }
-    setTimeout(processOutputQueue, 1000); // Maintain paced output
+    setTimeout(processOutputQueue, 1000);
 }
 
-// Status update
 function updateStatus() {
     let playerEffects = [...new Set(game.player.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("");
     document.getElementById("player-status").innerHTML = `${game.player.name} [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] ${playerEffects}`;
@@ -114,18 +116,21 @@ function startTutorialFight() {
     startBattle(game.player, game.enemy);
 }
 
-function startTutorial() {
-    // Step 1: Get player name directly
-    game.player.name = prompt("Enter your name, future shinobi:") || "Shinobi";
+function startTutorial(event) {
+    event.preventDefault(); // Prevent form submission
+    // Step 1: Get player name from input
+    let nameInput = document.getElementById("name-input");
+    game.player.name = nameInput.value.trim() || "Shinobi";
 
-    // Step 2: Display graduation message immediately
+    // Step 2: Display graduation message
     let outputDiv = document.getElementById("output");
     if (outputDiv) {
         outputDiv.innerHTML += `<br><span class='output-text-neutral'>${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.</span>`;
         outputDiv.scrollTop = outputDiv.scrollHeight;
-    } else {
-        console.error("Output div not found");
     }
+
+    // Clear the form for next use (optional)
+    nameInput.value = "";
 }
 
 function generateTrainingEnemy() {
