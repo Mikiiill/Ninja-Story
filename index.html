@@ -92,5 +92,32 @@
     <script src="Battle.js"></script>
     <script src="Log.js"></script>
     <script src="Map.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let startButton = document.getElementById('start-button');
+            if (startButton) {
+                startButton.addEventListener('click', startTutorial);
+                startButton.addEventListener('touchend', startTutorial); // Support touch devices
+            }
+        });
+
+        function startTutorial() {
+            let nameInput = document.getElementById("name-input");
+            let playerName = nameInput.value.trim() || "Shinobi";
+            let outputDiv = document.getElementById("output");
+            if (outputDiv) {
+                outputDiv.innerHTML += `<br><span class='output-text-player'>${playerName}</span><span class='output-text-neutral'>! Graduation is soon, demonstrate your abilities to your Teacher.</span>`;
+                outputDiv.scrollTop = outputDiv.scrollHeight;
+            }
+            nameInput.value = ""; // Clear input
+            // Trigger tutorial fight
+            if (typeof startTutorialFight === 'function') {
+                startTutorialFight();
+            } else {
+                console.error("startTutorialFight not found");
+            }
+        }
+    </script>
 </body>
 </html>
