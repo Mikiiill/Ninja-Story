@@ -1,12 +1,11 @@
-// startup.js
 let game = {
     player: {
         name: "Shinobi",
         hp: 10,
         maxHp: 10,
         Rank: "Student",
-        ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank", Fire: "D-Rank", Lightning: "D-Rank", Earth: "D-Rank", Water: "D-Rank", Wind: "D-Rank", Feral: "D-Rank" },
-        skills: [],
+        ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" }, // Start with only basic non-elemental styles
+        skills: [new Skills().findSkill("Barrage"), new Skills().findSkill("Barrage")], // Start with 2 Barrage
         skillInventory: [],
         statusEffects: [],
         lastVillage: "Newb Village"
@@ -43,8 +42,8 @@ function resetGameState() {
             hp: 10,
             maxHp: 10,
             Rank: "Student",
-            ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank", Fire: "D-Rank", Lightning: "D-Rank", Earth: "D-Rank", Water: "D-Rank", Wind: "D-Rank", Feral: "D-Rank" },
-            skills: [],
+            ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
+            skills: [new Skills().findSkill("Barrage"), new Skills().findSkill("Barrage")],
             skillInventory: [],
             statusEffects: [],
             lastVillage: "Newb Village"
@@ -89,7 +88,7 @@ function processOutputQueue() {
 
 function updateStatus() {
     let playerEffects = [...new Set(game.player.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("");
-    document.getElementById("player-status").innerHTML = `Shinobi [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] ${playerEffects}`;
+    document.getElementById("player-status").innerHTML = `${game.player.name} [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] ${playerEffects}`;
     let enemyEffects = game.enemy ? [...new Set(game.enemy.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("") : "";
     document.getElementById("enemy-status").innerHTML = game.enemy ? `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>] ${enemyEffects}` : "Enemy [HP: <span class='enemy-hp'>0/0</span>]";
 }
@@ -102,24 +101,26 @@ function updateSkillCount() {
     }
 }
 
+function startTutorialFight() {
+    game.battleType = "tutorial";
+    game.enemy = generateTrainingEnemy();
+    startBattle(game.player, game.enemy); // Calls Battle.js function
+}
+
 function startGame() {
-    if (typeof initiateStyleSelection === 'function') {
-        game.output = ["<span class='output-text-neutral'>Welcome to ShinobiWay, <span class='output-text-player'>Shinobi</span>! You can Rank Up 2 available Fighting Styles during Rank Up to unlock new Jutsu.</span>"];
-        document.getElementById("output").innerHTML = game.output.join("<br>");
-        game.gameState = "chooseStyles";
-        initiateStyleSelection();
-        updateSkillCount();
-        let skillSet = new Skills();
-        let barrageSkill = skillSet.findSkill("Barrage");
-        if (barrageSkill) {
-            game.player.skillInventory.push(barrageSkill);
-            game.player.skillInventory.push(barrageSkill);
-        }
-        document.getElementById("start-controls").innerHTML = "";
+    // Step 1: Get player name
+    let playerName = prompt("Enter your name, future shinobi:");
+    if (playerName) {
+        game.player.name = playerName;
     } else {
-        queueOutput("<span class='error-log'>Error: initiateStyleSelection is not defined. Check console for details.</span>");
-        console.error("initiateStyleSelection is not a function. Ensure RANKUP.js loaded correctly.");
+        game.player.name = "Shinobi"; // Default if canceled
     }
+
+    // Step 2: Show tutorial message
+    alert(`${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.`);
+
+    // Step 3: Start tutorial fight
+    startTutorialFight();
 }
 
 function generateTrainingEnemy() {
@@ -139,6 +140,7 @@ function initializeGame() {
     if (typeof initiateStyleSelection === 'function') {
         resetGameState();
         document.getElementById("start-controls").innerHTML = '<button class="start-button" id="start-button" onclick="startGame()">Start Game</button>';
+        console.log("Game initialized, button added.");
     } else {
         setTimeout(initializeGame, 100); // Retry every 100ms
         console.log("Waiting for initiateStyleSelection... Check RANKUP.js loading.");
