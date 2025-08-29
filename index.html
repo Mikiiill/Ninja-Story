@@ -129,19 +129,8 @@
             } else {
                 game.player.name = "Shinobi";
             }
-            // Immediately proceed to next step after name input
+            // Hardcode next step immediately after name prompt
             alert(`${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.`);
-            game.battleType = "tutorial";
-            game.enemy = {
-                name: "Training Dummy",
-                hp: 10,
-                maxHp: 10,
-                skills: [new Skills().findSkill("Healing Stance")],
-                skillInventory: [],
-                statusEffects: [],
-                lastVillage: "Newb Village"
-            };
-            startBattle(game.player, game.enemy);
         }
     </script>
 </body>
