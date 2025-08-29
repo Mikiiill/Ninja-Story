@@ -52,6 +52,7 @@
             cursor: pointer;
             transition: background-color 0.3s;
             min-width: 150px;
+            touch-action: manipulation;
         }
         button:hover {
             background-color: #777;
@@ -65,6 +66,8 @@
             background-color: #333;
             color: #fff;
         }
+        .output-text-player { color: #00ff00; }
+        .output-text-enemy { color: #ff00ff; }
         .output-text-neutral { color: #ccc; }
     </style>
 </head>
@@ -74,7 +77,7 @@
     <div class="output" id="output">Welcome to ShinobiWay!</div>
     <div class="controls" id="start-controls">
         <input type="text" id="name-input" class="name-input" placeholder="Enter your name, future shinobi">
-        <button onclick="startTutorial()">Start Game</button>
+        <button id="start-button">Start Game</button>
     </div>
     <div class="controls" id="style-controls"></div>
     <div class="controls" id="jutsu-controls"></div>
@@ -89,18 +92,5 @@
     <script src="Battle.js"></script>
     <script src="Log.js"></script>
     <script src="Map.js"></script>
-
-    <script>
-        function startTutorial() {
-            let nameInput = document.getElementById("name-input");
-            let playerName = nameInput.value.trim() || "Shinobi";
-            let outputDiv = document.getElementById("output");
-            if (outputDiv) {
-                outputDiv.innerHTML += `<br><span class='output-text-neutral'>${playerName}! Graduation is soon, demonstrate your abilities to your Teacher.</span>`;
-                outputDiv.scrollTop = outputDiv.scrollHeight;
-            }
-            nameInput.value = ""; // Clear input
-        }
-    </script>
 </body>
 </html>
