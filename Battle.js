@@ -1,3 +1,4 @@
+// Battle.js
 function startBattle(player, enemy) {
     if (game.gameState !== "battle") {
         game.gameState = "battle";
@@ -119,8 +120,7 @@ function endBattle() {
     if (game.battleType === "tutorial") {
         if (game.user.hp > 0) { // Win condition
             alert("What fighting styles have you been training?");
-            initiateStyleSelection(); // Trigger style selection after win
-            game.gameState = "chooseInitialJutsu"; // Prepare for jutsu selection
+            initiateStyleSelection(); // Trigger style selection only after battle win
         }
     } else if (game.battleType === "travel") {
         game.player.travelFightsCompleted = (game.player.travelFightsCompleted || 0) + 1;
