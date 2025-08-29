@@ -120,23 +120,12 @@
     <script src="Log.js"></script>
     <script src="Map.js"></script>
 
-    <!-- Full retard DOM readiness with multiple listeners -->
+    <!-- Ensure DOM is ready -->
     <script>
-        window.addEventListener('load', function() {
-            console.log("DOM fully loaded, attaching event");
-            document.getElementById('start-button').addEventListener('click', startTutorial);
-            document.getElementById('start-button').addEventListener('click', function() {
-                console.log("Button clicked, forcing tutorial");
-                startTutorial();
-            });
-        });
         document.addEventListener('DOMContentLoaded', function() {
-            console.log("DOM content loaded, prepping button");
-            setTimeout(() => {
-                let button = document.getElementById('start-button');
-                if (button) button.onclick = startTutorial;
-                else console.error("Button not found yet, retrying");
-            }, 500);
+            let output = document.getElementById('output');
+            if (output) console.log("Output div ready");
+            else console.warn("Output div not found on load");
         });
     </script>
 </body>
