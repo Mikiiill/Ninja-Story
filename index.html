@@ -123,7 +123,6 @@
     <script>
         // Hardcoded tutorial start function
         function startTutorial() {
-            alert("Enter your name, future shinobi:");
             let playerName = prompt("Enter your name, future shinobi:");
             if (playerName) {
                 game.player.name = playerName;
@@ -144,12 +143,9 @@
             startBattle(game.player, game.enemy);
         }
 
-        // Fallback to auto-start if button fails
+        // Hardcode tutorial to start automatically on page load
         window.onload = function() {
-            if (!document.getElementById("start-button")) {
-                alert("Game starting automatically due to button issue...");
-                startTutorial();
-            }
+            startTutorial();
         };
     </script>
 </body>
