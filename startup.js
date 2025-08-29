@@ -1,3 +1,4 @@
+// startup.js
 let game = {
     player: {
         name: "Shinobi",
