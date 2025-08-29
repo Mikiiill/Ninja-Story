@@ -60,7 +60,7 @@ function resetGameState() {
         isOutputting: false
     };
     document.getElementById("output").innerHTML = "Welcome to ShinobiWay!";
-    document.getElementById("start-controls").innerHTML = '<button class="start-button" id="start-button" onclick="startGame()">Start Game</button>'; // Ensure button is added here
+    document.getElementById("start-controls").innerHTML = '<button class="start-button" id="start-button" onclick="startTutorial()">Start Game</button>'; // Ensure button is added
     document.getElementById("style-controls").innerHTML = "";
     document.getElementById("jutsu-controls").innerHTML = "";
     document.getElementById("skill-controls").innerHTML = "";
