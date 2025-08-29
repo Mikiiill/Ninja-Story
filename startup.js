@@ -1,150 +1,206 @@
-let game = {
-    player: {
-        name: "Shinobi",
-        hp: 10,
-        maxHp: 10,
-        Rank: "Student",
-        ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" }, // Start with only basic non-elemental styles
-        skills: [new Skills().findSkill("Barrage"), new Skills().findSkill("Barrage")], // Start with 2 Barrage in active skills
-        skillInventory: [],
-        statusEffects: [],
-        lastVillage: "Newb Village"
-    },
-    user: null,
-    target: null,
-    enemy: null,
-    battleNum: 1,
-    output: [],
-    gameState: "start",
-    battleScene: null,
-    outputQueue: [],
-    isOutputting: false
-};
+function startBattle(player, enemy) {
+    if (game.gameState !== "battle") {
+        game.gameState = "battle";
+        document.getElementById("skill-controls").innerHTML = "";
+        var controls = document.getElementById("main-controls");
+        if (controls) controls.style.display = "none";
+        while (player.skills.length < 10 && player.skillInventory.length > 0) {
+            var randIndex = Math.floor(Math.random() * player.skillInventory.length);
+            player.skills.push(player.skillInventory.splice(randIndex, 1)[0]);
+        }
+        game.enemy = new Proxy(enemy, {
+            set(target, property, value) {
+                if (property === "hp" && target[property] !== value) {
+                    target[property] = value;
+                    updateStatus();
+                } else {
+                    target[property] = value;
+                }
+                return true;
+            }
+        });
+        updateStatus();
+        game.battleScene = { queueOutput: queueOutput };
+        queueOutput("");
+        queueOutput("<span class='battle-ready'>BATTLE BEGINS!</span>");
+        queueOutput("<span class='output-text-player'>" + player.name + "</span> vs. <span class='output-text-enemy'>" + enemy.name + "</span>");
+        queueOutput("");
+        setTimeout(function() { determineTurnOrder(player, enemy); }, 1000);
+    } else {
+        queueOutput("<span class='output-text-neutral'>Battle already in progress!</span>");
+    }
+}
 
-game.asciiMap = {
-    "Burn": "🔥",
-    "Numb": "⚡️",
-    "Bleed": "🩸",
-    "Regen": "🌿",
-    "Doom": "💀",
-    "ShadowCloneEffect": "👥",
-    "Substitution": "🪵",
-    "DoubleImage": "🌫️",
-    "Dome": "🪨",
-    "READY": "",
-    "Release": "🌀"
-};
+function determineTurnOrder(player, enemy) {
+    var coinFlip = Math.random() < 0.5;
+    game.user = coinFlip ? player : enemy;
+    game.target = coinFlip ? enemy : player;
+    queueOutput("<span class='output-text-neutral'>" + game.target.name + " is off guard!</span>");
+    takeTurn(game.user);
+}
 
-function resetGameState() {
-    game = {
-        player: {
-            name: "Shinobi",
-            hp: 10,
-            maxHp: 10,
-            Rank: "Student",
-            ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
-            skills: [new Skills().findSkill("Barrage"), new Skills().findSkill("Barrage")],
-            skillInventory: [],
-            statusEffects: [],
-            lastVillage: "Newb Village"
-        },
-        user: null,
-        target: null,
-        enemy: null,
-        battleNum: 1,
-        output: [],
-        gameState: "start",
-        battleScene: null,
-        outputQueue: [],
-        isOutputting: false
-    };
-    document.getElementById("output").innerHTML = "Welcome to ShinobiWay!";
-    document.getElementById("start-controls").innerHTML = ""; // Clear initially
-    document.getElementById("style-controls").innerHTML = "";
-    document.getElementById("jutsu-controls").innerHTML = "";
-    document.getElementById("skill-controls").innerHTML = "";
-    document.getElementById("main-controls").innerHTML = "";
-    document.getElementById("travel-controls").innerHTML = "";
+function takeTurn(user) {
+    if (!game.user || !game.target || game.user.hp <= 0 || game.target.hp <= 0) {
+        endBattle();
+        return;
+    }
+    game.user = user;
+    game.target = (user === game.user) ? game.target : game.user;
+    queueOutput("<span class='output-text-" + (user === game.player ? "player" : "enemy") + "'>" + user.name + "</span>'s turn");
+    startEffectCheck(user);
+}
+
+function startEffectCheck(user) {
+    var allEffectsProcessed = true;
+    try {
+        user.statusEffects.forEach(function(effect) {
+            if (effect.startOfTurn && effect.startOfTurnFunction) {
+                var endTurn = effect.startOfTurnFunction(user, game.target, game.battleScene);
+                if (endTurn) allEffectsProcessed = false;
+            }
+        });
+    } catch (e) {
+        queueOutput("<span class='output-text-" + (user === game.player ? "player" : "enemy") + "'>" + user.name + "</span> encountered an error with status effect!");
+        allEffectsProcessed = false;
+    }
+    if (allEffectsProcessed && user.hp > 0) {
+        skillAction(user);
+    } else {
+        endTurn();
+    }
+}
+
+function deathCheck() {
+    if (game.user.hp <= 0 || game.target.hp <= 0) {
+        endBattle();
+    }
+}
+
+function skillAction(user) {
+    var skillSet = new Skills();
+    var skill = user.skills[Math.floor(Math.random() * user.skills.length)];
+    if (!skill) {
+        queueOutput("<span class='output-text-" + (user === game.player ? "player" : "enemy") + "'>" + user.name + "</span> has no skills to use!");
+        endTurn();
+        return;
+    }
+    queueOutput("<span class='output-text-" + (user === game.player ? "player" : "enemy") + "'>" + user.name + "</span> uses " + skill.name + "!");
+    if (skill.support || skill.name === "Lightning Edge") {
+        try {
+            skill.skillFunction(user, game.target, game.battleScene);
+        } catch (e) {
+            queueOutput("<span class='output-text-" + (user === game.player ? "player" : "enemy") + "'>" + user.name + "</span> encountered an error with " + skill.name + "!");
+        }
+    } else {
+        try {
+            var skillResult = skill.skillFunction(user, game.target, game.battleScene);
+        } catch (e) {
+            queueOutput("<span class='output-text-" + (user === game.player ? "player" : "enemy") + "'>" + user.name + "</span> encountered an error with " + skill.name + "!");
+        }
+    }
+    endTurn();
+    deathCheck();
+}
+
+function endTurn() {
+    var temp = game.user;
+    game.user = game.target;
+    game.target = temp;
     updateStatus();
+    setTimeout(function() { takeTurn(game.user); }, 1000);
+}
+
+function endBattle() {
+    game.gameState = "postBattle";
+    var controls = document.getElementById("main-controls");
+    if (controls) controls.style.display = "block";
+    document.getElementById("skill-controls").innerHTML = "";
+    queueOutput("<span class='battle-ready'>Battle ended!</span>");
+    if (game.battleType === "tutorial") {
+        if (game.user.hp > 0) { // Win condition
+            alert("What fighting styles have you been training?");
+            initiateStyleSelection(); // Trigger style selection after win
+            game.gameState = "chooseInitialJutsu"; // Prepare for jutsu selection
+        }
+    } else if (game.battleType === "travel") {
+        game.player.travelFightsCompleted = (game.player.travelFightsCompleted || 0) + 1;
+        queueOutput("<span class='output-text-neutral'>Travel fight completed! " + game.player.travelFightsCompleted + "/4 fights done.</span>");
+        if (game.player.travelFightsCompleted >= 4) {
+            var targetIsVillage = MapData[game.player.lastVillage].areas.indexOf(game.target.lastVillage) === -1;
+            if (targetIsVillage) {
+                game.player.lastVillage = game.target.lastVillage;
+                ArriveVillage(game.player.lastVillage);
+            } else {
+                game.gameState = "inArea";
+                queueOutput("<span class='output-text-neutral'>Arrived at " + game.target.lastVillage + "! State set to inArea.</span>");
+                var eventControls = document.getElementById("travel-controls");
+                eventControls.style.display = "flex";
+                eventControls.innerHTML = "<button onclick='startEventFight()'>Start Event Fight</button><button onclick='talkToNPC()'>Talk to NPC</button><button onclick='returnToVillage()'>Return to " + game.player.lastVillage + "</button>";
+            }
+        } else {
+            startTravelFight();
+        }
+    } else if (game.user.hp <= 0) {
+        ArriveVillage(game.user.lastVillage);
+    }
+    game.user = null;
+    game.target = null;
+}
+
+function startTravelFight() {
+    game.battleType = "travel";
+    startBattle(game.player, generateTravelEnemy());
+}
+
+function generateTravelEnemy() {
+    return generateEnemy("Rabid Dog");
+}
+
+function startTrainingFight() {
+    game.battleType = "training";
+    var trainingMobs = ["Training Dummy", "Thief", "Rabid Dog"];
+    var randomMob = trainingMobs[Math.floor(Math.random() * trainingMobs.length)];
+    startBattle(game.player, generateEnemy(randomMob));
+}
+
+function startEventFight() {
+    queueOutput("<span class='output-text-neutral'>Event fight started! (Placeholder)</span>");
+}
+
+function talkToNPC() {
+    queueOutput("<span class='output-text-neutral'>Talking to NPC! (Placeholder)</span>");
+}
+
+function returnToVillage() {
+    game.gameState = "In Village";
+    ArriveVillage(game.player.lastVillage);
 }
 
 function queueOutput(text) {
-    game.outputQueue.push(text);
-    if (!game.isOutputting) processOutputQueue();
-}
-
-function processOutputQueue() {
-    if (game.outputQueue.length === 0) {
-        game.isOutputting = false;
-        return;
-    }
-    game.isOutputting = true;
-    let text = game.outputQueue.shift();
-    game.output.push(text);
-    document.getElementById("output").innerHTML = game.output.join("<br>");
-    document.getElementById("output").scrollTop = document.getElementById("output").scrollHeight;
-    setTimeout(processOutputQueue, 1000);
+    var log = document.getElementById("battle-log");
+    if (log) log.innerHTML += "<p>" + text + "</p>";
 }
 
 function updateStatus() {
-    let playerEffects = [...new Set(game.player.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("");
-    document.getElementById("player-status").innerHTML = `${game.player.name} [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] ${playerEffects}`;
-    let enemyEffects = game.enemy ? [...new Set(game.enemy.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("") : "";
-    document.getElementById("enemy-status").innerHTML = game.enemy ? `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>] ${enemyEffects}` : "Enemy [HP: <span class='enemy-hp'>0/0</span>]";
-}
-
-function updateSkillCount() {
-    let totalCards = game.player.skills.length + game.player.skillInventory.length;
-    if (totalCards >= 10 && game.player.Rank === "Student") {
-        game.player.Rank = "Genin";
-        queueOutput("<span class='battle-ready'>Promoted to Genin!</span>");
+    var playerHp = document.getElementById("player-hp");
+    var enemyHp = document.getElementById("enemy-hp");
+    var log = document.getElementById("battle-log");
+    if (playerHp && enemyHp && game.user && game.target) {
+        playerHp.textContent = game.user.name + " [HP: " + game.user.hp + "/" + game.user.maxHp + "]";
+        enemyHp.textContent = game.target.name + " [HP: " + game.target.hp + "/" + game.target.maxHp + "]";
+        if (log) {
+            log.innerHTML += "<p>Status - " + game.user.name + ": HP " + game.user.hp + "/" + game.user.maxHp + ", Effects: " + (game.user.statusEffects.map(function(e) { return e.name; }).join(", ") || "None") + "</p>";
+            log.innerHTML += "<p>Status - " + game.target.name + ": HP " + game.target.hp + "/" + game.target.maxHp + ", Effects: " + (game.target.statusEffects.map(function(e) { return e.name; }).join(", ") || "None") + "</p>";
+        }
     }
 }
 
-function startTutorialFight() {
-    game.battleType = "tutorial";
-    game.enemy = generateTrainingEnemy();
-    startBattle(game.player, game.enemy); // Calls Battle.js function
-}
-
-function startGame() {
-    // Step 1: Get player name
-    let playerName = prompt("Enter your name, future shinobi:");
-    if (playerName) {
-        game.player.name = playerName;
-    } else {
-        game.player.name = "Shinobi"; // Default if canceled
+function ArriveVillage(village) {
+    game.gameState = "In Village";
+    game.player.hp = game.player.maxHp;
+    game.player.statusEffects = [];
+    game.player.lastVillage = village;
+    var controls = document.getElementById("main-controls");
+    if (controls) controls.style.display = "block";
+    queueOutput("Arrived at " + village + "! HP restored, status effects cleared.");
     }
-
-    // Step 2: Show tutorial message
-    alert(`${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.`);
-
-    // Step 3: Start tutorial fight
-    startTutorialFight();
-}
-
-function generateTrainingEnemy() {
-    return {
-        name: "Training Dummy",
-        hp: 10,
-        maxHp: 10,
-        skills: [new Skills().findSkill("Healing Stance")],
-        skillInventory: [],
-        statusEffects: [],
-        lastVillage: "Newb Village"
-    };
-}
-
-// Wait for RANKUP.js to load
-function initializeGame() {
-    if (typeof initiateStyleSelection === 'function') {
-        resetGameState();
-        document.getElementById("start-controls").innerHTML = '<button class="start-button" id="start-button" onclick="startGame()">Start Game</button>';
-        console.log("Game initialized, button added.");
-    } else {
-        setTimeout(initializeGame, 100); // Retry every 100ms
-        console.log("Waiting for initiateStyleSelection... Check RANKUP.js loading.");
-    }
-}
-
-initializeGame(); // Start the initialization loop
