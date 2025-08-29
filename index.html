@@ -103,7 +103,9 @@
     <div class="status" id="player-status">Shinobi [HP: <span class="player-hp">10/10</span>]</div>
     <div class="status" id="enemy-status">Enemy [HP: <span class="enemy-hp">0/0</span>]</div>
     <div class="output" id="output">Welcome to ShinobiWay!</div>
-    <div class="controls" id="start-controls"></div>
+    <div class="controls" id="start-controls">
+        <button class="start-button" id="start-button" onclick="startTutorial()">Start Game</button>
+    </div>
     <div class="controls" id="style-controls"></div>
     <div class="controls" id="jutsu-controls"></div>
     <div class="controls" id="skill-controls"></div>
@@ -117,5 +119,38 @@
     <script src="Battle.js"></script>
     <script src="Log.js"></script>
     <script src="Map.js"></script>
+
+    <script>
+        // Hardcoded tutorial start function
+        function startTutorial() {
+            alert("Enter your name, future shinobi:");
+            let playerName = prompt("Enter your name, future shinobi:");
+            if (playerName) {
+                game.player.name = playerName;
+            } else {
+                game.player.name = "Shinobi";
+            }
+            alert(`${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.`);
+            game.battleType = "tutorial";
+            game.enemy = {
+                name: "Training Dummy",
+                hp: 10,
+                maxHp: 10,
+                skills: [new Skills().findSkill("Healing Stance")],
+                skillInventory: [],
+                statusEffects: [],
+                lastVillage: "Newb Village"
+            };
+            startBattle(game.player, game.enemy);
+        }
+
+        // Fallback to auto-start if button fails
+        window.onload = function() {
+            if (!document.getElementById("start-button")) {
+                alert("Game starting automatically due to button issue...");
+                startTutorial();
+            }
+        };
+    </script>
 </body>
 </html>
