@@ -116,8 +116,10 @@ function startTutorial() {
     } else {
         game.player.name = "Shinobi";
     }
-    // Step 2: Hardcode next step immediately after name prompt
-    queueOutput(`${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.`);
+    // Step 2: Hardcode next step immediately after name input - Display graduation message
+    document.getElementById("output").innerHTML += "<br>" + `${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.`;
+    // Step 3: Hardcode next step immediately after graduation message - Start training fight
+    startTutorialFight();
 }
 
 function generateTrainingEnemy() {
