@@ -129,6 +129,7 @@
             } else {
                 game.player.name = "Shinobi";
             }
+            // Immediately proceed to next step after name input
             alert(`${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.`);
             game.battleType = "tutorial";
             game.enemy = {
@@ -142,11 +143,6 @@
             };
             startBattle(game.player, game.enemy);
         }
-
-        // Hardcode tutorial to start automatically on page load
-        window.onload = function() {
-            startTutorial();
-        };
     </script>
 </body>
 </html>
