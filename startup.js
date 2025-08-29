@@ -114,14 +114,11 @@ function startGame() {
     if (playerName) {
         game.player.name = playerName;
     } else {
-        game.player.name = "Shinobi"; // Default if canceled
+        game.player.name = "Shinobi";
     }
 
-    // Step 2: Show tutorial message
+    // Step 2: Hardcode next step immediately after name prompt
     alert(`${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.`);
-
-    // Step 3: Start tutorial fight
-    startTutorialFight();
 }
 
 function generateTrainingEnemy() {
