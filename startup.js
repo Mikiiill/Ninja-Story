@@ -22,20 +22,6 @@ let game = {
     isOutputting: false
 };
 
-game.asciiMap = {
-    "Burn": "🔥",
-    "Numb": "⚡️",
-    "Bleed": "🩸",
-    "Regen": "🌿",
-    "Doom": "💀",
-    "ShadowCloneEffect": "👥",
-    "Substitution": "🪵",
-    "DoubleImage": "🌫️",
-    "Dome": "🪨",
-    "READY": "",
-    "Release": "🌀"
-};
-
 function resetGameState() {
     game = {
         player: {
@@ -63,10 +49,8 @@ function resetGameState() {
     let startControls = document.getElementById("start-controls");
     if (startControls) {
         startControls.innerHTML = `
-            <form class="name-form" id="name-form" onsubmit="startTutorial(event)">
-                <input type="text" id="name-input" class="name-input" placeholder="Enter your name, future shinobi" required>
-                <button type="submit" class="start-button">Start Game</button>
-            </form>
+            <input type="text" id="name-input" class="name-input" placeholder="Enter your name, future shinobi">
+            <button id="start-button">Start Game</button>
         `;
     }
     document.getElementById("style-controls").innerHTML = "";
@@ -116,23 +100,10 @@ function updateSkillCount() {
 function startTutorialFight() {
     game.battleType = "tutorial";
     game.enemy = generateTrainingEnemy();
-    startBattle(game.player, game.enemy);
-}
-
-function startTutorial(event) {
-    event.preventDefault();
-    console.log("Start tutorial triggered"); // Debug log
-    let nameInput = document.getElementById("name-input");
-    if (nameInput) {
-        game.player.name = nameInput.value.trim() || "Shinobi";
-        let outputDiv = document.getElementById("output");
-        if (outputDiv) {
-            outputDiv.innerHTML += `<br><span class='output-text-neutral'>${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.</span>`;
-            outputDiv.scrollTop = outputDiv.scrollHeight;
-        }
-        nameInput.value = ""; // Clear input
+    if (typeof startBattle === 'function') {
+        startBattle(game.player, game.enemy);
     } else {
-        console.error("Name input not found");
+        console.error("startBattle not found");
     }
 }
 
@@ -150,6 +121,27 @@ function generateTrainingEnemy() {
 
 function initializeGame() {
     resetGameState();
+    let startButton = document.getElementById('start-button');
+    if (startButton) {
+        startButton.addEventListener('click', startTutorial);
+        startButton.addEventListener('touchend', startTutorial); // Support touch devices
+    }
+}
+
+function startTutorial() {
+    let nameInput = document.getElementById("name-input");
+    if (nameInput) {
+        game.player.name = nameInput.value.trim() || "Shinobi";
+        let outputDiv = document.getElementById("output");
+        if (outputDiv) {
+            outputDiv.innerHTML += `<br><span class='output-text-player'>${game.player.name}</span><span class='output-text-neutral'>! Graduation is soon, demonstrate your abilities to your Teacher.</span>`;
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        }
+        nameInput.value = ""; // Clear input
+        startTutorialFight(); // Trigger tutorial fight
+    } else {
+        console.error("Name input not found");
+    }
 }
 
 document.addEventListener('DOMContentLoaded', initializeGame);
