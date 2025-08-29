@@ -1,104 +1,46 @@
-function initiateStyleSelection() {
-    game.gameState = "chooseStyles"; // Explicitly set state
-    let controls = document.getElementById("style-controls");
-    if (!controls) {
-        console.error("style-controls element not found!");
-        return;
-    }
-    controls.innerHTML = "";
-    let styles = ["Ninjutsu", "Genjutsu", "Taijutsu", "Fire", "Lightning", "Earth"];
-    styles.forEach((style) => {
-        let button = document.createElement("button");
-        button.innerText = style;
-        button.className = style.toLowerCase();
-        button.onclick = () => selectStyle(style, button);
-        controls.appendChild(button);
-    });
-    console.log("Style selection buttons created:", styles); // Debug log
-}
-
-function selectStyle(style, button) {
-    console.log(`Clicked ${style}, current state: ${game.gameState}`); // Debug click
-    if (game.gameState === "chooseStyles" && game.player.ninjaStyles[style] && game.player.ninjaStyles[style] === "D-Rank" && Object.values(game.player.ninjaStyles).filter(r => r !== "D-Rank").length < 2) {
-        if (confirm(`Upgrade ${style} to C-Rank?`)) {
-            game.player.ninjaStyles[style] = "C-Rank";
-            queueOutput(`<span class="output-text-${style.toLowerCase()}">${style}</span> trained to C-Rank!`);
-            button.className += " disabled";
-            button.disabled = true;
-            if (Object.values(game.player.ninjaStyles).filter(r => r !== "D-Rank").length === 2) {
-                document.getElementById("style-controls").innerHTML = "";
-                setupInitialJutsuSelection();
-            } else {
-                let remainingPoints = 2 - Object.values(game.player.ninjaStyles).filter(r => r !== "D-Rank").length;
-                queueOutput(`You have ${remainingPoints} point${remainingPoints === 1 ? '' : 's'} remaining to upgrade another style.`);
-            }
-        }
-    } else {
-        console.log(`Style selection blocked for ${style}:`, { state: game.gameState, rank: game.player.ninjaStyles[style], count: Object.values(game.player.ninjaStyles).filter(r => r !== "D-Rank").length });
-    }
-}
-
-function setupInitialJutsuSelection() {
-    game.gameState = "chooseInitialJutsu";
-    performJutsuSelection(3, true, () => ArriveVillage("Newb Village"));
-}
-
-function performJutsuSelection(times, isInitial = false, callback = () => {}) {
-    if (times > 0) {
-        let controls = document.getElementById("jutsu-controls");
-        controls.innerHTML = "";
-        let skillSet = new Skills();
-        let availableJutsu = skillSet.skills.filter(skill => skillSet.canUseSkill(game.player, skill));
-        let randomJutsu = [];
-        for (let i = 0; i < 3 && availableJutsu.length > 0; i++) {
-            let index = Math.floor(Math.random() * availableJutsu.length);
-            randomJutsu.push(availableJutsu.splice(index, 1)[0]);
-        }
-        if (randomJutsu.length > 0) {
-            randomJutsu.forEach(jutsu => {
-                let button = document.createElement("button");
-                button.innerText = jutsu.name;
-                button.onclick = function() { selectJutsu(jutsu, () => performJutsuSelection(times - 1, isInitial, callback)); };
-                controls.appendChild(button);
-            });
+window.initiateStyleSelection = function() {
+    console.log("initiateStyleSelection called, game.player.ninjaStyles:", game.player.ninjaStyles);
+    // Basic styles available at start (hidden styles like Water, Wind, Feral excluded until unlocked)
+    var styles = ["Ninjutsu", "Genjutsu", "Taijutsu", "Fire", "Earth", "Lightning"];
+    var availableStyles = styles.filter(style => !Object.keys(game.player.ninjaStyles).includes(style));
+    if (availableStyles.length > 0) {
+        var selectedStyle = availableStyles[Math.floor(Math.random() * availableStyles.length)];
+        // Permanently upgrade unranked styles to C-Rank
+        game.player.ninjaStyles[selectedStyle] = "C-Rank";
+        queueOutput(selectedStyle + " trained to C-Rank!");
+        console.log("Selected style:", selectedStyle, "Rank:", game.player.ninjaStyles[selectedStyle]);
+        if (Object.keys(game.player.ninjaStyles).length < 5) { // Allow up to 5 styles (3 initial + 2 new)
+            initiateStyleSelection();
         } else {
-            queueOutput('No jutsu available based on styles and ranks.');
-            if (callback) callback();
+            game.gameState = "chooseInitialJutsu";
+            initiateJutsuSelection();
         }
     } else {
-        document.getElementById("jutsu-controls").innerHTML = "";
-        if (isInitial) {
-            addInitialBarrageCards();
-        }
-        if (callback) callback();
+        game.gameState = "In Village";
+        queueOutput("Arrived at " + game.player.lastVillage + "! HP restored, status effects cleared.");
+        console.log("No available styles, setting gameState to In Village");
     }
-}
+};
 
-function selectJutsu(jutsu, callback) {
-    if (game.gameState === "chooseInitialJutsu" || game.gameState === "postBattle") {
-        if (confirm("Select " + jutsu.name + "?")) {
-            let count = game.player.skills.filter(s => s.name === jutsu.name).length + game.player.skillInventory.filter(s => s.name === jutsu.name).length;
-            if (count < 3 || (game.player.skills.length + game.player.skillInventory.length < 10 && (jutsu.rank === "D-Rank" || jutsu.rank === "C-Rank"))) {
-                game.player.skillInventory.push(jutsu);
-                queueOutput(`${jutsu.name} added to skill inventory!`);
-                updateSkillCount();
-                document.getElementById("jutsu-controls").innerHTML = "";
-                if (callback) callback();
-            } else {
-                game.player.gold += jutsu.rank === "D-Rank" ? 5 : jutsu.rank === "C-Rank" ? 10 : 50;
-                queueOutput(`Extra ${jutsu.name} converted to ${jutsu.rank === "D-Rank" ? 5 : jutsu.rank === "C-Rank" ? 10 : 50} gold due to owning 3 or more!`);
-                updateSkillCount();
-                document.getElementById("jutsu-controls").innerHTML = "";
-                if (callback) callback();
-            }
+function initiateJutsuSelection() {
+    var availableJutsu = Object.keys(window.jutsu).filter(jutsu => {
+        var skill = window.jutsu[jutsu];
+        return skill.rank === "C-Rank" && // Match C-Rank for new styles
+               Object.keys(game.player.ninjaStyles).some(style => 
+                   skill.type.includes(style) && game.player.ninjaStyles[style] >= "C-Rank") &&
+               !game.player.skills.some(s => s.name === jutsu) &&
+               !game.player.skillInventory.some(s => s.name === jutsu);
+    });
+    if (availableJutsu.length > 0) {
+        var selectedJutsu = availableJutsu[Math.floor(Math.random() * availableJutsu.length)];
+        game.player.skillInventory.push(Object.assign({}, window.jutsu[selectedJutsu]));
+        queueOutput(selectedJutsu + " added to skill inventory!");
+        if (game.player.skillInventory.length < 2) { // Limit to 2 jutsu
+            initiateJutsuSelection();
+        } else {
+            game.gameState = "In Village";
+            queueOutput("Jutsu selection complete! You must learn more skills to become a Genin. Arrived at Newb Village.");
+            ArriveVillage("Newb Village"); // Transition to village
         }
     }
-}
-
-function addInitialBarrageCards() {
-    let skillSet = new Skills();
-    let barrageSkill = skillSet.findSkill("Barrage");
-    game.player.skillInventory.push(barrageSkill);
-    game.player.skillInventory.push(barrageSkill);
-    queueOutput("You received 2 free Barrage cards to start!");
 }
