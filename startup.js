@@ -108,7 +108,7 @@ function startTutorialFight() {
     startBattle(game.player, game.enemy); // Calls Battle.js function
 }
 
-function startGame() {
+function startTutorial() {
     // Step 1: Get player name
     let playerName = prompt("Enter your name, future shinobi:");
     if (playerName) {
@@ -116,9 +116,8 @@ function startGame() {
     } else {
         game.player.name = "Shinobi";
     }
-
     // Step 2: Hardcode next step immediately after name prompt
-    alert(`${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.`);
+    queueOutput(`${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.`);
 }
 
 function generateTrainingEnemy() {
