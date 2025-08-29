@@ -1,4 +1,3 @@
-// startup.js
 let game = {
     player: {
         name: "Shinobi",
@@ -6,7 +5,7 @@ let game = {
         maxHp: 10,
         Rank: "Student",
         ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" }, // Start with only basic non-elemental styles
-        skills: [new Skills().findSkill("Barrage"), new Skills().findSkill("Barrage")], // Start with 2 Barrage
+        skills: [new Skills().findSkill("Barrage"), new Skills().findSkill("Barrage")], // Start with 2 Barrage in active skills
         skillInventory: [],
         statusEffects: [],
         lastVillage: "Newb Village"
