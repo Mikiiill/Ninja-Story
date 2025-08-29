@@ -51,7 +51,7 @@
             font-size: 1.2rem;
             cursor: pointer;
             transition: background-color 0.3s;
-            min-width: 120px; /* Mobile-friendly tap target */
+            min-width: 120px;
         }
         button:hover {
             background-color: #777;
@@ -138,5 +138,13 @@
     <script src="Battle.js"></script>
     <script src="Log.js"></script>
     <script src="Map.js"></script>
+
+    <!-- Ensure DOM is ready -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM ready, initializing game");
+            initializeGame();
+        });
+    </script>
 </body>
 </html>
