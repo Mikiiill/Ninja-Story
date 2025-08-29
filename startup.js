@@ -117,7 +117,8 @@ function startGame() {
         }
         document.getElementById("start-controls").innerHTML = "";
     } else {
-        queueOutput("<span class='error-log'>Error: initiateStyleSelection is not defined. Please check script load order.</span>");
+        queueOutput("<span class='error-log'>Error: initiateStyleSelection is not defined. Check console for details.</span>");
+        console.error("initiateStyleSelection is not a function. Ensure RANKUP.js loaded correctly.");
     }
 }
 
@@ -133,11 +134,15 @@ function generateTrainingEnemy() {
     };
 }
 
-// Add button after ensuring dependencies are loaded
-if (typeof initiateStyleSelection === 'function') {
-    resetGameState();
-    document.getElementById("start-controls").innerHTML = '<button class="start-button" id="start-button" onclick="startGame()">Start Game</button>';
-} else {
-    console.error("initiateStyleSelection not loaded. Check RANKUP.js.");
-    document.getElementById("start-controls").innerHTML = '<span class="error-log">Game initialization failed. Please reload.</span>';
+// Wait for RANKUP.js to load
+function initializeGame() {
+    if (typeof initiateStyleSelection === 'function') {
+        resetGameState();
+        document.getElementById("start-controls").innerHTML = '<button class="start-button" id="start-button" onclick="startGame()">Start Game</button>';
+    } else {
+        setTimeout(initializeGame, 100); // Retry every 100ms
+        console.log("Waiting for initiateStyleSelection... Check RANKUP.js loading.");
+    }
 }
+
+initializeGame(); // Start the initialization loop
