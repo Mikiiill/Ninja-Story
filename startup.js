@@ -121,27 +121,6 @@ function generateTrainingEnemy() {
 
 function initializeGame() {
     resetGameState();
-    let startButton = document.getElementById('start-button');
-    if (startButton) {
-        startButton.addEventListener('click', startTutorial);
-        startButton.addEventListener('touchend', startTutorial); // Support touch devices
-    }
-}
-
-function startTutorial() {
-    let nameInput = document.getElementById("name-input");
-    if (nameInput) {
-        game.player.name = nameInput.value.trim() || "Shinobi";
-        let outputDiv = document.getElementById("output");
-        if (outputDiv) {
-            outputDiv.innerHTML += `<br><span class='output-text-player'>${game.player.name}</span><span class='output-text-neutral'>! Graduation is soon, demonstrate your abilities to your Teacher.</span>`;
-            outputDiv.scrollTop = outputDiv.scrollHeight;
-        }
-        nameInput.value = ""; // Clear input
-        startTutorialFight(); // Trigger tutorial fight
-    } else {
-        console.error("Name input not found");
-    }
 }
 
 document.addEventListener('DOMContentLoaded', initializeGame);
