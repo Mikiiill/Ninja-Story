@@ -60,12 +60,15 @@ function resetGameState() {
         isOutputting: false
     };
     document.getElementById("output").innerHTML = "Welcome to ShinobiWay!";
-    document.getElementById("start-controls").innerHTML = `
-        <form class="name-form" id="name-form" onsubmit="startTutorial(event)">
-            <input type="text" id="name-input" class="name-input" placeholder="Enter your name, future shinobi" required>
-            <button type="submit" class="start-button">Start Game</button>
-        </form>
-    `;
+    let startControls = document.getElementById("start-controls");
+    if (startControls) {
+        startControls.innerHTML = `
+            <form class="name-form" id="name-form" onsubmit="startTutorial(event)">
+                <input type="text" id="name-input" class="name-input" placeholder="Enter your name, future shinobi" required>
+                <button type="submit" class="start-button">Start Game</button>
+            </form>
+        `;
+    }
     document.getElementById("style-controls").innerHTML = "";
     document.getElementById("jutsu-controls").innerHTML = "";
     document.getElementById("skill-controls").innerHTML = "";
@@ -117,20 +120,20 @@ function startTutorialFight() {
 }
 
 function startTutorial(event) {
-    event.preventDefault(); // Prevent form submission
-    // Step 1: Get player name from input
+    event.preventDefault();
+    console.log("Start tutorial triggered"); // Debug log
     let nameInput = document.getElementById("name-input");
-    game.player.name = nameInput.value.trim() || "Shinobi";
-
-    // Step 2: Display graduation message
-    let outputDiv = document.getElementById("output");
-    if (outputDiv) {
-        outputDiv.innerHTML += `<br><span class='output-text-neutral'>${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.</span>`;
-        outputDiv.scrollTop = outputDiv.scrollHeight;
+    if (nameInput) {
+        game.player.name = nameInput.value.trim() || "Shinobi";
+        let outputDiv = document.getElementById("output");
+        if (outputDiv) {
+            outputDiv.innerHTML += `<br><span class='output-text-neutral'>${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.</span>`;
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        }
+        nameInput.value = ""; // Clear input
+    } else {
+        console.error("Name input not found");
     }
-
-    // Clear the form for next use (optional)
-    nameInput.value = "";
 }
 
 function generateTrainingEnemy() {
@@ -149,4 +152,4 @@ function initializeGame() {
     resetGameState();
 }
 
-initializeGame();
+document.addEventListener('DOMContentLoaded', initializeGame);
