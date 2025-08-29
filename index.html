@@ -47,37 +47,14 @@
             background-color: #555;
             color: #fff;
             border: 2px solid #fff;
-            padding: 10px 20px;
-            font-size: 1.2rem;
+            padding: 15px 30px;
+            font-size: 1.5rem;
             cursor: pointer;
             transition: background-color 0.3s;
-            min-width: 120px;
+            min-width: 150px;
         }
         button:hover {
             background-color: #777;
-        }
-        button.disabled {
-            background-color: #888;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        .ninjutsu { background-color: #000080; }
-        .genjutsu { background-color: #800080; }
-        .taijutsu { background-color: #228b22; }
-        .fire { background-color: #ff0000; }
-        .lightning { background-color: #ffa500; }
-        .earth { background-color: #8b4513; }
-        .start-button {
-            background-color: #555;
-            color: #fff;
-            border: 2px solid #fff;
-            font-size: 1.5rem;
-            padding: 15px 30px;
-        }
-        .name-form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
         .name-input {
             width: 80%;
@@ -88,31 +65,7 @@
             background-color: #333;
             color: #fff;
         }
-        .skills-button, .train-button, .travel-button, .shop-button {
-            background-color: #555;
-            color: #fff;
-            border: 2px solid #fff;
-            font-size: 1.2rem;
-            padding: 10px 20px;
-            min-width: 120px;
-        }
-        .output-text-player { color: #00ff00; }
-        .output-text-enemy { color: #ff00ff; }
         .output-text-neutral { color: #ccc; }
-        .status-burn { color: #ff0000; }
-        .status-numb { color: #ffa500; }
-        .status-bleed { color: #ff00ff; }
-        .status-regen { color: #00ff00; }
-        .status-doom { color: #ffffff; }
-        .status-shadowcloneeffect { color: #800080; }
-        .status-substitution { color: #8b4513; }
-        .status-dome { color: #228b22; }
-        .battle-ready { color: #fff; font-weight: bold; }
-        .debug-log { background-color: #444; color: #fff; padding: 2px 5px; border-radius: 3px; }
-        .error-log { background-color: #800000; color: #fff; padding: 2px 5px; border-radius: 3px; }
-        .sprite { width: 50px; height: 50px; vertical-align: middle; }
-        .player-hp { color: #00ff00; }
-        .enemy-hp { color: #ff00ff; }
     </style>
 </head>
 <body>
@@ -120,10 +73,8 @@
     <div class="status" id="enemy-status">Enemy [HP: <span class="enemy-hp">0/0</span>]</div>
     <div class="output" id="output">Welcome to ShinobiWay!</div>
     <div class="controls" id="start-controls">
-        <form class="name-form" id="name-form" onsubmit="startTutorial(event)">
-            <input type="text" id="name-input" class="name-input" placeholder="Enter your name, future shinobi" required>
-            <button type="submit" class="start-button">Start Game</button>
-        </form>
+        <input type="text" id="name-input" class="name-input" placeholder="Enter your name, future shinobi">
+        <button onclick="startTutorial()">Start Game</button>
     </div>
     <div class="controls" id="style-controls"></div>
     <div class="controls" id="jutsu-controls"></div>
@@ -139,12 +90,17 @@
     <script src="Log.js"></script>
     <script src="Map.js"></script>
 
-    <!-- Ensure DOM is ready -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("DOM ready, initializing game");
-            initializeGame();
-        });
+        function startTutorial() {
+            let nameInput = document.getElementById("name-input");
+            let playerName = nameInput.value.trim() || "Shinobi";
+            let outputDiv = document.getElementById("output");
+            if (outputDiv) {
+                outputDiv.innerHTML += `<br><span class='output-text-neutral'>${playerName}! Graduation is soon, demonstrate your abilities to your Teacher.</span>`;
+                outputDiv.scrollTop = outputDiv.scrollHeight;
+            }
+            nameInput.value = ""; // Clear input
+        }
     </script>
 </body>
 </html>
