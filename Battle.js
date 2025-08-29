@@ -121,6 +121,7 @@ function endBattle() {
         if (game.user.hp > 0) { // Win condition
             alert("What fighting styles have you been training?");
             initiateStyleSelection(); // Trigger style selection only after battle win
+            game.gameState = "chooseInitialJutsu"; // Prepare for jutsu selection
         }
     } else if (game.battleType === "travel") {
         game.player.travelFightsCompleted = (game.player.travelFightsCompleted || 0) + 1;
@@ -203,4 +204,4 @@ function ArriveVillage(village) {
     var controls = document.getElementById("main-controls");
     if (controls) controls.style.display = "block";
     queueOutput("Arrived at " + village + "! HP restored, status effects cleared.");
-}
+                                                                                                                                       }
