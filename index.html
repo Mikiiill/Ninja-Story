@@ -111,13 +111,7 @@
                     outputDiv.innerHTML += `<br><span class='output-text-player'>${game.player.name}</span><span class='output-text-neutral'>! Graduation is soon, demonstrate your abilities to your Teacher.</span>`;
                     outputDiv.scrollTop = outputDiv.scrollHeight;
                 }
-                // Hide the input and button
-                let startControls = document.getElementById("start-controls");
-                if (startControls) {
-                    startControls.style.display = "none";
-                }
-                // Update player status with new name
-                updateStatus();
+                nameInput.value = ""; // Clear input
                 // Trigger tutorial fight
                 if (typeof startTutorialFight === 'function') {
                     startTutorialFight();
