@@ -49,8 +49,10 @@ function resetGameState() {
     let startControls = document.getElementById("start-controls");
     if (startControls) {
         startControls.innerHTML = `
-            <input type="text" id="name-input" class="name-input" placeholder="Enter your name, future shinobi">
-            <button id="start-button">Start Game</button>
+            <form class="name-form" id="name-form" onsubmit="startTutorial(event)">
+                <input type="text" id="name-input" class="name-input" placeholder="Enter your name, future shinobi" required>
+                <button type="submit" class="start-button">Start Game</button>
+            </form>
         `;
     }
     document.getElementById("style-controls").innerHTML = "";
@@ -97,9 +99,9 @@ function updateSkillCount() {
     }
 }
 
-function startTutorialFight() {
-    game.battleType = "tutorial";
-    game.enemy = generateTrainingEnemy();
+function startEventFight() {
+    game.battleType = "event"; // Set as event fight
+    game.enemy = new Characters().enemies.find(enemy => enemy.name === "Training Dummy"); // Use Training Dummy from Characters.js
     if (typeof startBattle === 'function') {
         startBattle(game.player, game.enemy);
     } else {
