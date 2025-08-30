@@ -1,4 +1,3 @@
-// Battle.js
 function startBattle(player, enemy) {
     if (game.gameState !== "battle") {
         game.gameState = "battle";
@@ -120,7 +119,7 @@ function endBattle() {
     if (game.battleType === "tutorial") {
         if (game.user.hp > 0) { // Win condition
             alert("What fighting styles have you been training?");
-            initiateStyleSelection(); // Trigger style selection only after battle win
+            initiateStyleSelection(); // Trigger style selection after win
             game.gameState = "chooseInitialJutsu"; // Prepare for jutsu selection
         }
     } else if (game.battleType === "travel") {
@@ -204,4 +203,4 @@ function ArriveVillage(village) {
     var controls = document.getElementById("main-controls");
     if (controls) controls.style.display = "block";
     queueOutput("Arrived at " + village + "! HP restored, status effects cleared.");
-    }
+                    }
