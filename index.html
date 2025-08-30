@@ -120,10 +120,8 @@
     <div class="status" id="enemy-status">Enemy [HP: <span class="enemy-hp">0/0</span>]</div>
     <div class="output" id="output">Welcome to ShinobiWay!</div>
     <div class="controls" id="start-controls">
-        <form class="name-form" id="name-form" onsubmit="startTutorial(event)">
-            <input type="text" id="name-input" class="name-input" placeholder="Enter your name, future shinobi" required>
-            <button type="submit" class="start-button">Start Game</button>
-        </form>
+        <input type="text" id="name-input" class="name-input" placeholder="Enter your name, future shinobi">
+        <button id="start-button" class="start-button" onclick="startTutorial()">Start Game</button>
     </div>
     <div class="controls" id="style-controls"></div>
     <div class="controls" id="jutsu-controls"></div>
@@ -138,29 +136,5 @@
     <script src="Battle.js"></script>
     <script src="Log.js"></script>
     <script src="Map.js"></script>
-
-    <script>
-        function startTutorial(event) {
-            event.preventDefault();
-            let nameInput = document.getElementById("name-input");
-            if (nameInput) {
-                game.player.name = nameInput.value.trim() || "Shinobi";
-                let outputDiv = document.getElementById("output");
-                if (outputDiv) {
-                    outputDiv.innerHTML += `<br><span class='output-text-player'>${game.player.name}</span><span class='output-text-neutral'>! Graduation is soon, demonstrate your abilities to your Teacher.</span>`;
-                    outputDiv.scrollTop = outputDiv.scrollHeight;
-                }
-                nameInput.value = ""; // Clear input
-                // Add one line to start event fight with Training Dummy
-                if (typeof startEventFight === 'function') {
-                    startEventFight();
-                } else {
-                    console.error("startEventFight not found");
-                }
-            } else {
-                console.error("Name input not found");
-            }
-        }
-    </script>
 </body>
 </html>
