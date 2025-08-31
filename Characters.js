@@ -37,25 +37,26 @@ function generateEnemy() {
     }
     let skills = generateEnemySkills(rank, randomStyles);
     let name = game.player.Rank === "Genin" ? "Genin Opponent" : game.player.Rank === "Chunin" ? "Chunin Opponent" : "Jounin Opponent";
-    return new Mob(name, hp, hp, rank, randomStyles, skills, []);
+    return new Mob(name, hp, hp, rank, randomStyles, skills, [], null); // Default sprite to null
 }
 
 function generateTrainingEnemy() {
     let enemies = [
-        new Mob("Rabid Dog", 8, 8, "D-Rank", { Feral: "C-Rank" }, [new Skills().findSkill("Bite")], []),
-        new Mob("Thief", 10, 10, "D-Rank", { Taijutsu: "D-Rank" }, [new Skills().findSkill("Barrage"), new Skills().findSkill("Substitution Jutsu")], []),
-        new Mob("Training Dummy", 6, 6, "D-Rank", { Ninjutsu: "D-Rank" }, [new Skills().findSkill("Healing Stance")], [])
+        new Mob("Rabid Dog", 8, 8, "D-Rank", { Feral: "C-Rank" }, [new Skills().findSkill("Bite")], [], null),
+        new Mob("Thief", 10, 10, "D-Rank", { Taijutsu: "D-Rank" }, [new Skills().findSkill("Barrage"), new Skills().findSkill("Substitution Jutsu")], [], null),
+        new Mob("Training Dummy", 6, 6, "D-Rank", { Ninjutsu: "D-Rank" }, [new Skills().findSkill("Healing Stance")], [], null)
     ];
     return enemies[Math.floor(Math.random() * enemies.length)];
 }
 
 function generateTravelEnemy() {
     let enemies = [
-        new Mob("Bandit", 30, 30, "C-Rank", { Taijutsu: "C-Rank" }, generateEnemySkills("C-Rank", { Taijutsu: "C-Rank" }), []),
-        new Mob("Rabid Dog", 35, 35, "D-Rank", { Feral: "C-Rank" }, [new Skills().findSkill("Bite")], [])
+        new Mob("Bandit", 30, 30, "C-Rank", { Taijutsu: "C-Rank" }, generateEnemySkills("C-Rank", { Taijutsu: "C-Rank" }), [], null),
+        new Mob("Rabid Dog", 35, 35, "D-Rank", { Feral: "C-Rank" }, [new Skills().findSkill("Bite")], [], null)
     ];
     return enemies[Math.floor(Math.random() * enemies.length)];
 }
+
 const SparringDummy = {
     name: "SparringDummy",
     hp: 6,
