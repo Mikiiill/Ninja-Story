@@ -220,7 +220,7 @@
                         return;
                     }
                     game.battleType = "eventFight";
-                    game.enemy = Object.assign({}, SparringDummy); // Shallow copy to avoid reference issues
+                    game.enemy = Object.assign({}, SparringDummy); // Shallow copy
                     console.log("[DEBUG]: Before startBattle - enemy:", game.enemy);
                     game.gameState = "battle";
                     if (typeof startBattle === "undefined") {
@@ -233,9 +233,7 @@
                         console.error("[ERROR]: Enemy name overridden to:", game.enemy.name);
                         game.enemy = Object.assign({}, SparringDummy);
                     }
-                    // Add graduation and Rank Up message after battle starts
                     queueOutput(`<span class='output-text-player'>${game.player.name}</span><span class='output-text-neutral'>! Graduation is soon, demonstrate your abilities to your Teacher.</span>`);
-                    queueOutput("You can Rank Up 2 available Fighting Styles during Rank Up to unlock new Jutsu.");
                 } catch (e) {
                     console.error("[ERROR]: startTutorialFight failed:", e);
                 }
@@ -247,7 +245,9 @@
                     if (nameInput) {
                         game.player.name = nameInput.value.trim() || "Shinobi";
                         nameInput.value = ""; // Clear input
-                        startTutorialFight(); // Start fight and messages
+                        document.getElementById("output").innerHTML = ""; // Clear initial message
+                        startTutorialFight(); // Start fight and graduation message
+                        queueOutput("You can Rank Up 2 available Fighting Styles during Rank Up to unlock new Jutsu."); // Add Rank Up message after
                     } else {
                         console.error("Name input not found");
                     }
