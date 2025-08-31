@@ -94,7 +94,6 @@ function updateStatus() {
     document.getElementById("player-status").innerHTML = `${game.player.name} [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] ${playerEffects}`;
     let enemyEffects = game.enemy ? [...new Set(game.enemy.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("") : "";
     if (game.enemy) {
-        // Explicitly use game.enemy's maxHp to prevent override
         document.getElementById("enemy-status").innerHTML = `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>] ${enemyEffects}`;
     } else {
         document.getElementById("enemy-status").innerHTML = "Enemy [HP: <span class='enemy-hp'>0/0</span>]";
@@ -112,10 +111,9 @@ function updateSkillCount() {
 function startTutorialFight() {
     game.battleType = "tutorial";
     game.enemy = generateSpecialTutorialDummy();
-    game.gameState = "battle"; // Ensure battle state
-    queueOutput(`${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.`); // Before fight
+    game.gameState = "battle";
     startBattle(game.player, game.enemy);
-    game.battleScene.onEnd = () => endTutorial();
+    game.battleScene.onEnd = () => endTutorialFight();
 }
 
 function startGame() {
@@ -125,6 +123,8 @@ function startGame() {
     } else {
         game.player.name = "Shinobi";
     }
+    // Persist graduation message in a separate div to avoid overwrite
+    document.getElementById("graduation-message").innerHTML = `${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.`;
     startTutorialFight();
 }
 
@@ -140,8 +140,8 @@ function generateSpecialTutorialDummy() {
     };
 }
 
-function endTutorial() {
-    queueOutput("Train and learn 10 Jutsu to prepare for your Genin promotion!"); // After fight
+function endTutorialFight() {
+    queueOutput("Train and learn 10 Jutsu to prepare for your Genin promotion!");
     showStyleSelect();
 }
 
