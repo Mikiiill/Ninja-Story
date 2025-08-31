@@ -112,41 +112,10 @@ function updateSkillCount() {
 
 function startTutorialFight() {
     game.battleType = "eventFight"; // Explicitly set to eventFight
-    game.enemy = generateSpecialTutorialDummy(); // Ensure correct enemy
+    game.enemy = SpecialTrainingDummy; // Use the defined character
     console.log("[DEBUG]: Starting tutorial fight with enemy:", game.enemy); // Debug enemy assignment
     game.gameState = "battle";
     startBattle(game.player, game.enemy);
-    game.battleScene.onEnd = () => {
-        if (game.target && game.target.hp <= 0 && !game.tutorialDone) {
-            game.tutorialDone = true;
-            queueOutput("good!"); // Test message
-            game.gameState = "chooseStyles"; // Set state for style selection
-            initiateStyleSelection(); // Trigger style selection
-        }
-    };
-}
-
-function startGame() {
-    let playerName = prompt("Enter your name, future shinobi:");
-    if (playerName) {
-        game.player.name = playerName;
-    } else {
-        game.player.name = "Shinobi";
-    }
-    document.getElementById("graduation-message").innerHTML = `${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.`;
-    startTutorialFight();
-}
-
-function generateSpecialTutorialDummy() {
-    return {
-        name: "SpecialTrainingDummy", // Exact match for EventRewards
-        hp: 6,
-        maxHp: 6,
-        skills: [new Skills().findSkill("Healing Stance"), new Skills().findSkill("Bite")],
-        skillInventory: [],
-        statusEffects: [{ name: "Burn", duration: 2, effect: (target) => target.hp = Math.max(0, target.hp - 1) }],
-        lastVillage: "Newb Village"
-    };
 }
 
 function showStyleSelect() {
