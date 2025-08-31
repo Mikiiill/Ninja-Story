@@ -19,7 +19,8 @@ let game = {
     gameState: "start",
     battleScene: null,
     outputQueue: [],
-    isOutputting: false
+    isOutputting: false,
+    tutorialDone: false // New variable to track tutorial completion
 };
 
 game.asciiMap = {
@@ -58,7 +59,8 @@ function resetGameState() {
             gameState: "start",
             battleScene: null,
             outputQueue: [],
-            isOutputting: false
+            isOutputting: false,
+            tutorialDone: false
         };
         document.getElementById("output").innerHTML = "Welcome to ShinobiWay!";
         document.getElementById("start-controls").innerHTML = '<button class="start-button" id="start-button" onclick="startGame()">Start Game</button>';
@@ -113,7 +115,6 @@ function startTutorialFight() {
     game.enemy = generateSpecialTutorialDummy();
     game.gameState = "battle";
     startBattle(game.player, game.enemy);
-    game.battleScene.onEnd = () => endTutorialFight();
 }
 
 function startGame() {
@@ -123,7 +124,6 @@ function startGame() {
     } else {
         game.player.name = "Shinobi";
     }
-    // Persist graduation message in a separate div to avoid overwrite
     document.getElementById("graduation-message").innerHTML = `${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.`;
     startTutorialFight();
 }
@@ -138,11 +138,6 @@ function generateSpecialTutorialDummy() {
         statusEffects: [{ name: "Burn", duration: 2, effect: (target) => target.hp = Math.max(0, target.hp - 1) }],
         lastVillage: "Newb Village"
     };
-}
-
-function endTutorialFight() {
-    queueOutput("Train and learn 10 Jutsu to prepare for your Genin promotion!");
-    showStyleSelect();
 }
 
 function showStyleSelect() {
