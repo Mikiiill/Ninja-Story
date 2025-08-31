@@ -617,7 +617,7 @@ const player = new Mob(
     [],
     [],
     [],
-    "https://via.placeholder.com/120x160"
+    "https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/NINJA1.PNG"
 );
 
 const opponent = new Mob(
