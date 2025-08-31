@@ -15,6 +15,20 @@ class StatusEffect {
     }
 }
 
+// Emoji Map for Status Effects
+const statusEmojis = {
+    "Swap": "🪵",
+    "ShadowCloneEffect": "👥",
+    "Doom": "💀",
+    "Regen": "🌿",
+    "Dome": "🪨",
+    "Burn": "🔥",
+    "Numb": "⚡️",
+    "READY": "💪",
+    "Release": "🌀",
+    "Bleed": "🩸"
+};
+
 // Battle Skill Class
 class BattleSkill {
     constructor(name, attributes, requirements, skillFunction, style, support, rank) {
@@ -273,7 +287,7 @@ class Skills {
             (user, target, skillStyle) => {
                 if (skillStyle === "genjutsu") {
                     logBattle(`<span class='output-text-${user === player ? 'player' : 'enemy'}'>${user.name}</span> uses Release to resist the Genjutsu attack!`);
-                    user.statusEffects = user.statusEffects.filter(e => e.name !== "Release");
+                    user.statusEffects = user.statusEffects.filter(e => e.name === "Release");
                     return true;
                 }
                 return false;
@@ -316,7 +330,9 @@ function logBattle(message) {
     const log = document.getElementById("battle-log-content");
     if (log) {
         log.innerHTML += `<p>${message}</p>`;
-        log.scrollTop = log.scrollHeight;
+        setTimeout(() => {
+            log.scrollTop = log.scrollHeight; // Ensure auto-scroll on mobile
+        }, 100);
     }
 }
 
@@ -577,10 +593,10 @@ function updateBattleUI() {
     if (userName && userHp && userStatus && opponentName && opponentHp && opponentStatus) {
         userName.textContent = player.name;
         userHp.textContent = `${player.hp}/${player.maxHp}`;
-        userStatus.textContent = player.statusEffects.map(s => s.name).join(", ") || "None";
+        userStatus.textContent = player.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None";
         opponentName.textContent = opponent.name;
         opponentHp.textContent = `${opponent.hp}/${opponent.maxHp}`;
-        opponentStatus.textContent = opponent.statusEffects.map(s => s.name).join(", ") || "None";
+        opponentStatus.textContent = opponent.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None";
     }
 }
 
@@ -601,7 +617,7 @@ const player = new Mob(
     [],
     [],
     [],
-    "https://via.placeholder.com/150"
+    "https://via.placeholder.com/120x160"
 );
 
 const opponent = new Mob(
@@ -613,7 +629,7 @@ const opponent = new Mob(
     [],
     [],
     [],
-    "https://via.placeholder.com/150"
+    "https://via.placeholder.com/120x160"
 );
 
 // Initialize Game
