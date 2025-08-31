@@ -260,7 +260,7 @@ class Skills {
         target.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
             (user, target) => {
                 logBattle(`<span class='output-text-${target === player ? 'player' : 'enemy'}'>${target.name}</span> is stunned by Numb and skips their turn!`);
-                target.statusEffects = target.statusEffects.filter(e => e.name !== "Numb");
+                target.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
                 return true;
             }));
         user.statusEffects.push(new StatusEffect("READY", 1, 0, false, true, false, null, 
@@ -599,11 +599,11 @@ function updateBattleUI() {
         userName.textContent = player.name;
         userHp.textContent = `${player.hp}/${player.maxHp}`;
         userStatus.textContent = player.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None";
-        userSprite.src = player.sprite || "https://via.placeholder.com/120x160"; // Fallback
+        userSprite.src = player.sprite || "https://via.placeholder.com/120x160";
         opponentName.textContent = opponent.name;
         opponentHp.textContent = `${opponent.hp}/${opponent.maxHp}`;
         opponentStatus.textContent = opponent.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None";
-        opponentSprite.src = opponent.sprite || "https://via.placeholder.com/120x160"; // Fallback
+        opponentSprite.src = opponent.sprite || "https://via.placeholder.com/120x160";
     }
 }
 
@@ -636,7 +636,7 @@ const opponent = new Mob(
     [],
     [],
     [],
-    "https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/NINJA2.PNG" // Adjusted for local testing
+    "Assets/NINJA1.png"
 );
 
 // Initialize Game
