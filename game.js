@@ -636,7 +636,7 @@ const opponent = new Mob(
     [],
     [],
     [],
-    "Assets/NINJA1.png" // Adjusted for local testing
+    "https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/NINJA2.PNG" // Adjusted for local testing
 );
 
 // Initialize Game
