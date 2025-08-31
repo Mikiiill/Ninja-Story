@@ -3,35 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shinobi Way</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
-        div { margin: 20px; }
-        button { margin: 5px; padding: 10px; }
-        .output { border: 1px solid #ccc; padding: 10px; min-height: 100px; }
-        input { padding: 5px; }
-    </style>
+    <title>Shinobi Way: Naruto Card Battler</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="game">
-        <div id="start-screen" style="display: none;"></div>
-        <div id="name-selection" style="display: none;"></div>
-        <div id="game-screen" style="display: none;">
-            <h2>Game Screen</h2>
-            <div id="output" class="output"></div>
-            <div id="main-controls" style="display: none;"></div>
-            <div id="skill-controls" style="display: none;"></div>
+    <div class="game-container">
+        <!-- Battle Screen -->
+        <div class="battle-screen">
+            <div class="character user">
+                <h2 id="user-name">User</h2>
+                <img id="user-sprite" src="https://via.placeholder.com/150" alt="User Sprite">
+                <p>HP: <span id="user-hp">100/100</span></p>
+                <p>Status: <span id="user-status">None</span></p>
+            </div>
+            <div class="battle-log">
+                <h3>Battle Log</h3>
+                <div id="battle-log-content"></div>
+            </div>
+            <div class="character opponent">
+                <h2 id="opponent-name">Opponent</h2>
+                <img id="opponent-sprite" src="https://via.placeholder.com/150" alt="Opponent Sprite">
+                <p>HP: <span id="opponent-hp">100/100</span></p>
+                <p>Status: <span id="opponent-status">None</span></p>
+            </div>
         </div>
-        <div id="battle-screen" style="display: none;">
-            <h2>Battle</h2>
-            <div id="battle-output" class="output"></div>
-            <div id="jutsu-controls"></div>
+
+        <!-- Jutsu Selection Panel -->
+        <div class="jutsu-select hidden">
+            <h3>Select a Jutsu</h3>
+            <div id="jutsu-options"></div>
+            <button onclick="closeJutsuSelect()">Cancel</button>
         </div>
-        <div id="style-controls" style="display: none;"></div>
-        <div id="event-controls" style="display: none;"></div>
+
+        <!-- Jutsu Management -->
+        <div class="jutsu-management">
+            <h3>Active Jutsu (Max 10)</h3>
+            <div id="active-jutsu" class="jutsu-list"></div>
+            <h3>Inventory</h3>
+            <div id="inventory-jutsu" class="jutsu-list"></div>
+            <button onclick="openJutsuSelect()">Select New Jutsu</button>
+            <button onclick="startBattle()">Start Battle</button>
+        </div>
     </div>
-    <script src="Characters.js"></script>
-    <script src="Jutsu.js"></script>
-    <script src="main.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>
