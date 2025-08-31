@@ -206,24 +206,6 @@
             }
         }
 
-        function startTutorialFight() {
-            game.battleType = "event";
-            game.enemy = {
-                name: "Training Dummy",
-                hp: 6,
-                maxHp: 6,
-                skills: [new Skills().findSkill("Healing Stance")],
-                skillInventory: [],
-                statusEffects: [],
-                lastVillage: "Newb Village"
-            };
-            if (typeof startBattle === 'function') {
-                startBattle(game.player, game.enemy);
-            } else {
-                console.error("startBattle not found");
-            }
-        }
-
         function startTutorial() {
             let nameInput = document.getElementById("name-input");
             if (nameInput) {
