@@ -53,6 +53,10 @@
             transition: background-color 0.3s;
             min-width: 150px;
             touch-action: manipulation;
+            display: none; /* Hidden until loaded */
+        }
+        button.loaded {
+            display: block; /* Shown after loading */
         }
         button:hover {
             background-color: #777;
@@ -162,7 +166,7 @@
                     let nameInput = startControls.querySelector("#name-input");
                     let startButton = startControls.querySelector("#start-button");
                     if (!nameInput || !startButton) {
-                        startControls.innerHTML = '<input type="text" id="name-input" class="name-input" placeholder="Enter your name, future shinobi"><button id="start-button" class="start-button" onclick="startTutorial()">Start Game</button>';
+                        startControls.innerHTML = '<input type="text" id="name-input" class="name-input" placeholder="Enter your name, future shinobi"><button id="start-button" class="start-button loaded" onclick="startTutorial()">Start Game</button>';
                     }
                 }
                 document.getElementById("style-controls").innerHTML = "";
@@ -219,6 +223,7 @@
                         console.error("[ERROR]: SparringDummy is undefined. Check Characters.js loading.");
                         return;
                     }
+                    console.log("[DEBUG]: SparringDummy loaded:", SparringDummy);
                     game.battleType = "eventFight";
                     game.enemy = Object.assign({}, SparringDummy); // Shallow copy
                     console.log("[DEBUG]: Before startBattle - enemy:", game.enemy);
@@ -227,6 +232,7 @@
                         console.error("[ERROR]: startBattle is undefined. Check Battle.js loading.");
                         return;
                     }
+                    console.log("[DEBUG]: startBattle function available, calling with:", { player: game.player.name, enemy: game.enemy.name });
                     startBattle(game.player, game.enemy);
                     console.log("[DEBUG]: After startBattle - enemy:", game.enemy);
                     if (game.enemy.name !== "SparringDummy") {
@@ -316,6 +322,16 @@
 
             function initializeGame() {
                 resetGameState();
+                // Check script loading and show button
+                window.addEventListener('load', () => {
+                    console.log("[DEBUG]: All scripts loaded, checking dependencies");
+                    if (typeof SparringDummy !== "undefined" && typeof startBattle !== "undefined") {
+                        console.log("[DEBUG]: Dependencies loaded, showing Start Game button");
+                        document.getElementById("start-button").classList.add("loaded");
+                    } else {
+                        console.error("[ERROR]: Missing dependencies - SparringDummy:", typeof SparringDummy, "startBattle:", typeof startBattle);
+                    }
+                });
             }
 
             initializeGame(); // Initial call after DOM is ready
