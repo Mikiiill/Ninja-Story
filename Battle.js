@@ -8,7 +8,12 @@ function startBattle(player, enemy) {
             let randIndex = Math.floor(Math.random() * player.skillInventory.length);
             player.skills.push(player.skillInventory.splice(randIndex, 1)[0]);
         }
-        game.enemy = enemy; // Ensure enemy is not overridden
+        game.enemy = enemy; // Assign passed enemy
+        // Validate enemy name for tutorial
+        if (game.battleType === "eventFight" && game.enemy.name !== "SpecialTrainingDummy") {
+            console.warn("[WARN]: startBattle overriding enemy to SpecialTrainingDummy");
+            game.enemy = { ...SpecialTrainingDummy }; // Force correct enemy if mismatch
+        }
         console.log("[DEBUG]: startBattle enemy set to:", game.enemy); // Debug enemy
         updateStatus();
         game.battleScene = { queueOutput: queueOutput };
@@ -185,12 +190,12 @@ function endBattle() {
                     eventControls.innerHTML = `<button onclick="startEventFight()">Start Event Fight</button><button onclick="talkToNPC()">Talk to NPC</button><button onclick="returnToVillage()">Return to ${game.player.lastVillage}</button>`;
                 }
             }
-        } else if (game.battleType === "eventFight") {
+        } else if (game.battleType === "eventFight" && game.target.name === "SpecialTrainingDummy") {
             console.log("[DEBUG]: Event fight win, gameState:", game.gameState); // Debug state
-            // Reward handled by battleScene.onEnd in startup.js
+            applyEventReward(game.target.name); // Trigger reward
         }
-    } else if (game.user.hp <= 0) {
-        ArriveVillage(game.user.lastVillage); // Only on loss
+    } else if (game.user.hp <= 0 && !game.battleType === "eventFight") { // Only call ArriveVillage on loss for non-event fights
+        ArriveVillage(game.user.lastVillage);
     }
     game.user = null;
     game.target = null;
