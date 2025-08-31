@@ -4,125 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shinobi Way: Naruto Card Battler</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Arial', sans-serif;
-            background: url('https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/Back.png') no-repeat center center fixed;
-            background-size: cover;
-            color: #000;
-        }
-
-        .game-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .battle-screen {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.9);
-            border: 4px solid #000;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-        }
-
-        .character {
-            width: 30%;
-            text-align: center;
-        }
-
-        .character img {
-            border: 3px solid #000;
-            border-radius: 10px;
-            width: 150px;
-            height: 150px;
-            object-fit: cover;
-        }
-
-        .battle-log {
-            width: 30%;
-            background: #fff;
-            border: 2px solid #000;
-            border-radius: 5px;
-            padding: 10px;
-            max-height: 300px;
-            overflow-y: auto;
-            text-align: left;
-        }
-
-        .jutsu-select, .jutsu-management {
-            background: rgba(255, 255, 255, 0.9);
-            border: 4px solid #000;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .jutsu-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .jutsu-card {
-            background: #fff;
-            border: 3px solid #000;
-            border-radius: 8px;
-            padding: 10px;
-            width: 150px;
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.2s;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-        }
-
-        .jutsu-card:hover {
-            transform: scale(1.05);
-        }
-
-        .jutsu-card h4 {
-            margin: 0;
-            font-size: 1.1em;
-            text-transform: uppercase;
-        }
-
-        .jutsu-card p {
-            margin: 5px 0;
-            font-size: 0.9em;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        button {
-            background: #d2b48c; /* Light brown scroll-like */
-            color: #000;
-            border: 2px solid #8b4513; /* Darker brown border */
-            border-radius: 5px;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-size: 1em;
-            margin: 10px;
-            background-image: linear-gradient(to bottom, #e6d7b8, #d2b48c);
-            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-
-        button:hover {
-            background: #c19a6c;
-        }
-
-        button:disabled {
-            background: #d3d3d3;
-            cursor: not-allowed;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="game-container">
@@ -150,20 +32,17 @@
         <div class="jutsu-select hidden">
             <h3>Select a Jutsu</h3>
             <div id="jutsu-options"></div>
-            <button id="cancel-jutsu-btn" onclick="closeJutsuSelect()">Cancel</button>
+            <button onclick="closeJutsuSelect()">Cancel</button>
         </div>
 
         <!-- Jutsu Management -->
         <div class="jutsu-management">
-            <button id="toggle-jutsu-btn" onclick="toggleJutsuMenu()">Toggle Jutsu Menu</button>
-            <div id="jutsu-management-content" class="jutsu-management-content">
-                <h3>Active Jutsu (Max 10)</h3>
-                <div id="active-jutsu" class="jutsu-list"></div>
-                <h3>Inventory</h3>
-                <div id="inventory-jutsu" class="jutsu-list"></div>
-                <button id="select-jutsu-btn" onclick="openJutsuSelect()">Select New Jutsu</button>
-                <button id="start-battle-btn" onclick="startBattle()">Start Battle</button>
-            </div>
+            <h3>Active Jutsu (Max 10)</h3>
+            <div id="active-jutsu" class="jutsu-list"></div>
+            <h3>Inventory</h3>
+            <div id="inventory-jutsu" class="jutsu-list"></div>
+            <button onclick="openJutsuSelect()">Select New Jutsu</button>
+            <button onclick="startBattle()">Start Battle</button>
         </div>
     </div>
     <script src="game.js"></script>
