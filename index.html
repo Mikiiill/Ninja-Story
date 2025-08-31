@@ -210,14 +210,14 @@
 
         function startTutorialFight() {
             game.battleType = "eventFight";
-            game.enemy = SpecialTrainingDummy; // Use SpecialTrainingDummy from Characters.js
+            game.enemy = SparringDummy; // Use SpecialTrainingDummy from Characters.js
             console.log("[DEBUG]: Before startBattle - enemy:", game.enemy);
             game.gameState = "battle";
             startBattle(game.player, game.enemy);
             console.log("[DEBUG]: After startBattle - enemy:", game.enemy);
-            if (game.enemy.name !== "SpecialTrainingDummy") {
+            if (game.enemy.name !== "SparringDummy") {
                 console.error("[ERROR]: Enemy name overridden to:", game.enemy.name);
-                game.enemy = SpecialTrainingDummy;
+                game.enemy = SparringDummy;
             }
         }
 
