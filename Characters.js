@@ -63,3 +63,15 @@ function generateTravelEnemy() {
     let name = game.player.Rank === "Genin" ? "Genin Opponent" : game.player.Rank === "Chunin" ? "Chunin Opponent" : "Jounin Opponent";
     return new Mob(name, hp, hp, rank, randomStyles, skills, []);
 }
+
+
+// Characters.js (append this)
+const SpecialTrainingDummy = {
+    name: "SpecialTrainingDummy",
+    hp: 6,
+    maxHp: 6,
+    skills: [new Skills().findSkill("Healing Stance"), new Skills().findSkill("Bite")],
+    skillInventory: [],
+    statusEffects: [{ name: "Burn", duration: 2, effect: (target) => target.hp = Math.max(0, target.hp - 1) }],
+    lastVillage: "Newb Village"
+};
