@@ -186,7 +186,7 @@ function endBattle() {
                     eventControls.innerHTML = `<button onclick="startEventFight()">Start Event Fight</button><button onclick="talkToNPC()">Talk to NPC</button><button onclick="returnToVillage()">Return to ${game.player.lastVillage}</button>`;
                 }
             }
-        } else if (game.battleType === "eventFight" && game.target.name === "SparringDummy") { // Updated to SparringDummy
+        } else if (game.battleType === "eventFight" && game.target.name === "SparringDummy") {
             console.log("[DEBUG]: Event fight win, gameState:", game.gameState);
             applyEventReward(game.target.name);
         }
@@ -239,16 +239,11 @@ function queueOutput(text) {
 function updateStatus() {
     try {
         console.log("[DEBUG]: Updating status", { user: game.user ? game.user.name : "null", target: game.target ? game.target.name : "null", userEffects: game.user ? game.user.statusEffects : [], targetEffects: game.target ? game.target.statusEffects : [], gameState: game.gameState });
-        let playerHp = document.getElementById("player-hp");
-        let enemyHp = document.getElementById("enemy-hp");
-        let log = document.getElementById("battle-log");
-        if (playerHp && enemyHp && game.user && game.target) {
-            playerHp.textContent = `${game.user.name} [HP: ${game.user.hp}/${game.user.maxHp}]`;
-            enemyHp.textContent = `${game.target.name} [HP: ${game.target.hp}/${game.target.maxHp}]`;
-            if (log) {
-                log.innerHTML += `<p>Status - ${game.user.name}: HP ${game.user.hp}/${game.user.maxHp}, Effects: ${game.user.statusEffects.map(e => e.name).join(", ")}</p>`;
-                log.innerHTML += `<p>Status - ${game.target.name}: HP ${game.target.hp}/${game.target.maxHp}, Effects: ${game.target.statusEffects.map(e => e.name).join(", ")}</p>`;
-            }
+        let playerStatus = document.getElementById("player-status");
+        let enemyStatus = document.getElementById("enemy-status");
+        if (playerStatus && enemyStatus && game.user && game.target) {
+            playerStatus.innerHTML = `${game.user.name} [HP: <span class="player-hp">${game.user.hp}/${game.user.maxHp}</span>]`;
+            enemyStatus.innerHTML = `${game.target.name} [HP: <span class="enemy-hp">${game.target.hp}/${game.target.maxHp}</span>]`;
         }
     } catch (e) {
         console.error("[ERROR]: Update status failed:", e);
@@ -256,7 +251,7 @@ function updateStatus() {
 }
 
 const EventRewards = {
-    "SparringDummy": { // Updated to SparringDummy
+    "SparringDummy": {
         reward: () => {
             queueOutput("good!");
             game.gameState = "chooseStyles";
@@ -271,4 +266,4 @@ const EventRewards = {
 function applyEventReward(enemyName) {
     const reward = EventRewards[enemyName] || EventRewards["Default"];
     reward.reward();
-    }
+}
