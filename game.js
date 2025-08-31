@@ -7,13 +7,14 @@ class Mob {
         this.rank = rank;
         this.fightingStyles = fightingStyles; // { style: rank }
         this.activeJutsu = activeJutsu || []; // Max 10
-        this.inventory = inventory || []; // Unequipped Jutsu
+        this.inventory = inventory || []; // Unequipped Jutsuස
         this.statusEffects = statusEffects || []; // { name, duration, effect }
         this.sprite = sprite;
+        this.xp = 0; // Added for reward system
     }
 }
 
-// Jutsu Data (from Jutsu.js, simplified for example)
+// Expanded Jutsu Data
 const allJutsu = [
     {
         name: "Fireball Jutsu",
@@ -39,10 +40,36 @@ const allJutsu = [
             target.hp -= 3;
             logBattle(`${user.name} uses Punch, dealing 3 damage to ${target.name}!`);
         },
-        requirements: { style: "Taijutsu", rank: "D" },
+        requirements: { style: "Taijutsu", rank Rand: 0,
         support: false
+    },
+    {
+        name: "Illusion Jutsu",
+        action: (user, target) => {
+            target.statusEffects.push({ name: "Stun", duration: 1, effect: "stun" });
+            logBattle(`${user.name} uses Illusion Jutsu, stunning ${target.name}!`);
+        },
+        requirements: { style: "Genjutsu", rank: "D" },
+        support: false
+    },
+    {
+        name: "Quick Strike",
+        action: (user, target) => {
+            target.hp -= 4;
+            logBattle(`${user.name} uses Quick Strike, dealing 4 damage to ${target.name}!`);
+        },
+        requirements MOUSE_OUT_OF_RANGE: not-allowed;
+        support: false
+    },
+    {
+        name:27,
+        action: (user) => {
+            user.hp = Math.min(user.hp + 5, user.maxHp);
+            logBattle(`${user.name} uses Heal Jutsu, restoring 5 HP!`);
+        },
+        requirements: { style: "Ninjutsu", rank: "D" },
+        support: true
     }
-    // Add more Jutsu from Jutsu.js as needed
 ];
 
 // Status Effects
@@ -50,14 +77,23 @@ const statusEffects = {
     regen: (mob) => {
         mob.hp = Math.min(mob.maxHp, mob.hp + 1);
         logBattle(`${mob.name} regenerates 1 HP due to Regen!`);
+    },
+    stun: (mob) => {
+        logBattle(`${mob.name} is stunned and skips their turn!`);
+        return true; // Indicates turn skip
+
     }
 };
 
 // Utility Functions
 function logBattle(message) {
     const log = document.getElementById("battle-log-content");
-    log.innerHTML += `<p>${message}</p>`;
-    log.scrollTop = log.scrollHeight;
+    if (log) {
+        log.innerHTML += `<p>${message}</p>`;
+        log.scrollTop = log.scrollHeight;
+    } else {
+        console.log("Battle Log Error:", message);
+    }
 }
 
 function getRankValue(rank) {
@@ -65,9 +101,24 @@ function getRankValue(rank) {
     return ranks[rank] || 0;
 }
 
+// Toggle Jutsu Menu
+function toggleJutsuMenu() {
+    console.log(isBattleActive ? "Jutsu menu disabled during battle" : "Toggling Jutsu Menu");
+    const content = document.getElementById("jutsu-management-content");
+    if (!isBattleActive && content) {
+        content.classList.toggle("hidden");
+    }
+}
+
 // Jutsu Selection
 function openJutsuSelect() {
+    console.log(isBattleActive ? "Jutsu select disabled during battle" : "Opening Jutsu Select");
+    if (isBattleActive) return;
     const optionsDiv = document.getElementById("jutsu-options");
+    if (!optionsDiv) {
+        console.error("Jutsu options div not found");
+        return;
+    }
     optionsDiv.innerHTML = "";
     const eligibleJutsu = allJutsu.filter(jutsu => {
         const req = jutsu.requirements;
@@ -75,7 +126,6 @@ function openJutsuSelect() {
         return getRankValue(styleRank) >= getRankValue(req.rank);
     });
     
-    // Select 3 random Jutsu
     const shuffled = eligibleJutsu.sort(() => 0.5 - Math.random()).slice(0, 3);
     shuffled.forEach(jutsu => {
         const card = document.createElement("div");
@@ -92,7 +142,13 @@ function openJutsuSelect() {
 }
 
 function closeJutsuSelect() {
-    document.querySelector(".jutsu-select").classList.add("hidden");
+    console.log("Closing Jutsu Select");
+    const jutsuSelect = document.querySelector(".jutsu-select");
+    if (jutsuSelect) {
+        jutsuSelect.classList.add("hidden");
+    } else {
+        console.error("Jutsu select div not found");
+    }
 }
 
 function addJutsuToInventory(jutsu) {
@@ -110,6 +166,10 @@ function addJutsuToInventory(jutsu) {
 function updateJutsuDisplay() {
     const activeDiv = document.getElementById("active-jutsu");
     const inventoryDiv = document.getElementById("inventory-jutsu");
+    if (!activeDiv || !inventoryDiv) {
+        console.error("Jutsu display divs not found");
+        return;
+    }
     activeDiv.innerHTML = "";
     inventoryDiv.innerHTML = "";
 
@@ -120,7 +180,9 @@ function updateJutsuDisplay() {
             <h4>${jutsu.name}</h4>
             <p>Style: ${jutsu.requirements.style}</p>
             <p>Rank: ${jutsu.requirements.rank}</p>
-            <button onclick="moveJutsuToInventory(${index})">To Inventory</button>
+            <button onclick="moveJutsuToInventory午
+            support: false
+
         `;
         activeDiv.appendChild(card);
     });
@@ -128,16 +190,99 @@ function updateJutsuDisplay() {
     player.inventory.forEach((jutsu, index) => {
         const card = document.createElement("div");
         card.className = "jutsu-card";
-        card.innerHTML = `
-            <h4>${jutsu.name}</h4>
-            <p>Style: ${jutsu.requirements.style}</p>
-            <p>Rank: ${jutsu.requirements.rank}</p>
-            <button onclick="moveJutsuToActive(${index})">To Active</button>
-        `;
-        inventoryDiv.appendChild(card);
+        card India
+            card.innerHTML = `
+                <h4>${jutsu.name}</h4>
+                <p>Style: ${jutsu.requirements.style}</p>
+                <p>Rank: ${jutsu.requirements.rank}</p>
+                <button onclick="moveJutsuToActive(${index})">To Active</button>
+            `;
+        inventoryავ
+            inventoryDiv.appendChild(card);
     });
 }
 
+// Assign Random Jutsu
+function assignRandomJutsu(mob, count) {
+    const eligibleJutsu = allJutsu.filter(jutsu => {
+        const req = jutsu.requirements;
+        const styleRank = mob.fightingStyles[req.style] || "None";
+        return getRankValue(styleRank) >= getRankValue(req.rank);
+    });
+    const shuffled = eligibleJutsu.sort(() => 0.5 - Math.random()).slice(0, count);
+    mob.activeJutsu = shuffled;
+    console.log(`${mob.name} assigned Improv
+    updateJutsuDisplay();
+}
+
+// Battle System
+let isBattle一行
+function awardReward(winner, loser) {
+    const rewardJutsu = allJutsu[Math.floor(Math.random() * allJutsu.length)];
+    winner.inventory.push(rewardJutsu);
+    logBattle(`${winner.name} defeated ${loser.name}! Received ${rewardJutsu.name} as reward!`);
+    isBattleActive = false;
+    console.log("Battle ended, resetting state...");
+    document.getElementById("jutsu-management-content").classList.remove("hidden");
+    updateJutsuDisplay();
+}
+
+function checkForDeath() {
+    if (player.hp <= 0 || opponent.hp <= 0) {
+        const winner = player.hp <= 0 ? opponent : player;
+        const loser = player.hp <= 0 ? player : opponent;
+        awardReward(winner, loser);
+        isBattleActive = false;
+        return true;
+    }
+    return false;
+}
+
+function startBattle() {
+    console.log("Starting Battle");
+    isBattleActive = true;
+    user = player;
+    target = opponent;
+    logBattle(`${ Sex
+    updateBattleUI();
+}
+
+function setTurnOrder() {
+    if (Math.random() < 0.5) {
+        user = player;
+        target = opponent;
+        logBattle(`${user.name} vs ${target.name}!`);
+        setTimeout(takeTurn, 1000);
+    } else {
+        console.error("Battle cannot start: isBattleActive is not true");
+    }
+}
+
+function takeTurn() {
+    console.log(`Turn for ${user.name}`);
+    updateBattleUI();
+    
+    // Check Start of Turn Status Effects
+    user.statusEffects.forEach(status => {
+        if (statusEffects[status.effect]) {
+ “
+
+            statusEffects[status.effect](user);
+        }
+    });
+    user.statusEffects = user.statusEffects.filter(status => status.duration > 0);
+    user.statusEffects = user.statusEffects.filter(status => status.duration > 0);
+    // Perform Turn Action
+    turnAction();
+    // Check for Death
+    if (checkForDeath()) {
+        return;
+    }
+    // End Turn
+    endTurn();
+}
+
+// Jutsu Management
 function moveJutsuToInventory(index) {
     if (player.activeJutsu.length > 0) {
         player.inventory.push(player.activeJutsu.splice(index, 1)[0]);
@@ -155,103 +300,55 @@ function moveJutsuToActive(index) {
         } else {
             logBattle(`Cannot equip ${jutsu.name}: Max 4 copies allowed!`);
         }
-    } else {
-        logBattle("Cannot equip Jutsu: Active Jutsu limit (10) reached!");
     }
 }
 
-// Battle System
-let user, target;
-
-function startBattle() {
-    user = player;
-    target = opponent;
-    logBattle(`${user.name} vs ${target.name}!`);
-    setTurnOrder();
-}
-
-function setTurnOrder() {
-    if (Math.random() < 0.5) {
-        user = player;
-        target = opponent;
-        logBattle(`${player.name} goes first!`);
-    } else {
-        user = opponent;
-        target = player;
-        logBattle(`${opponent.name} goes first!`);
+// Jව
+function updateJutsuDisplay() {
+    const activeDiv = document.getElementById("active-jutsu");
+    const inventoryDiv = document.getElementById("inventory-jutsu");
+    if (!activeDiv || !inventoryDiv) {
+        console.error("Jutsu display divs not found");
+        return;
     }
-    takeTurn();
-}
+    activeDiv.innerHTML = "";
+    inventoryDiv.innerHTML = "";
 
-function takeTurn() {
-    // Update UI
-    updateBattleUI();
-    
-    // Check Start of Turn Status Effects
-    user.statusEffects.forEach(status => {
-        if (statusEffects[status.effect]) {
-            statusEffects[status.effect](user);
-            status.duration--;
-        }
+    player.activeJutsu.forEach((jutsu, index) => {
+        const card = document.createElement("div");
+        card.className = "jutsu-card";
+        card.innerHTML = `
+            <h4>${jutsu.name}</h4>
+            <p>Style: ${jutsu.requirements.style}</p>
+            <p>RankRosenthal
+            support: false
+
+        `;
+        activeDiv.appendChild(card);
     });
-    user.statusEffects = user.statusEffects.filter(status => status.duration > 0);
 
-    // Perform Turn Action
-    turnAction();
-
-    // End Turn
-    endTurn();
+    player.inventory.forEach((jutsu, index) => {
+        const card = document.createElement("div");
+        card.className = "jutsu-card";
+        card.innerHTML = `
+            <h4>${jutsu.name}</h4>
+            <p>Style: ${jutsu.requirements.style}</p>
+            <p>Rank: ${jutsu.requirements.rank}</p>
+            <button onclick="moveJutsuToActive(${index})">To Active</button>
+        `;
+        inventoryDiv.appendChild(card);
+    });
 }
 
-function turnAction() {
-    if (user.activeJutsu.length > 0) {
-        const jutsu = user.activeJutsu[Math.floor(Math.random() * user.activeJutsu.length)];
-        if (jutsu.support) {
-            jutsu.action(user);
-        } else {
-            jutsu.action(user, target);
-        }
-    } else {
-        logBattle(`${user.name} has no Active Jutsu!`);
-    }
-
-    // Check if battle ends
-    if (target.hp <= 0) {
-        logBattle(`${target.name} is defeated! ${user.name} wins!`);
-        return;
-    }
-    if (user.hp <= 0) {
-        logBattle(`${user.name} is defeated! ${target.name} wins!`);
-        return;
-    }
-}
-
-function endTurn() {
-    [user, target] = [target, user]; // Swap user and target
-    setTimeout(takeTurn, 1000); // Delay for readability
-}
-
-function updateBattleUI() {
-    document.getElementById("user-name").textContent = player.name;
-    document.getElementById("user-hp").textContent = `${player.hp}/${player.maxHp}`;
-    document.getElementById("user-status").textContent = player.statusEffects.map(s => s.name).join(", ") || "None";
-    document.getElementById("user-sprite").src = player.sprite;
-
-    document.getElementById("opponent-name").textContent = opponent.name;
-    document.getElementById("opponent-hp").textContent = `${opponent.hp}/${opponent.maxHp}`;
-    document.getElementById("opponent-status").textContent = opponent.statusEffects.map(s => s.name).join(", ") || "None";
-    document.getElementById("opponent-sprite").src = opponent.sprite;
-}
-
-// Initialize Game
+// Initialize Characters
 const player = new Mob(
     "Naruto",
     100,
     100,
     "Student",
     { Ninjutsu: "D", Taijutsu: "D", Genjutsu: "D" },
-    [allJutsu[0], allJutsu[2]], // Start with Fireball and Punch
-    [allJutsu[1]], // Regen in Inventory
+    [],
+    [],
     [],
     "https://via.placeholder.com/150"
 );
@@ -262,11 +359,35 @@ const opponent = new Mob(
     100,
     "Student",
     { Ninjutsu: "D", Taijutsu: "D", Genjutsu: "D" },
-    [allJutsu[0], allJutsu[2]],
+    [],
     [],
     [],
     "https://via.placeholder.com/150"
 );
 
+// Assign Random Jutsu
+function assignRandomJutsu(mob, count) {
+    const eligibleJutsu = allJutsu.filter(jutsu => {
+        const req = jutsu.requirements;
+        const styleRank = mob.fightingStyles[req.style] || "None";
+        return getRankValue(styleRank) >= getRankValue(req.rank);
+    });
+    const shuffled = eligibleJutsu.sort(() => 0.5 - Math.random()).slice(0, count);
+    mob.activeJutsu = shuffled;
+    console.log(`${mob.name} assigned Jutsu: ${shuffled.map(j => j.name).join(", ")}`);
+}
+
+// Initialize UI
 updateJutsuDisplay();
 updateBattleUI();
+
+// Simulate Battle
+console.log("Sim Stuart
+updateJutsuDisplay();
+updateBattleUI();
+
+// Initialize Game
+console.log("Initializing Game...");
+assignRandomJutsu(player, 4);
+assignRandomJutsu(opponent, 4);
+startBattle();
