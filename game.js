@@ -287,7 +287,7 @@ class Skills {
             (user, target, skillStyle) => {
                 if (skillStyle === "genjutsu") {
                     logBattle(`<span class='output-text-${user === player ? 'player' : 'enemy'}'>${user.name}</span> uses Release to resist the Genjutsu attack!`);
-                    user.statusEffects = user.statusEffects.filter(e => e.name === "Release");
+                    user.statusEffects = user.statusEffects.filter(e => e.name !== "Release");
                     return true;
                 }
                 return false;
@@ -329,10 +329,13 @@ function compareRanks(rank1, rank2) {
 function logBattle(message) {
     const log = document.getElementById("battle-log-content");
     if (log) {
-        log.innerHTML += `<p>${message}</p>`;
+        const newMessage = document.createElement("p");
+        newMessage.innerHTML = message;
+        log.appendChild(newMessage);
         setTimeout(() => {
-            log.scrollTop = log.scrollHeight; // Ensure auto-scroll on mobile
-        }, 100);
+            log.scrollTop = log.scrollHeight; // Primary auto-scroll
+            newMessage.scrollIntoView({ behavior: "smooth", block: "end" }); // Fallback
+        }, 200); // Increased delay for mobile
     }
 }
 
@@ -586,17 +589,21 @@ function updateBattleUI() {
     const userName = document.getElementById("user-name");
     const userHp = document.getElementById("user-hp");
     const userStatus = document.getElementById("user-status");
+    const userSprite = document.getElementById("user-sprite");
     const opponentName = document.getElementById("opponent-name");
     const opponentHp = document.getElementById("opponent-hp");
     const opponentStatus = document.getElementById("opponent-status");
+    const opponentSprite = document.getElementById("opponent-sprite");
 
-    if (userName && userHp && userStatus && opponentName && opponentHp && opponentStatus) {
+    if (userName && userHp && userStatus && userSprite && opponentName && opponentHp && opponentStatus && opponentSprite) {
         userName.textContent = player.name;
         userHp.textContent = `${player.hp}/${player.maxHp}`;
         userStatus.textContent = player.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None";
+        userSprite.src = player.sprite || "https://via.placeholder.com/120x160"; // Fallback
         opponentName.textContent = opponent.name;
         opponentHp.textContent = `${opponent.hp}/${opponent.maxHp}`;
         opponentStatus.textContent = opponent.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None";
+        opponentSprite.src = opponent.sprite || "https://via.placeholder.com/120x160"; // Fallback
     }
 }
 
@@ -629,7 +636,7 @@ const opponent = new Mob(
     [],
     [],
     [],
-    "/Assets/NINJA1.png"
+    "Assets/NINJA1.png" // Adjusted for local testing
 );
 
 // Initialize Game
