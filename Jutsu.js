@@ -1,316 +1,81 @@
-class StatusEffect {
-    constructor(name, duration, damage = 0, startOfTurn = false, active = false, triggered = false, 
-                startOfTurnFunction = null, activeFunction = null, triggeredFunction = null) {
-        this.name = name;
-        this.duration = duration;
-        this.damage = damage;
-        this.new = true;
-        this.startOfTurn = startOfTurn;
-        this.active = active;
-        this.triggered = triggered;
-        this.startOfTurnFunction = startOfTurnFunction;
-        this.activeFunction = activeFunction;
-        this.triggeredFunction = triggeredFunction;
-    }
-}
-
-class BattleSkill {
-    constructor(name, attributes, requirements, skillFunction, style, support, rank) {
-        this.name = name;
-        this.attributes = attributes || [];
-        this.requirements = requirements || {};
-        this.skillFunction = skillFunction;
-        this.style = style;
-        this.support = support || false;
-        this.rank = rank;
-    }
-}
-
-class Skills {
-    constructor() {
-        this.skills = [];
-        this.initializeSkills();
-    }
-
-    initializeSkills() {
-        this.skills = [
-            new BattleSkill("Barrage", ["Taijutsu"], {}, this.barrage.bind(this), "neutral", false, "D-Rank"),
-            new BattleSkill("Substitution Jutsu", [], { Ninjutsu: "D-Rank", Taijutsu: "D-Rank" }, this.substitutionJutsu.bind(this), "neutral", true, "D-Rank"),
-            new BattleSkill("Shadow Clone Jutsu", ["Ninjutsu"], { Ninjutsu: "C-Rank" }, this.shadowCloneJutsu.bind(this), "neutral", true, "C-Rank"),
-            new BattleSkill("Demonic Vision", ["Genjutsu"], { Genjutsu: "C-Rank" }, this.demonicVision.bind(this), "genjutsu", false, "C-Rank"),
-            new BattleSkill("Healing Stance", ["Ninjutsu"], {}, this.healingStance.bind(this), "neutral", true, "D-Rank"),
-            new BattleSkill("Earth Dome Jutsu", ["Earth", "Ninjutsu"], { Earth: "C-Rank" }, this.earthDomeJutsu.bind(this), "earth", true, "C-Rank"),
-            new BattleSkill("Flame Throw Jutsu", ["Fire", "Ninjutsu"], { Fire: "C-Rank", Ninjutsu: "C-Rank" }, this.flameThrowJutsu.bind(this), "fire", false, "B-Rank"),
-            new BattleSkill("Static Field Jutsu", ["Lightning", "Ninjutsu"], { Lightning: "C-Rank" }, this.staticFieldJutsu.bind(this), "lightning", false, "C-Rank"),
-            new BattleSkill("Fireball Jutsu", ["Fire", "Ninjutsu"], { Fire: "C-Rank" }, this.fireballJutsu.bind(this), "fire", false, "C-Rank"),
-            new BattleSkill("Dynamic Entry", ["Taijutsu"], { Taijutsu: "C-Rank" }, this.dynamicEntry.bind(this), "neutral", false, "C-Rank"),
-            new BattleSkill("Falcon Drop", ["Taijutsu"], { Taijutsu: "B-Rank" }, this.falconDrop.bind(this), "neutral", false, "B-Rank"),
-            new BattleSkill("Rock Smash Jutsu", ["Earth", "Taijutsu"], { Earth: "B-Rank" }, this.rockSmashJutsu.bind(this), "earth", false, "B-Rank"),
-            new BattleSkill("Genjutsu Release", ["Genjutsu"], { Genjutsu: "B-Rank" }, this.genjutsuRelease.bind(this), "genjutsu", true, "B-Rank"),
-            new BattleSkill("Lightning Edge", ["Lightning", "Ninjutsu"], { Lightning: "C-Rank", Ninjutsu: "C-Rank" }, this.lightningEdge.bind(this), "lightning", false, "B-Rank"),
-            new BattleSkill("Bite", ["Feral"], { Feral: "C-Rank" }, this.bite.bind(this), "feral", false, "C-Rank")
-        ];
-    }
-
-    canUseSkill(mob, skill) {
-        return Object.keys(skill.requirements).every(key => mob.ninjaStyles[key] && compareRanks(mob.ninjaStyles[key], skill.requirements[key]) >= 0);
-    }
-
-    findSkill(name) {
-        return this.skills.find(skill => skill.name === name);
-    }
-
-    barrage(user, target, scene) {
-        let baseDamage = Math.floor(Math.random() * 2) + 1;
-        let comboDamage = Math.floor(Math.random() * 2) + 1;
-        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - baseDamage));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> attacks <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> with <span class="output-text-neutral">Barrage</span> for ${baseDamage} damage!`);
-        if (target.hp > 0) {
-            target.hp = Math.max(0, Math.min(target.maxHp, target.hp - comboDamage));
-            scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> combos ${target.name} for ${comboDamage} damage!`);
+window.jutsu = {
+    "Barrage": { name: "Barrage", style: "Taijutsu", rank: "E-Rank", damage: 1, combo: 1, support: false, skillFunction: function(user, target, scene) {
+        let totalDamage = this.damage + (Math.random() < 0.5 ? this.combo : 0);
+        target.hp -= totalDamage;
+        scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> attacks ${target.name} with ${this.name} for ${this.damage} damage!`);
+        if (totalDamage > this.damage) {
+            scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> combos ${target.name} for ${this.combo} damage!`);
         }
-        return target.hp <= 0;
-    }
-
-    substitutionJutsu(user, target, scene) {
-        user.statusEffects.push(new StatusEffect("Swap", 1, 0, false, false, true, null, null, 
-            (user, target, scene, skillStyle) => {
-                scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> uses Substitution to dodge the attack with a log!`);
-                user.statusEffects = user.statusEffects.filter(e => e.name !== "Swap");
-                return true;
-            }));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> prepares <span class="output-text-neutral">Substitution Jutsu</span> <span class="status-substitution">🪵</span>!`);
-        return true;
-    }
-
-    shadowCloneJutsu(user, target, scene) {
-        if (user.hp < 2) {
-            scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> does not have enough HP to cast <span class="output-text-neutral">Shadow Clone Jutsu</span>!`);
+    }},
+    "Healing Stance": { name: "Healing Stance", style: "Medical", rank: "E-Rank", support: true, skillFunction: function(user, target, scene) {
+        user.statusEffects.push({ name: "Regen", startOfTurn: true, startOfTurnFunction: function(u, t, s) {
+            u.hp = Math.min(u.maxHp, u.hp + 1);
+            s.queueOutput(`<span class='output-text-${u === game.player ? 'player' : 'enemy'}'>${u.name}</span> heals 1 HP from Regen 🌿!`);
             return false;
+        }});
+        scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> enters Healing Stance 🌿!`);
+    }},
+    "Substitution Jutsu": { name: "Substitution Jutsu", style: "Ninjutsu", rank: "D-Rank", support: true, skillFunction: function(user, target, scene) {
+        if (Math.random() < 0.5) {
+            let tempHp = user.hp;
+            user.hp = target.hp;
+            target.hp = tempHp;
+            scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> uses ${this.name} to swap HP with ${target.name}!`);
         }
-        let cloneCount = user.statusEffects.filter(e => e.name === "ShadowCloneEffect").length;
-        if (cloneCount >= 3) {
-            scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> already has the maximum of 3 shadow clones!`);
+    }},
+    "Dynamic Entry": { name: "Dynamic Entry", style: "Taijutsu", rank: "D-Rank", damage: 1, support: false, skillFunction: function(user, target, scene) {
+        target.hp -= this.damage;
+        scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> uses ${this.name} on ${target.name} for ${this.damage} damage!`);
+        if (user.skills.includes(new Skills().findSkill("Static Field Jutsu"))) {
+            new Skills().findSkill("Static Field Jutsu").skillFunction(user, target, scene);
+        }
+    }},
+    "Static Field Jutsu": { name: "Static Field Jutsu", style: "Lightning", rank: "D-Rank", damage: 2, support: false, skillFunction: function(user, target, scene) {
+        target.hp -= this.damage;
+        target.statusEffects.push({ name: "Numb", startOfTurn: true, startOfTurnFunction: function(u, t, s) {
+            s.queueOutput(`<span class='output-text-${u === game.player ? 'player' : 'enemy'}'>${u.name}</span> is stunned by Numb and skips their turn!`);
+            return true;
+        }, duration: 1 });
+        user.statusEffects.push({ name: "Numb", startOfTurn: true, startOfTurnFunction: function(u, t, s) {
+            s.queueOutput(`<span class='output-text-${u === game.player ? 'player' : 'enemy'}'>${u.name}</span> is stunned by Numb and skips their turn!`);
+            return true;
+        }, duration: 1 });
+        scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> uses ${this.name} on ${target.name} for ${this.damage} damage, inflicting Numb ⚡️ on both!`);
+    }},
+    "Fireball Jutsu": { name: "Fireball Jutsu", style: "Fire", rank: "D-Rank", damage: 3, support: false, skillFunction: function(user, target, scene) {
+        target.hp -= this.damage + (Math.random() < 0.33 ? 1 : 0);
+        target.statusEffects.push({ name: "Burn", startOfTurn: true, startOfTurnFunction: function(u, t, s) {
+            t.hp -= 1;
+            s.queueOutput(`<span class='output-text-${t === game.player ? 'player' : 'enemy'}'>${t.name}</span> takes 1 damage from Burn 🔥!`);
             return false;
-        }
-        user.hp = Math.max(0, Math.min(user.maxHp, user.hp - 2));
-        try {
-            user.statusEffects.push(new StatusEffect("ShadowCloneEffect", 3, 0, false, true, true, null, 
-                (user, target, scene) => {
-                    let cloneCount = user.statusEffects.filter(e => e.name === "ShadowCloneEffect").length;
-                    for (let i = 0; i < cloneCount; i++) {
-                        scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>Shadow Clone ${i + 1} uses Barrage on ${target.name}!</span>`);
-                        let barrageSkill = this.findSkill("Barrage");
-                        if (barrageSkill) barrageSkill.skillFunction(user, target, scene);
-                    }
-                    user.statusEffects = user.statusEffects.filter(e => e.name !== "ShadowCloneEffect");
-                    deathCheck();
-                    return false;
-                }, 
-                (user, target, scene, skillStyle) => {
-                    let cloneCount = user.statusEffects.filter(e => e.name === "ShadowCloneEffect").length;
-                    if (cloneCount > 0) {
-                        scene.queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span>'s Shadow Clone absorbs the attack!`);
-                        user.statusEffects.splice(user.statusEffects.findIndex(e => e.name === "ShadowCloneEffect"), 1);
-                        return true;
-                    }
-                    return false;
-                }));
-            console.log("[DEBUG]: Shadow Clone Jutsu added ShadowCloneEffect to", user.name, user.statusEffects);
-        } catch (e) {
-            console.error("[ERROR]: Failed to add ShadowCloneEffect:", e);
-            scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> failed to cast Shadow Clone Jutsu due to an error!`);
+        }, active: true, activeFunction: function(u, t, s) {
+            t.hp -= 1;
+            s.queueOutput(`<span class='output-text-${t === game.player ? 'player' : 'enemy'}'>${t.name}</span> takes 1 damage from Burn 🔥!`);
+        } });
+        scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> casts ${this.name} on ${target.name} for ${this.damage} damage, inflicting Burn 🔥!`);
+    }},
+    "Bite": { name: "Bite", style: "Feral", rank: "C-Rank", damage: 2, support: false, skillFunction: function(user, target, scene) {
+        target.hp -= this.damage;
+        target.statusEffects.push({ name: "Bleed", startOfTurn: true, startOfTurnFunction: function(u, t, s) {
+            t.hp -= 1;
+            s.queueOutput(`<span class='output-text-${t === game.player ? 'player' : 'enemy'}'>${t.name}</span> takes 1 damage from Bleed 💧!`);
             return false;
-        }
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-neutral">Shadow Clone Jutsu</span>, adding a clone <span class="status-shadowcloneeffect">👥</span>!`);
-        return true;
-    }
-
-    demonicVision(user, target, scene) {
-        let damage = 1;
-        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-        target.statusEffects.push(new StatusEffect("Doom", 5, 1, true, false, false, 
-            (user, target, scene) => {
-                target.hp = Math.max(0, target.hp - target.statusEffects.find(e => e.name === "Doom").damage);
-                scene.queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span> takes ${target.statusEffects.find(e => e.name === "Doom").damage} damage from <span class='status-doom'>Doom 💀</span>!`);
-                updateStatus();
-                deathCheck();
-                return false;
-            }));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-genjutsu">Demonic Vision</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-doom">Doom 💀</span>!`);
-        return target.hp <= 0;
-    }
-
-    healingStance(user, target, scene) {
-        let heal = user.hp < user.maxHp ? 1 : 0;
-        user.hp = Math.max(0, Math.min(user.maxHp, user.hp + heal));
-        user.statusEffects.push(new StatusEffect("Regen", 3, 1, true, false, false, 
-            (user, target, scene) => {
-                let heal = user.hp < user.maxHp ? user.statusEffects.find(e => e.name === "Regen").damage : 0;
-                user.hp = Math.min(user.maxHp, user.hp + heal);
-                if (heal > 0) scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> heals ${heal} HP from <span class='status-regen'>Regen 🌿</span>!`);
-                updateStatus();
-                return false;
-            }));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> enters <span class="output-text-neutral">Healing Stance</span>${heal > 0 ? `, healing ${heal} HP` : ""} <span class="status-regen">🌿</span>!`);
-        return true;
-    }
-
-    earthDomeJutsu(user, target, scene) {
-        user.statusEffects.push(new StatusEffect("Dome", 2, 0, false, false, true, null, null, 
-            (user, target, scene, skillStyle) => {
-                if (skillStyle !== "genjutsu") {
-                    scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> uses Earth Dome to mitigate the attack!`);
-                    user.statusEffects = user.statusEffects.filter(e => e.name !== "Dome");
-                    return false;
-                }
-                return false;
-            }));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> raises <span class="output-text-earth">Earth Dome Jutsu</span> <span class="status-dome">🪨</span>!`);
-        return true;
-    }
-
-    flameThrowJutsu(user, target, scene) {
-        let damage = Math.floor(Math.random() * 2) + 4;
-        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-        target.statusEffects.push(new StatusEffect("Burn", 1, 2, true, false, false, 
-            (user, target, scene) => {
-                target.hp = Math.max(0, target.hp - target.statusEffects.find(e => e.name === "Burn").damage);
-                scene.queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span> takes ${target.statusEffects.find(e => e.name === "Burn").damage} damage from <span class='status-burn'>Burn 🔥</span>!`);
-                updateStatus();
-                deathCheck();
-                return false;
-            }));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Flame Throw Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burn">Burn 🔥</span>!`);
-        return target.hp <= 0;
-    }
-
-    staticFieldJutsu(user, target, scene) {
-        let damage = Math.floor(Math.random() * 2) + 2;
-        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-        user.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
-            (user, target, scene) => {
-                scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> is stunned by Numb and skips their turn!`);
-                user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
+        }, active: true, activeFunction: function(u, t, s) {
+            t.hp -= 1;
+            s.queueOutput(`<span class='output-text-${t === game.player ? 'player' : 'enemy'}'>${t.name}</span> takes 1 damage from Bleed 💧!`);
+        } });
+        scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> bites ${target.name} for ${this.damage} damage, inflicting Bleed 💧!`);
+    }},
+    "Demonic Mind": { name: "Demonic Mind", style: "Genjutsu", rank: "C-Rank", damage: 0, support: false, skillFunction: function(user, target, scene) {
+        target.statusEffects.push({ name: "Doom", startOfTurn: true, startOfTurnFunction: function(u, t, s) {
+            t.hp -= 2;
+            s.queueOutput(`<span class='output-text-${t === game.player ? 'player' : 'enemy'}'>${t.name}</span> takes 2 damage from Doom 😈!`);
+            if (t.hp <= 0) {
+                s.queueOutput(`<span class='output-text-${t === game.player ? 'player' : 'enemy'}'>${t.name}</span> succumbs to Doom 😈!`);
                 return true;
-            }));
-        target.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
-            (user, target, scene) => {
-                scene.queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span> is stunned by Numb and skips their turn!`);
-                target.statusEffects = target.statusEffects.filter(e => e.name !== "Numb");
-                return true;
-            }));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-lightning">Static Field Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-numb">Numb ⚡️</span> on both!`);
-        return target.hp <= 0;
-    }
-
-    fireballJutsu(user, target, scene) {
-        let damage = Math.floor(Math.random() * 2) + 3;
-        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-        try {
-            target.statusEffects.push(new StatusEffect("Burn", 1, 1, true, false, false, 
-                (user, target, scene) => {
-                    target.hp = Math.max(0, target.hp - target.statusEffects.find(e => e.name === "Burn").damage);
-                    scene.queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span> takes ${target.statusEffects.find(e => e.name === "Burn").damage} damage from <span class='status-burn'>Burn 🔥</span>!`);
-                    updateStatus();
-                    deathCheck();
-                    return false;
-                }));
-        } catch (e) {
-            console.error("[ERROR]: Failed to apply Burn status:", e);
-        }
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Fireball Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burn">Burn 🔥</span>!`);
-        return target.hp <= 0;
-    }
-
-    dynamicEntry(user, target, scene) {
-        let damage = 1;
-        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-neutral">Dynamic Entry</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage!`);
-        if (!user.statusEffects.some(e => e.name === "DynamicEntryProc")) {
-            user.statusEffects.push(new StatusEffect("DynamicEntryProc", 1, 0, false, false, false, null, null, null));
-            let usableSkills = user.skills.filter(skill => !skill.support && skill !== this.findSkill("Dynamic Entry"));
-            let nextSkill = usableSkills.length > 0 ? usableSkills[Math.floor(Math.random() * usableSkills.length)] : null;
-            if (nextSkill) {
-                scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> chains with ${nextSkill.name}!`);
-                nextSkill.skillFunction(user, target, scene);
             }
-            user.statusEffects = user.statusEffects.filter(e => e.name !== "DynamicEntryProc");
-        }
-        return target.hp <= 0;
-    }
-
-    falconDrop(user, target, scene) {
-        let damage = 2;
-        user.hp = Math.max(0, Math.min(user.maxHp, user.hp - 2));
-        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-        target.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
-            (user, target, scene) => {
-                scene.queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span> is stunned by Numb and skips their turn!`);
-                target.statusEffects = target.statusEffects.filter(e => e.name !== "Numb");
-                return true;
-            }));
-        user.statusEffects.push(new StatusEffect("READY", 1, 0, false, true, false, null, 
-            (user, target, scene) => {
-                let barrageSkill = this.findSkill("Barrage");
-                if (barrageSkill) barrageSkill.skillFunction(user, target, scene);
-                user.statusEffects = user.statusEffects.filter(e => e.name !== "READY");
-                deathCheck();
-                return false;
-            }));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-neutral">Falcon Drop</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, stunning target and taking 2 damage!`);
-        return target.hp <= 0;
-    }
-
-    rockSmashJutsu(user, target, scene) {
-        let damage = 6;
-        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-earth">Rock Smash Jutsu</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage!`);
-        return target.hp <= 0;
-    }
-
-    genjutsuRelease(user, target, scene) {
-        user.statusEffects = user.statusEffects.filter(e => e.name !== "Doom");
-        user.statusEffects.push(new StatusEffect("Release", 1, 0, false, false, true, null, null, 
-            (user, target, scene, skillStyle) => {
-                if (skillStyle === "genjutsu") {
-                    scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> uses Release to resist the Genjutsu attack!`);
-                    user.statusEffects = user.statusEffects.filter(e => e.name !== "Release");
-                    return false;
-                }
-                return false;
-            }));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-genjutsu">Genjutsu Release</span>, dispelling Doom and gaining <span class="status-substitution">Release 🌀</span>!`);
-        return true;
-    }
-
-    lightningEdge(user, target, scene) {
-        let damage = Math.floor(Math.random() * 2) + 4;
-        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-        target.statusEffects = target.statusEffects.filter(effect => !effect.triggered);
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> strikes with <span class="output-text-lightning">Lightning Edge</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, breaking all triggered status effects!`);
-        return target.hp <= 0;
-    }
-
-    bite(user, target, scene) {
-        let damage = 1;
-        let heal = user.hp < user.maxHp ? 1 : 0;
-        user.hp = Math.max(0, Math.min(user.maxHp, user.hp + heal));
-        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-        target.statusEffects.push(new StatusEffect("Bleed", 2, 1, true, false, false, 
-            (user, target, scene) => {
-                target.hp = Math.max(0, target.hp - target.statusEffects.find(e => e.name === "Bleed").damage);
-                scene.queueOutput(`<span class='output-text-${target === game.player ? 'player' : 'enemy'}'>${target.name}</span> takes ${target.statusEffects.find(e => e.name === "Bleed").damage} damage from <span class='status-bleed'>Bleed 🩸</span>!`);
-                updateStatus();
-                deathCheck();
-                return false;
-            }));
-        scene.queueOutput(`<span class="output-text-${user === game.player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-feral">Bite</span> on <span class="output-text-${target === game.player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage${heal > 0 ? `, healing ${heal} HP` : ""}, inflicting <span class="status-bleed">Bleed 🩸</span>!`);
-        return target.hp <= 0;
-    }
-}
-
-function compareRanks(rank1, rank2) {
-    const ranks = ["D-Rank", "C-Rank", "B-Rank", "A-Rank", "S-Rank"];
-    return ranks.indexOf(rank1) - ranks.indexOf(rank2);
-}
+            return false;
+        }, active: false });
+        scene.queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> casts ${this.name} on ${target.name}, inflicting Doom 😈!`);
+    }}
+};
