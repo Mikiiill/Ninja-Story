@@ -1,4 +1,4 @@
-// Battle.js
+// Battle.js (Reverted to your last working version)
 function startBattle(player, enemy) {
     if (game.gameState !== "battle") {
         game.gameState = "battle";
@@ -79,54 +79,9 @@ function applyStatusEffects(character) {
 }
 
 function endBattle() {
-    game.gameState = "postBattle";
-    let controls = document.getElementById("main-controls");
-    if (controls) controls.style.display = "block";
-    document.getElementById("skill-controls").innerHTML = "";
-    queueOutput("<span class='battle-ready'>Battle ended!</span>");
-    if (game.target.hp <= 0) {
-        if (game.battleType === "training") {
-            performJutsuSelection(1, false, () => ArriveVillage(game.user.lastVillage));
-        } else if (game.battleType === "travel") {
-            game.player.travelFightsCompleted = (game.player.travelFightsCompleted || 0) + 1;
-            queueOutput(`<span class='output-text-neutral'>Travel fight completed! ${game.player.travelFightsCompleted}/4 fights done.</span>`);
-            if (game.player.travelFightsCompleted < 4) {
-                startTravelFight();
-            } else {
-                let targetIsVillage = MapData[game.player.lastVillage]?.areas.includes(game.target.lastVillage) ? false : true;
-                if (targetIsVillage) {
-                    game.player.lastVillage = game.target.lastVillage;
-                    ArriveVillage(game.player.lastVillage);
-                } else {
-                    game.gameState = "inArea";
-                    queueOutput(`<span class='output-text-neutral'>Arrived at ${game.target.lastVillage}! State set to inArea.</span>`);
-                    let eventControls = document.getElementById("travel-controls");
-                    eventControls.style.display = "flex";
-                    eventControls.innerHTML = `<button onclick="startEventFight()">Start Event Fight</button><button onclick="talkToNPC()">Talk to NPC</button><button onclick="returnToVillage()">Return to ${game.player.lastVillage}</button>`;
-                }
-            }
-        } else if (game.battleType === "eventFight") {
-            applyEventReward(game.target.name);
-        }
+    game.gameState = "end";
+    queueOutput("Battle ended!");
+    if (game.battleScene && game.battleScene.onEnd) {
+        game.battleScene.onEnd();
     }
-}
-
-// Event Rewards List
-const EventRewards = {
-    "SpecialTrainingDummy": {
-        reward: () => {
-            queueOutput("good!"); // Test message
-            showStyleSelect(); // Trigger style select
-        }
-    },
-    // Add more enemies and rewards as needed
-    "Default": {
-        reward: () => queueOutput("No special reward for this fight.")
-    }
-};
-
-// Function to apply reward based on defeated enemy
-function applyEventReward(enemyName) {
-    const reward = EventRewards[enemyName] || EventRewards["Default"];
-    reward.reward();
 }
