@@ -17,24 +17,27 @@
             flex-direction: column;
             align-items: center;
             height: 100vh;
-            overflow: hidden;
+            overflow-y: auto;
         }
         .menu {
             width: 90%;
             text-align: center;
             margin: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border: 2px solid #ff4500;
         }
         input {
             width: 80%;
             padding: 10px;
             margin: 10px 0;
-            border: 2px solid #ff4500; /* Naruto orange accent */
+            border: 2px solid #ff4500;
             background-color: #333;
             color: #fff;
             font-size: 1.2rem;
         }
         button {
-            background-color: #ff4500; /* Naruto orange */
+            background-color: #ff4500;
             color: #fff;
             border: 2px solid #fff;
             padding: 15px 30px;
@@ -45,12 +48,20 @@
             margin: 10px;
         }
         button:hover {
-            background-color: #ff8c00; /* Darker orange */
+            background-color: #ff8c00;
         }
         .confirmation {
             font-size: 1.5rem;
-            color: #00ff00; /* Green for success */
+            color: #00ff00;
             margin: 20px;
+            text-align: center;
+        }
+        .stats {
+            width: 90%;
+            margin: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border: 2px solid #00bfff;
         }
     </style>
 </head>
@@ -63,67 +74,20 @@
     <div class="menu" id="sign-in" style="display: none;">
         <h1>Sign In</h1>
         <input type="email" id="email-input" placeholder="Enter your email">
-        <button onclick="signIn()">Verify and Sign In</button>
+        <button onclick="signIn()">Verify</button>
     </div>
     <div class="menu" id="name-input" style="display: none;">
         <h1>Create Character</h1>
-        <input type="text" id="name-input" placeholder="Enter character name">
+        <input type="text" id="char-name-input" placeholder="Enter character name">
         <button onclick="createCharacter()">Create</button>
     </div>
     <div class="confirmation" id="confirmation" style="display: none;"></div>
+    <div class="stats" id="stats-display" style="display: none;"></div>
 
-    <script>
-        function showSignIn() {
-            document.getElementById("main-menu").style.display = "none";
-            document.getElementById("sign-in").style.display = "block";
-        }
-
-        function signIn() {
-            const email = document.getElementById("email-input").value;
-            if (email) {
-                // Simulate email verification (real version would send an email)
-                const verificationCode = Math.floor(Math.random() * 10000); // Mock code
-                const inputCode = prompt("Enter verification code sent to your email (mock code: " + verificationCode + ")");
-
-                if (inputCode == verificationCode) {
-                    // Load saved data from localStorage (keyed by email)
-                    const savedData = localStorage.getItem(email);
-                    if (savedData) {
-                        const playerData = JSON.parse(savedData);
-                        alert("Welcome back, " + playerData.name + "! Loaded from last location: " + playerData.location);
-                        // Load game state (stats, location, events)
-                    } else {
-                        alert("No account found. Creating new one.");
-                        startAsGuest(true, email); // Create new character and save to email
-                    }
-                } else {
-                    alert("Verification failed. Try again.");
-                }
-            } else {
-                alert("Enter a valid email.");
-            }
-        }
-
-        function startAsGuest(isNewAccount = false, email = null) {
-            document.getElementById("sign-in").style.display = "none";
-            document.getElementById("main-menu").style.display = "none";
-            document.getElementById("name-input").style.display = "block";
-        }
-
-        function createCharacter() {
-            const name = document.getElementById("name-input").value;
-            if (name) {
-                document.getElementById("name-input").style.display = "none";
-                document.getElementById("confirmation").style.display = "block";
-                document.getElementById("confirmation").innerText = "new character " + name + "!";
-                // Save to localStorage (for guest or new account)
-                localStorage.setItem("player", JSON.stringify({ name: name, hp: 10, location: "Newb Village" }));
-                console.log("Character created and saved:", name);
-                // Future: Start game logic (travel, training, etc.)
-            } else {
-                alert("Enter a name!");
-            }
-        }
-    </script>
+    <script src="Characters.js" defer></script>
+    <script src="Jutsu.js" defer></script>
+    <script src="Battle.js" defer></script>
+    <script src="RANKUP.js" defer></script>
+    <script src="index.js" defer></script>
 </body>
 </html>
