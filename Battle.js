@@ -8,13 +8,7 @@ function startBattle(player, enemy) {
             let randIndex = Math.floor(Math.random() * player.skillInventory.length);
             player.skills.push(player.skillInventory.splice(randIndex, 1)[0]);
         }
-        game.enemy = JSON.parse(JSON.stringify(enemy)); // Deep clone to preserve all properties
-        // Validate enemy name for tutorial
-        if (game.battleType === "eventFight" && game.enemy.name !== "SpecialTrainingDummy") {
-            console.warn("[WARN]: startBattle overriding enemy to SpecialTrainingDummy");
-            game.enemy = JSON.parse(JSON.stringify(SpecialTrainingDummy)); // Deep clone SpecialTrainingDummy
-        }
-        console.log("[DEBUG]: startBattle enemy set to:", game.enemy); // Debug enemy
+        game.enemy = enemy;
         updateStatus();
         game.battleScene = { queueOutput: queueOutput };
         queueOutput("");
@@ -38,7 +32,7 @@ function determineTurnOrder(player, enemy) {
 }
 
 function takeTurn(user) {
-    console.log("[DEBUG]: Entering takeTurn for", user.name, { user: game.user, target: game.target, gameState: game.gameState });
+    console.log("[DEBUG]: Entering takeTurn for", user.name, { user: game.user, target: game.target });
     if (!game.user || !game.target || game.user.hp <= 0 || game.target.hp <= 0) {
         console.log("[DEBUG]: Battle end condition met, exiting takeTurn");
         endBattle();
@@ -151,7 +145,7 @@ function triggeredEffectCheck(user, target, skillStyle) {
 }
 
 function endTurn() {
-    console.log("[DEBUG]: Ending turn, scheduling next turn", { user: game.user, target: game.target, gameState: game.gameState });
+    console.log("[DEBUG]: Ending turn, scheduling next turn", { user: game.user, target: game.target });
     let temp = game.user;
     game.user = game.target;
     game.target = temp;
@@ -164,7 +158,7 @@ function endTurn() {
 }
 
 function endBattle() {
-    game.gameState = "postBattle"; // Force postBattle state
+    game.gameState = "postBattle";
     let controls = document.getElementById("main-controls");
     if (controls) controls.style.display = "block";
     document.getElementById("skill-controls").innerHTML = "";
@@ -190,11 +184,8 @@ function endBattle() {
                     eventControls.innerHTML = `<button onclick="startEventFight()">Start Event Fight</button><button onclick="talkToNPC()">Talk to NPC</button><button onclick="returnToVillage()">Return to ${game.player.lastVillage}</button>`;
                 }
             }
-        } else if (game.battleType === "eventFight") {
-            console.log("[DEBUG]: Event fight win, gameState:", game.gameState); // Debug state
-            applyEventReward(game.target.name); // Trigger reward
         }
-    } else if (game.user.hp <= 0 && game.battleType !== "eventFight") { // Corrected logic: only on loss for non-event fights
+    } else if (game.user.hp <= 0) {
         ArriveVillage(game.user.lastVillage);
     }
     game.user = null;
@@ -242,7 +233,7 @@ function queueOutput(text) {
 
 function updateStatus() {
     try {
-        console.log("[DEBUG]: Updating status", { user: game.user ? game.user.name : "null", target: game.target ? game.target.name : "null", userEffects: game.user ? game.user.statusEffects : [], targetEffects: game.target ? game.target.statusEffects : [], gameState: game.gameState });
+        console.log("[DEBUG]: Updating status", { user: game.user ? game.user.name : "null", target: game.target ? game.target.name : "null", userEffects: game.user ? game.user.statusEffects : [], targetEffects: game.target ? game.target.statusEffects : [] });
         let playerHp = document.getElementById("player-hp");
         let enemyHp = document.getElementById("enemy-hp");
         let log = document.getElementById("battle-log");
@@ -257,25 +248,4 @@ function updateStatus() {
     } catch (e) {
         console.error("[ERROR]: Update status failed:", e);
     }
-}
-
-// Event Rewards List
-// Battle.js (update the EventRewards list and applyEventReward)
-const EventRewards = {
-    "Sparring Dummy": {
-        reward: () => {
-            queueOutput("good!"); // Test message
-            game.gameState = "chooseStyles"; // Set state for style selection
-            initiateStyleSelection(); // Trigger style selection
-        }
-    },
-    "Default": {
-        reward: () => queueOutput("No special reward for this fight.")
-    }
-};
-
-// Function to apply reward based on defeated enemy
-function applyEventReward(enemyName) {
-    const reward = EventRewards[enemyName] || EventRewards["Default"];
-    reward.reward();
-                                          }
+            }
