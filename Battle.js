@@ -197,18 +197,6 @@ function startTravelFight() {
     startBattle(game.player, generateTravelEnemy());
 }
 
-function generateTravelEnemy() {
-    return {
-        name: "Rabid Dog",
-        hp: 8,
-        maxHp: 8,
-        skills: [new Skills().findSkill("Barrage")],
-        skillInventory: [],
-        statusEffects: [],
-        lastVillage: game.player.lastVillage
-    };
-}
-
 function startEventFight() {
     queueOutput("<span class='output-text-neutral'>Event fight started! (Placeholder)</span>");
 }
