@@ -260,8 +260,9 @@ function updateStatus() {
 }
 
 // Event Rewards List
+// Battle.js (update the EventRewards list and applyEventReward)
 const EventRewards = {
-    "SpecialTrainingDummy": {
+    "Sparring Dummy": {
         reward: () => {
             queueOutput("good!"); // Test message
             game.gameState = "chooseStyles"; // Set state for style selection
@@ -277,4 +278,4 @@ const EventRewards = {
 function applyEventReward(enemyName) {
     const reward = EventRewards[enemyName] || EventRewards["Default"];
     reward.reward();
-        }
+}
