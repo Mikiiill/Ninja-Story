@@ -22,8 +22,8 @@
 
         .battle-screen {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            justify-content: space-around; /* Center characters */
+            align-items: flex-start;
             background: linear-gradient(to bottom, #e6d7b8, #d2b48c);
             border: 4px solid #8b4513;
             border-radius: 10px;
@@ -33,8 +33,19 @@
         }
 
         .character {
-            width: 28%;
+            width: 45%; /* Adjusted for side-by-side */
+            min-height: 250px; /* Ensure consistent height */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
             text-align: center;
+        }
+
+        .character h2 {
+            height: 40px; /* Fixed height for names */
+            margin: 0 0 10px;
+            font-size: 1.2em; /* Readable on mobile */
         }
 
         .character img {
@@ -46,16 +57,20 @@
             background-color: #ccc; /* Fallback if sprite fails */
         }
 
+        .battle-log-container {
+            width: calc(100% - 40px); /* Almost full width */
+            margin: 0 auto 20px;
+        }
+
         .battle-log {
-            width: 35%;
             background: #fff;
             border: 2px solid #000;
             border-radius: 5px;
             padding: 10px;
-            max-height: 300px;
+            max-height: 200px; /* Adjusted for mobile */
             overflow-y: auto;
-            overflow-anchor: auto; /* Enhance auto-scroll */
-            scroll-behavior: smooth; /* Smooth scrolling on mobile */
+            overflow-anchor: auto;
+            scroll-behavior: smooth;
             text-align: left;
             font-size: 14px;
         }
@@ -132,20 +147,24 @@
         <!-- Battle Screen -->
         <div class="battle-screen">
             <div class="character user">
-                <h2 id="user-name">User</h2>
+                <h2 id="user-name">Shinobi</h2>
                 <img id="user-sprite" src="https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/NINJA1.PNG" alt="User Sprite">
                 <p>HP: <span id="user-hp">10/10</span></p>
                 <p>Status: <span id="user-status">None</span></p>
             </div>
+            <div class="character opponent">
+                <h2 id="opponent-name">Training Dummy</h2>
+                <img id="opponent-sprite" src="Assets/NINJA1.png" alt="Opponent Sprite">
+                <p>HP: <span id="opponent-hp">6/6</span></p>
+                <p>Status: <span id="opponent-status">None</span></p>
+            </div>
+        </div>
+
+        <!-- Battle Log -->
+        <div class="battle-log-container">
             <div class="battle-log">
                 <h3>Battle Log</h3>
                 <div id="battle-log-content"></div>
-            </div>
-            <div class="character opponent">
-                <h2 id="opponent-name">Opponent</h2>
-                <img id="opponent-sprite" src="/Assets/NINJA1.png" alt="Opponent Sprite">
-                <p>HP: <span id="opponent-hp">6/6</span></p>
-                <p>Status: <span id="opponent-status">None</span></p>
             </div>
         </div>
 
