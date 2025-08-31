@@ -184,6 +184,8 @@ function endBattle() {
                     eventControls.innerHTML = `<button onclick="startEventFight()">Start Event Fight</button><button onclick="talkToNPC()">Talk to NPC</button><button onclick="returnToVillage()">Return to ${game.player.lastVillage}</button>`;
                 }
             }
+        } else if (game.battleType === "eventFight") {
+            applyEventReward(game.target.name);
         }
     } else if (game.user.hp <= 0) {
         ArriveVillage(game.user.lastVillage);
@@ -211,6 +213,25 @@ function generateTravelEnemy() {
 
 function startEventFight() {
     queueOutput("<span class='output-text-neutral'>Event fight started! (Placeholder)</span>");
+}
+
+// Event Rewards List
+const EventRewards = {
+    "SpecialTrainingDummy": {
+        reward: () => {
+            queueOutput("good!"); // Test message
+            showStyleSelect(); // Trigger style select
+        }
+    },
+    "Default": {
+        reward: () => queueOutput("No special reward for this fight.")
+    }
+};
+
+// Function to apply reward based on defeated enemy
+function applyEventReward(enemyName) {
+    const reward = EventRewards[enemyName] || EventRewards["Default"];
+    reward.reward();
 }
 
 function talkToNPC() {
