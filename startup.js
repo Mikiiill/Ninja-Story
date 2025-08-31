@@ -28,11 +28,15 @@ function startTutorial() {
 }
 
 function startTutorialFight() {
-    queueOutput("Welcome to the Shinobi Way! Let's begin your training.");
-    const sparringDummy = new Character("Sparring Dummy", 50, 5, 2, 0);
-    game.battleType = "eventFight";
-    game.user = player;
-    game.target = sparringDummy;
-    game.gameState = "inBattle";
-    startBattle(sparringDummy);
+    game.battleType = "eventFight"; // Ensure eventFight is set
+    game.enemy = Object.assign({}, SparringDummy); // Shallow copy to avoid reference issues
+    game.isTutorialBattle = true;
+    console.log("[DEBUG]: Before startBattle - enemy:", game.enemy);
+    game.gameState = "battle";
+    startBattle(game.player, game.enemy);
+    console.log("[DEBUG]: After startBattle - enemy:", game.enemy);
+    if (game.enemy.name !== "SparringDummy") {
+        console.error("[ERROR]: Enemy name overridden to:", game.enemy.name);
+        game.enemy = Object.assign({}, SparringDummy); // Force correct name
+    }
 }
