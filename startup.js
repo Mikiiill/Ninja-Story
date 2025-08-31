@@ -1,4 +1,4 @@
-// startup.js
+// startup.js (full file with changes)
 let game = {
     player: {
         name: "Shinobi",
@@ -116,6 +116,34 @@ function startTutorialFight() {
     console.log("[DEBUG]: Starting tutorial fight with enemy:", game.enemy); // Debug enemy assignment
     game.gameState = "battle";
     startBattle(game.player, game.enemy);
+    // Add validation to ensure enemy name persists
+    if (game.enemy.name !== "SpecialTrainingDummy") {
+        console.error("[ERROR]: Enemy name overridden to:", game.enemy.name);
+        game.enemy = SpecialTrainingDummy; // Force correct name
+    }
+}
+
+function startGame() {
+    let playerName = prompt("Enter your name, future shinobi:");
+    if (playerName) {
+        game.player.name = playerName;
+    } else {
+        game.player.name = "Shinobi";
+    }
+    document.getElementById("graduation-message").innerHTML = `${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.`;
+    startTutorialFight();
+}
+
+function generateSpecialTutorialDummy() {
+    return {
+        name: "SpecialTrainingDummy", // Exact match for EventRewards
+        hp: 6,
+        maxHp: 6,
+        skills: [new Skills().findSkill("Healing Stance")],
+        skillInventory: [],
+        statusEffects: [{ name: "Burn", duration: 2, effect: (target) => target.hp = Math.max(0, target.hp - 1) }],
+        lastVillage: "Newb Village"
+    };
 }
 
 function showStyleSelect() {
@@ -150,14 +178,17 @@ function selectSkill(skillName) {
 }
 
 function arriveVillage() {
-    document.getElementById("style-controls").style.display = "none";
-    document.getElementById("skill-controls").style.display = "none";
-    document.getElementById("travel-controls").style.display = "flex";
-    document.getElementById("travel-controls").innerHTML = `<button class="travel-button" onclick="startTravel()">Travel</button>`;
-    queueOutput("You have arrived at Newb Village. Prepare to travel!");
-    game.player.hp = game.player.maxHp;
-    game.player.statusEffects = [];
-    updateStatus();
+    if (game.gameState !== "postBattle" && game.gameState !== "battle") { // Prevent during battle or postBattle
+        document.getElementById("style-controls").style.display = "none";
+        document.getElementById("skill-controls").style.display = "none";
+        document.getElementById("travel-controls").style.display = "flex";
+        document.getElementById("travel-controls").innerHTML = `<button class="travel-button" onclick="startTravel()">Travel</button>`;
+        queueOutput("You have arrived at Newb Village. Prepare to travel!");
+        game.player.hp = game.player.maxHp;
+        game.player.statusEffects = [];
+        updateStatus();
+        game.gameState = "In Village";
+    }
 }
 
 function startTravel() {
