@@ -209,31 +209,47 @@
         }
 
         function startTutorialFight() {
-            game.battleType = "eventFight";
-            game.enemy = SparringDummy;
-            console.log("[DEBUG]: Before startBattle - enemy:", game.enemy);
-            game.gameState = "battle";
-            startBattle(game.player, game.enemy);
-            console.log("[DEBUG]: After startBattle - enemy:", game.enemy);
-            if (game.enemy.name !== "SparringDummy") {
-                console.error("[ERROR]: Enemy name overridden to:", game.enemy.name);
+            try {
+                game.battleType = "eventFight";
+                if (typeof SparringDummy === "undefined") {
+                    console.error("[ERROR]: SparringDummy is undefined. Check Characters.js loading.");
+                    return;
+                }
                 game.enemy = SparringDummy;
+                console.log("[DEBUG]: Before startBattle - enemy:", game.enemy);
+                game.gameState = "battle";
+                if (typeof startBattle === "undefined") {
+                    console.error("[ERROR]: startBattle is undefined. Check Battle.js loading.");
+                    return;
+                }
+                startBattle(game.player, game.enemy);
+                console.log("[DEBUG]: After startBattle - enemy:", game.enemy);
+                if (game.enemy.name !== "SparringDummy") {
+                    console.error("[ERROR]: Enemy name overridden to:", game.enemy.name);
+                    game.enemy = SparringDummy;
+                }
+            } catch (e) {
+                console.error("[ERROR]: startTutorialFight failed:", e);
             }
         }
 
         function startTutorial() {
-            let nameInput = document.getElementById("name-input");
-            if (nameInput) {
-                game.player.name = nameInput.value.trim() || "Shinobi";
-                let outputDiv = document.getElementById("output");
-                if (outputDiv) {
-                    outputDiv.innerHTML += `<br><span class='output-text-player'>${game.player.name}</span><span class='output-text-neutral'>! Graduation is soon, demonstrate your abilities to your Teacher.</span>`;
-                    outputDiv.scrollTop = outputDiv.scrollHeight;
+            try {
+                let nameInput = document.getElementById("name-input");
+                if (nameInput) {
+                    game.player.name = nameInput.value.trim() || "Shinobi";
+                    let outputDiv = document.getElementById("output");
+                    if (outputDiv) {
+                        outputDiv.innerHTML += `<br><span class='output-text-player'>${game.player.name}</span><span class='output-text-neutral'>! Graduation is soon, demonstrate your abilities to your Teacher.</span>`;
+                        outputDiv.scrollTop = outputDiv.scrollHeight;
+                    }
+                    nameInput.value = ""; // Clear input
+                    startTutorialFight(); // Start event fight after graduation message
+                } else {
+                    console.error("Name input not found");
                 }
-                nameInput.value = ""; // Clear input
-                startTutorialFight(); // Start event fight after graduation message
-            } else {
-                console.error("Name input not found");
+            } catch (e) {
+                console.error("[ERROR]: startTutorial failed:", e);
             }
         }
 
