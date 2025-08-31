@@ -1,0 +1,110 @@
+body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background: url('https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/Back.png') no-repeat center center fixed;
+    background-size: cover;
+    color: #000;
+}
+
+.game-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+}
+
+.battle-screen {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.9);
+    border: 4px solid #000;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.character {
+    width: 30%;
+    text-align: center;
+}
+
+.character img {
+    border: 3px solid #000;
+    border-radius: 10px;
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+}
+
+.battle-log {
+    width: 30%;
+    background: #fff;
+    border: 2px solid #000;
+    border-radius: 5px;
+    padding: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+    text-align: left;
+}
+
+.jutsu-select, .jutsu-management {
+    background: rgba(255, 255, 255, 0.9);
+    border: 4px solid #000;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.jutsu-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.jutsu-card {
+    background: #fff;
+    border: 3px solid #000;
+    border-radius: 8px;
+    padding: 10px;
+    width: 150px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+.jutsu-card:hover {
+    transform: scale(1.05);
+}
+
+.jutsu-card h4 {
+    margin: 0;
+    font-size: 1.1em;
+    text-transform: uppercase;
+}
+
+.jutsu-card p {
+    margin: 5px 0;
+    font-size: 0.9em;
+}
+
+.hidden {
+    display: none;
+}
+
+button {
+    background: #000;
+    color: #fff;
+    border: 2px solid #000;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 1em;
+    margin: 10px;
+}
+
+button:hover {
+    background: #333;
+}
