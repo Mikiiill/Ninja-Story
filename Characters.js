@@ -50,28 +50,9 @@ function generateTrainingEnemy() {
 }
 
 function generateTravelEnemy() {
-    let styles = ["Fire", "Lightning", "Earth", "Water", "Wind", "Feral"]; // All non-quest styles
-    let styleCount = { Genin: 2, Chunin: 4, Jounin: 6 }[game.player.Rank] || 2; // Default to Genin
-    let rank = { Student: "D-Rank", Genin: "C-Rank", Chunin: "B-Rank", Jounin: "A-Rank" }[game.player.Rank] || "D-Rank";
-    let hp = { Genin: 12, Chunin: 16, Jounin: 20 }[game.player.Rank] || 12;
-    let randomStyles = {};
-    for (let i = 0; i < styleCount; i++) {
-        let style = styles.splice(Math.floor(Math.random() * styles.length), 1)[0];
-        randomStyles[style] = rank;
-    }
-    let skills = generateEnemySkills(rank, randomStyles);
-    let name = game.player.Rank === "Genin" ? "Genin Opponent" : game.player.Rank === "Chunin" ? "Chunin Opponent" : "Jounin Opponent";
-    return new Mob(name, hp, hp, rank, randomStyles, skills, []);
+    let enemies = [
+        new Mob("Bandit", 30, 30, "C-Rank", { Taijutsu: "C-Rank" }, generateEnemySkills("C-Rank", { Taijutsu: "C-Rank" }), []),
+        new Mob("Rabid Dog", 35, 35, "D-Rank", { Feral: "C-Rank" }, [new Skills().findSkill("Bite")], [])
+    ];
+    return enemies[Math.floor(Math.random() * enemies.length)];
 }
-
-
-// Characters.js (append this)
-const SparringDummy = {
-    name: "Sparring Dummy",
-    hp: 6,
-    maxHp: 6,
-    skills: [new Skills().findSkill("Healing Stance")],
-    skillInventory: [],
-    statusEffects: [],
-    lastVillage: "Newb Village"
-};
