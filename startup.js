@@ -111,14 +111,18 @@ function updateSkillCount() {
 }
 
 function startTutorialFight() {
-    game.battleType = "eventFight"; // Ensure eventFight type
-    game.enemy = generateSpecialTutorialDummy(); // Initialize with correct enemy
+    game.battleType = "eventFight"; // Explicitly set to eventFight
+    game.enemy = generateSpecialTutorialDummy(); // Ensure correct enemy
     game.gameState = "battle";
     startBattle(game.player, game.enemy);
     game.battleScene.onEnd = () => {
-        if (game.target.hp <= 0 && !game.tutorialDone) {
+        if (game.target && game.target.hp <= 0 && !game.tutorialDone) {
             game.tutorialDone = true;
-            applyEventReward(game.target.name); // Trigger reward directly
+            queueOutput("good!"); // Test message
+            game.gameState = "chooseStyles"; // Set state for style selection
+            initiateStyleSelection(); // Trigger style selection
+        } else if (game.user && game.user.hp <= 0) {
+            arriveVillage(); // Handle loss case
         }
     };
 }
@@ -147,8 +151,7 @@ function generateSpecialTutorialDummy() {
 }
 
 function showStyleSelect() {
-    // Note: This was a mistake; use initiateStyleSelection from RANKUP.js instead
-    // Keeping this as a placeholder; remove or replace with initiateStyleSelection call
+    // Placeholder; not used, replaced by initiateStyleSelection
 }
 
 function selectStyle(style) {
