@@ -111,10 +111,16 @@ function updateSkillCount() {
 }
 
 function startTutorialFight() {
-    game.battleType = "eventFight"; // Changed to match endBattle logic
-    game.enemy = generateSpecialTutorialDummy(); // Ensure enemy is initialized
+    game.battleType = "eventFight"; // Ensure eventFight type
+    game.enemy = generateSpecialTutorialDummy(); // Initialize with correct enemy
     game.gameState = "battle";
     startBattle(game.player, game.enemy);
+    game.battleScene.onEnd = () => {
+        if (game.target.hp <= 0 && !game.tutorialDone) {
+            game.tutorialDone = true;
+            applyEventReward(game.target.name); // Trigger reward directly
+        }
+    };
 }
 
 function startGame() {
@@ -130,7 +136,7 @@ function startGame() {
 
 function generateSpecialTutorialDummy() {
     return {
-        name: "SpecialTrainingDummy", // Match exact name for EventRewards
+        name: "SpecialTrainingDummy", // Exact match for EventRewards
         hp: 6,
         maxHp: 6,
         skills: [new Skills().findSkill("Healing Stance"), new Skills().findSkill("Bite")],
@@ -141,12 +147,8 @@ function generateSpecialTutorialDummy() {
 }
 
 function showStyleSelect() {
-    document.getElementById("style-controls").style.display = "flex";
-    document.getElementById("style-controls").innerHTML = `
-        <button class="ninjutsu" onclick="selectStyle('Ninjutsu')">Ninjutsu</button>
-        <button class="taijutsu" onclick="selectStyle('Taijutsu')">Taijutsu</button>
-        <button class="genjutsu" onclick="selectStyle('Genjutsu')">Genjutsu</button>
-    `;
+    // Note: This was a mistake; use initiateStyleSelection from RANKUP.js instead
+    // Keeping this as a placeholder; remove or replace with initiateStyleSelection call
 }
 
 function selectStyle(style) {
