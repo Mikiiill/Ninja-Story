@@ -609,7 +609,7 @@ function assignRandomJutsu(mob, count) {
 
 // Initialize Characters
 const player = new Mob(
-    "Naruto",
+    "Shinobi",
     10,
     10,
     "Student",
@@ -629,7 +629,7 @@ const opponent = new Mob(
     [],
     [],
     [],
-    "https://via.placeholder.com/120x160"
+    "/Assets/NINJA1.png"
 );
 
 // Initialize Game
