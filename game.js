@@ -610,8 +610,8 @@ function assignRandomJutsu(mob, count) {
 // Initialize Characters
 const player = new Mob(
     "Naruto",
-    100,
-    100,
+    10,
+    10,
     "Student",
     { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
     [],
@@ -621,9 +621,9 @@ const player = new Mob(
 );
 
 const opponent = new Mob(
-    "Sasuke",
-    100,
-    100,
+    "Training Dummy",
+    6,
+    6,
     "Student",
     { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
     [],
