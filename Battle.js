@@ -215,25 +215,6 @@ function startEventFight() {
     queueOutput("<span class='output-text-neutral'>Event fight started! (Placeholder)</span>");
 }
 
-// Event Rewards List
-const EventRewards = {
-    "SpecialTrainingDummy": {
-        reward: () => {
-            queueOutput("good!"); // Test message
-            showStyleSelect(); // Trigger style select
-        }
-    },
-    "Default": {
-        reward: () => queueOutput("No special reward for this fight.")
-    }
-};
-
-// Function to apply reward based on defeated enemy
-function applyEventReward(enemyName) {
-    const reward = EventRewards[enemyName] || EventRewards["Default"];
-    reward.reward();
-}
-
 function talkToNPC() {
     queueOutput("<span class='output-text-neutral'>Talking to NPC! (Placeholder)</span>");
 }
@@ -269,4 +250,24 @@ function updateStatus() {
     } catch (e) {
         console.error("[ERROR]: Update status failed:", e);
     }
-            }
+}
+
+// Event Rewards List
+const EventRewards = {
+    "SpecialTrainingDummy": {
+        reward: () => {
+            queueOutput("good!"); // Test message
+            game.gameState = "chooseStyles"; // Set state to match initiateStyleSelection
+            initiateStyleSelection(); // Use the correct function from RANKUP.js
+        }
+    },
+    "Default": {
+        reward: () => queueOutput("No special reward for this fight.")
+    }
+};
+
+// Function to apply reward based on defeated enemy
+function applyEventReward(enemyName) {
+    const reward = EventRewards[enemyName] || EventRewards["Default"];
+    reward.reward();
+                        }
