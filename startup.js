@@ -104,13 +104,20 @@ function updateStatus() {
     }
 }
 
-function updateSkillCount() {
-    let totalCards = game.player.skills.length + game.player.skillInventory.length;
-    if (totalCards >= 10 && game.player.Rank === "Student") {
-        game.player.Rank = "Genin";
-        queueOutput("<span class='battle-ready'>Promoted to Genin!</span>");
-    }
-}
+function startTutorialFight() {
+    game.battleType = "eventFight";
+    game.enemy = SparringDummy; // Use the defined Sparring Dummy
+    console.log("[DEBUG]: Starting tutorial fight with enemy:", game.enemy); // Debug enemy assignment
+    game.gameState = "battle";
+    startBattle(game.player, game.enemy);
+    game.battleScene.onEnd = () => {
+        if (game.target && game.target.hp <= 0 && !game.tutorialDone) {
+            game.tutorialDone = true;
+            queueOutput("good!"); // Test message
+            game.gameState = "chooseStyles"; // Set state for style selection
+            initiateStyleSelection(); // Trigger style selection
+        }
+    };
 
 function startTutorialFight() {
     game.battleType = "eventFight"; // Explicitly set to eventFight
@@ -137,9 +144,10 @@ function startGame() {
     startTutorialFight();
 }
 
+// startup.js (update generateSpecialTutorialDummy and startTutorialFight)
 function generateSpecialTutorialDummy() {
     return {
-        name: "SpecialTrainingDummy", // Exact match for EventRewards
+        name: "Sparring Dummy",
         hp: 6,
         maxHp: 6,
         skills: [new Skills().findSkill("Healing Stance"), new Skills().findSkill("Bite")],
