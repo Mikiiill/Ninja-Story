@@ -85,14 +85,14 @@
     <div class="controls" id="main-controls"></div>
     <div class="controls" id="travel-controls" style="display:none;"></div>
 
-    <script src="RANKUP.js"></script>
-    <script src="Jutsu.js"></script>
-    <script src="Characters.js"></script>
-    <script src="Battle.js"></script>
-    <script src="Log.js"></script>
-    <script src="Map.js"></script>
+    <script src="RANKUP.js" defer></script>
+    <script src="Jutsu.js" defer></script>
+    <script src="Characters.js" defer></script>
+    <script src="Battle.js" defer></script>
+    <script src="Log.js" defer></script>
+    <script src="Map.js" defer></script>
 
-    <script>
+    <script defer>
         let game = {
             player: {
                 name: "Shinobi",
@@ -114,7 +114,7 @@
             battleScene: null,
             outputQueue: [],
             isOutputting: false,
-            tutorialDone: false // Track tutorial completion
+            tutorialDone: false
         };
 
         game.asciiMap = {
@@ -210,7 +210,7 @@
 
         function startTutorialFight() {
             game.battleType = "eventFight";
-            game.enemy = SparringDummy; // Use SparringDummy from Characters.js
+            game.enemy = SparringDummy; // Matches Characters.js
             console.log("[DEBUG]: Before startBattle - enemy:", game.enemy);
             game.gameState = "battle";
             startBattle(game.player, game.enemy);
@@ -238,7 +238,6 @@
         }
 
         function initiateStyleSelection() {
-            // Placeholder implementation
             document.getElementById("style-controls").style.display = "flex";
             document.getElementById("style-controls").innerHTML = `
                 <button class="skills-button" onclick="selectStyle('Ninjutsu')">Ninjutsu</button>
@@ -249,4 +248,58 @@
 
         function selectStyle(style) {
             game.player.ninjaStyles[style] = "C-Rank";
-            queueOutput(`Selected ${style} style upgraded to C-Rank!
+            queueOutput(`Selected ${style} style upgraded to C-Rank!`);
+            showSkillSelect();
+        }
+
+        function showSkillSelect() {
+            document.getElementById("skill-controls").style.display = "flex";
+            document.getElementById("skill-controls").innerHTML = `
+                <button class="skills-button" onclick="selectSkill('Barrage')">Barrage</button>
+                <button class="skills-button" onclick="selectSkill('Healing Stance')">Healing Stance</button>
+                <button class="skills-button" onclick="selectSkill('Bite')">Bite</button>
+                <button class="skills-button" onclick="selectSkill('Substitution Jutsu')">Substitution Jutsu</button>
+            `;
+        }
+
+        function selectSkill(skillName) {
+            let skill = new Skills().findSkill(skillName);
+            if (skill && game.player.skills.length < 4) {
+                game.player.skills.push(skill);
+                queueOutput(`Added ${skillName} to skills!`);
+                if (game.player.skills.length >= 2) {
+                    arriveVillage();
+                }
+            }
+        }
+
+        function arriveVillage() {
+            if (game.gameState !== "postBattle" && game.gameState !== "battle") {
+                document.getElementById("style-controls").style.display = "none";
+                document.getElementById("skill-controls").style.display = "none";
+                document.getElementById("travel-controls").style.display = "flex";
+                document.getElementById("travel-controls").innerHTML = `<button class="travel-button" onclick="startTravel()">Travel</button>`;
+                queueOutput("You have arrived at Newb Village. Prepare to travel!");
+                game.player.hp = game.player.maxHp;
+                game.player.statusEffects = [];
+                updateStatus();
+                game.gameState = "In Village";
+            }
+        }
+
+        function startTravel() {
+            game.gameState = "travel";
+            document.getElementById("travel-controls").style.display = "none";
+            document.getElementById("main-controls").style.display = "flex";
+            queueOutput("Traveling... Encountering a random Genin!");
+            // Placeholder for Travel Genin battle
+        }
+
+        function initializeGame() {
+            resetGameState();
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeGame);
+    </script>
+</body>
+</html>
