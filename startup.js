@@ -20,7 +20,8 @@ let game = {
     battleScene: null,
     outputQueue: [],
     isOutputting: false,
-    tutorialDone: false // Track tutorial completion
+    tutorialDone: false, // Track tutorial completion
+    isTutorialBattle: false // Flag to control state during tutorial
 };
 
 game.asciiMap = {
@@ -60,7 +61,8 @@ function resetGameState() {
             battleScene: null,
             outputQueue: [],
             isOutputting: false,
-            tutorialDone: false
+            tutorialDone: false,
+            isTutorialBattle: false
         };
         document.getElementById("output").innerHTML = "Welcome to ShinobiWay!";
         document.getElementById("start-controls").innerHTML = '<button class="start-button" id="start-button" onclick="startGame()">Start Game</button>';
@@ -113,10 +115,11 @@ function updateSkillCount() {
 function startTutorialFight() {
     game.battleType = "eventFight"; // Explicitly set to eventFight
     game.enemy = SpecialTrainingDummy; // Use the defined character
-    console.log("[DEBUG]: Starting tutorial fight with enemy:", game.enemy); // Debug enemy assignment
+    game.isTutorialBattle = true; // Set tutorial flag
+    console.log("[DEBUG]: Before startBattle - enemy:", game.enemy); // Debug before battle
     game.gameState = "battle";
     startBattle(game.player, game.enemy);
-    // Add validation to ensure enemy name persists
+    console.log("[DEBUG]: After startBattle - enemy:", game.enemy); // Debug after battle start
     if (game.enemy.name !== "SpecialTrainingDummy") {
         console.error("[ERROR]: Enemy name overridden to:", game.enemy.name);
         game.enemy = SpecialTrainingDummy; // Force correct name
@@ -139,7 +142,7 @@ function generateSpecialTutorialDummy() {
         name: "SpecialTrainingDummy", // Exact match for EventRewards
         hp: 6,
         maxHp: 6,
-        skills: [new Skills().findSkill("Healing Stance")],
+        skills: [new Skills().findSkill("Healing Stance"), new Skills().findSkill("Bite")],
         skillInventory: [],
         statusEffects: [{ name: "Burn", duration: 2, effect: (target) => target.hp = Math.max(0, target.hp - 1) }],
         lastVillage: "Newb Village"
@@ -178,7 +181,7 @@ function selectSkill(skillName) {
 }
 
 function arriveVillage() {
-    if (game.gameState !== "postBattle" && game.gameState !== "battle") { // Prevent during battle or postBattle
+    if (!game.isTutorialBattle && game.gameState !== "postBattle" && game.gameState !== "battle") { // Prevent during tutorial or postBattle
         document.getElementById("style-controls").style.display = "none";
         document.getElementById("skill-controls").style.display = "none";
         document.getElementById("travel-controls").style.display = "flex";
@@ -188,6 +191,7 @@ function arriveVillage() {
         game.player.statusEffects = [];
         updateStatus();
         game.gameState = "In Village";
+        game.isTutorialBattle = false; // Reset flag
     }
 }
 
