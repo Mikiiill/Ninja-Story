@@ -60,7 +60,7 @@ function resetGameState() {
         isOutputting: false
     };
     document.getElementById("output").innerHTML = "Welcome to ShinobiWay!";
-    document.getElementById("start-controls").innerHTML = '<input type="text" id="name-input" class="name-input" placeholder="Enter your name, future shinobi"><button id="start-button" class="start-button" onclick="startTutorial()">Start Game</button>';
+    document.getElementById("start-controls").innerHTML = '<button class="start-button" id="start-button" onclick="startGame()">Start Game</button>';
     document.getElementById("style-controls").innerHTML = "";
     document.getElementById("jutsu-controls").innerHTML = "";
     document.getElementById("skill-controls").innerHTML = "";
@@ -91,7 +91,7 @@ function updateStatus() {
     let playerEffects = [...new Set(game.player.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("");
     document.getElementById("player-status").innerHTML = `${game.player.name} [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] ${playerEffects}`;
     let enemyEffects = game.enemy ? [...new Set(game.enemy.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("") : "";
-    document.getElementById("enemy-status").innerHTML = game.enemy ? `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.player.maxHp}</span>] ${enemyEffects}` : "Enemy [HP: <span class='enemy-hp'>0/0</span>]";
+    document.getElementById("enemy-status").innerHTML = game.enemy ? `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>] ${enemyEffects}` : "Enemy [HP: <span class='enemy-hp'>0/0</span>]";
 }
 
 function updateSkillCount() {
@@ -103,20 +103,32 @@ function updateSkillCount() {
 }
 
 function startTutorialFight() {
-    game.battleType = "event"; // Set as event fight
+    game.battleType = "tutorial";
     game.enemy = generateTrainingEnemy();
-    if (typeof startBattle === 'function') {
-        startBattle(game.player, game.enemy);
+    startBattle(game.player, game.enemy); // Calls Battle.js function
+}
+
+function startGame() {
+    // Step 1: Get player name
+    let playerName = prompt("Enter your name, future shinobi:");
+    if (playerName) {
+        game.player.name = playerName;
     } else {
-        console.error("startBattle not found");
+        game.player.name = "Shinobi";
     }
+
+    // Step 2: Show tutorial message
+    alert(`${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.`);
+
+    // Step 3: Start tutorial fight
+    startTutorialFight();
 }
 
 function generateTrainingEnemy() {
     return {
         name: "Training Dummy",
-        hp: 10,
-        maxHp: 10,
+        hp: 6, // Fixed to 6 HP
+        maxHp: 6,
         skills: [new Skills().findSkill("Healing Stance")],
         skillInventory: [],
         statusEffects: [],
@@ -124,25 +136,9 @@ function generateTrainingEnemy() {
     };
 }
 
-function startTutorial() {
-    let nameInput = document.getElementById("name-input");
-    if (nameInput) {
-        game.player.name = nameInput.value.trim() || "Shinobi";
-        let outputDiv = document.getElementById("output");
-        if (outputDiv) {
-            outputDiv.innerHTML += `<br><span class='output-text-player'>${game.player.name}</span><span class='output-text-neutral'>! Graduation is soon, demonstrate your abilities to your Teacher.</span>`;
-            outputDiv.scrollTop = outputDiv.scrollHeight;
-        }
-        nameInput.value = ""; // Clear input
-        // Start event fight after graduation message
-        startTutorialFight();
-    } else {
-        console.error("Name input not found");
-    }
-}
-
+// Simplified initialization to ensure button presence
 function initializeGame() {
-    resetGameState();
+    resetGameState(); // Moved button addition to resetGameState
 }
 
-document.addEventListener('DOMContentLoaded', initializeGame);
+initializeGame();
