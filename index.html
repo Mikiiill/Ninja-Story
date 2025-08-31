@@ -113,7 +113,8 @@
             gameState: "start",
             battleScene: null,
             outputQueue: [],
-            isOutputting: false
+            isOutputting: false,
+            tutorialDone: false // Track tutorial completion
         };
 
         game.asciiMap = {
@@ -151,7 +152,8 @@
                 gameState: "start",
                 battleScene: null,
                 outputQueue: [],
-                isOutputting: false
+                isOutputting: false,
+                tutorialDone: false
             };
             document.getElementById("output").innerHTML = "Welcome to ShinobiWay!";
             let startControls = document.getElementById("start-controls");
@@ -195,7 +197,7 @@
             let playerEffects = [...new Set(game.player.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("");
             document.getElementById("player-status").innerHTML = `${game.player.name} [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] ${playerEffects}`;
             let enemyEffects = game.enemy ? [...new Set(game.enemy.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("") : "";
-            document.getElementById("enemy-status").innerHTML = game.enemy ? `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.player.maxHp}</span>] ${enemyEffects}` : "Enemy [HP: <span class='enemy-hp'>0/0</span>]";
+            document.getElementById("enemy-status").innerHTML = game.enemy ? `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>] ${enemyEffects}` : "Enemy [HP: <span class='enemy-hp'>0/0</span>]";
         }
 
         function updateSkillCount() {
@@ -207,19 +209,17 @@
         }
 
         function startTutorialFight() {
-    game.battleType = "eventFight";
-    game.enemy = SparringDummy; // Use the defined Sparring Dummy
-    console.log("[DEBUG]: Starting tutorial fight with enemy:", game.enemy); // Debug enemy assignment
-    game.gameState = "battle";
-    startBattle(game.player, game.enemy);
-    game.battleScene.onEnd = () => {
-        if (game.target && game.target.hp <= 0 && !game.tutorialDone) {
-            game.tutorialDone = true;
-            queueOutput("good!"); // Test message
-            game.gameState = "chooseStyles"; // Set state for style selection
-            initiateStyleSelection(); // Trigger style selection
+            game.battleType = "eventFight";
+            game.enemy = SpecialTrainingDummy; // Use SpecialTrainingDummy from Characters.js
+            console.log("[DEBUG]: Before startBattle - enemy:", game.enemy);
+            game.gameState = "battle";
+            startBattle(game.player, game.enemy);
+            console.log("[DEBUG]: After startBattle - enemy:", game.enemy);
+            if (game.enemy.name !== "SpecialTrainingDummy") {
+                console.error("[ERROR]: Enemy name overridden to:", game.enemy.name);
+                game.enemy = SpecialTrainingDummy;
+            }
         }
-    }
 
         function startTutorial() {
             let nameInput = document.getElementById("name-input");
@@ -237,11 +237,16 @@
             }
         }
 
-        function initializeGame() {
-            resetGameState();
+        function initiateStyleSelection() {
+            // Placeholder implementation
+            document.getElementById("style-controls").style.display = "flex";
+            document.getElementById("style-controls").innerHTML = `
+                <button class="skills-button" onclick="selectStyle('Ninjutsu')">Ninjutsu</button>
+                <button class="skills-button" onclick="selectStyle('Taijutsu')">Taijutsu</button>
+                <button class="skills-button" onclick="selectStyle('Genjutsu')">Genjutsu</button>
+            `;
         }
 
-        document.addEventListener('DOMContentLoaded', initializeGame);
-    </script>
-</body>
-</html>
+        function selectStyle(style) {
+            game.player.ninjaStyles[style] = "C-Rank";
+            queueOutput(`Selected ${style} style upgraded to C-Rank!
