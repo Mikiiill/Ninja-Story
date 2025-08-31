@@ -20,7 +20,7 @@ let game = {
     battleScene: null,
     outputQueue: [],
     isOutputting: false,
-    tutorialDone: false // New variable to track tutorial completion
+    tutorialDone: false // Track tutorial completion
 };
 
 game.asciiMap = {
@@ -111,8 +111,8 @@ function updateSkillCount() {
 }
 
 function startTutorialFight() {
-    game.battleType = "tutorial";
-    game.enemy = generateSpecialTutorialDummy();
+    game.battleType = "eventFight"; // Changed to match endBattle logic
+    game.enemy = generateSpecialTutorialDummy(); // Ensure enemy is initialized
     game.gameState = "battle";
     startBattle(game.player, game.enemy);
 }
@@ -130,7 +130,7 @@ function startGame() {
 
 function generateSpecialTutorialDummy() {
     return {
-        name: "Special Training Dummy",
+        name: "SpecialTrainingDummy", // Match exact name for EventRewards
         hp: 6,
         maxHp: 6,
         skills: [new Skills().findSkill("Healing Stance"), new Skills().findSkill("Bite")],
