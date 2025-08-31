@@ -48,11 +48,3 @@ function generateTrainingEnemy() {
     ];
     return enemies[Math.floor(Math.random() * enemies.length)];
 }
-
-function generateTravelEnemy() {
-    let enemies = [
-        new Mob("Bandit", 30, 30, "C-Rank", { Taijutsu: "C-Rank" }, generateEnemySkills("C-Rank", { Taijutsu: "C-Rank" }), []),
-        new Mob("Rabid Dog", 35, 35, "D-Rank", { Feral: "C-Rank" }, [new Skills().findSkill("Bite")], [])
-    ];
-    return enemies[Math.floor(Math.random() * enemies.length)];
-}
