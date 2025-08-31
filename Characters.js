@@ -66,12 +66,12 @@ function generateTravelEnemy() {
 
 
 // Characters.js (append this)
-const SpecialTrainingDummy = {
-    name: "SpecialTrainingDummy",
+const SparringDummy = {
+    name: "Sparring Dummy",
     hp: 6,
     maxHp: 6,
-    skills: [new Skills().findSkill("Healing Stance"), new Skills().findSkill("Bite")],
+    skills: [new Skills().findSkill("Healing Stance")],
     skillInventory: [],
-    statusEffects: [{ name: "Burn", duration: 2, effect: (target) => target.hp = Math.max(0, target.hp - 1) }],
+    statusEffects: [],
     lastVillage: "Newb Village"
 };
