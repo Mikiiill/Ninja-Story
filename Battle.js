@@ -1,54 +1,66 @@
 function startBattle(player, enemy) {
-    if (game.gameState !== "battle") {
-        game.gameState = "battle";
-        document.getElementById("skill-controls").innerHTML = "";
-        let controls = document.getElementById("main-controls");
-        if (controls) controls.style.display = "none";
-        while (player.skills.length < 10 && player.skillInventory.length > 0) {
-            let randIndex = Math.floor(Math.random() * player.skillInventory.length);
-            player.skills.push(player.skillInventory.splice(randIndex, 1)[0]);
+    try {
+        if (game.gameState !== "battle") {
+            game.gameState = "battle";
+            document.getElementById("skill-controls").innerHTML = "";
+            let controls = document.getElementById("main-controls");
+            if (controls) controls.style.display = "none";
+            while (player.skills.length < 10 && player.skillInventory.length > 0) {
+                let randIndex = Math.floor(Math.random() * player.skillInventory.length);
+                player.skills.push(player.skillInventory.splice(randIndex, 1)[0]);
+            }
+            game.enemy = enemy;
+            console.log("[DEBUG]: startBattle enemy set to:", game.enemy);
+            updateStatus();
+            game.battleScene = { queueOutput: queueOutput };
+            queueOutput("");
+            queueOutput("<span class='battle-ready'>BATTLE BEGINS!</span>");
+            queueOutput(`<span class='output-text-player'>${player.name}</span> vs. <span class='output-text-enemy'>${enemy.name}</span>`);
+            queueOutput("");
+            console.log("Starting battle with:", { player: player.name, enemy: enemy.name });
+            setTimeout(() => determineTurnOrder(player, enemy), 1000);
+        } else {
+            queueOutput("<span class='output-text-neutral'>Battle already in progress!</span>");
         }
-        game.enemy = enemy;
-        console.log("[DEBUG]: startBattle enemy set to:", game.enemy);
-        updateStatus();
-        game.battleScene = { queueOutput: queueOutput };
-        queueOutput("");
-        queueOutput("<span class='battle-ready'>BATTLE BEGINS!</span>");
-        queueOutput(`<span class='output-text-player'>${player.name}</span> vs. <span class='output-text-enemy'>${enemy.name}</span>`);
-        queueOutput("");
-        console.log("Starting battle with:", { player: player.name, enemy: enemy.name });
-        setTimeout(() => determineTurnOrder(player, enemy), 1000);
-    } else {
-        queueOutput("<span class='output-text-neutral'>Battle already in progress!</span>");
+    } catch (e) {
+        console.error("[ERROR]: startBattle failed:", e);
     }
 }
 
 function determineTurnOrder(player, enemy) {
-    let coinFlip = Math.random() < 0.5;
-    game.user = coinFlip ? player : enemy;
-    game.target = coinFlip ? enemy : player;
-    queueOutput(`<span class='output-text-neutral'>${game.target.name} is off guard!</span>`);
-    console.log("[DEBUG]: Turn order determined:", { user: game.user.name, target: game.target.name });
-    takeTurn(game.user);
+    try {
+        let coinFlip = Math.random() < 0.5;
+        game.user = coinFlip ? player : enemy;
+        game.target = coinFlip ? enemy : player;
+        queueOutput(`<span class='output-text-neutral'>${game.target.name} is off guard!</span>`);
+        console.log("[DEBUG]: Turn order determined:", { user: game.user.name, target: game.target.name });
+        takeTurn(game.user);
+    } catch (e) {
+        console.error("[ERROR]: determineTurnOrder failed:", e);
+    }
 }
 
 function takeTurn(user) {
-    console.log("[DEBUG]: Entering takeTurn for", user.name, { user: game.user, target: game.target, gameState: game.gameState });
-    if (!game.user || !game.target || game.user.hp <= 0 || game.target.hp <= 0) {
-        console.log("[DEBUG]: Battle end condition met, exiting takeTurn");
-        endBattle();
-        return;
+    try {
+        console.log("[DEBUG]: Entering takeTurn for", user.name, { user: game.user, target: game.target, gameState: game.gameState });
+        if (!game.user || !game.target || game.user.hp <= 0 || game.target.hp <= 0) {
+            console.log("[DEBUG]: Battle end condition met, exiting takeTurn");
+            endBattle();
+            return;
+        }
+        game.user = user;
+        game.target = (user === game.user) ? game.target : game.user;
+        queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span>'s turn`);
+        startEffectCheck(user);
+    } catch (e) {
+        console.error("[ERROR]: takeTurn failed:", e);
     }
-    game.user = user;
-    game.target = (user === game.user) ? game.target : game.user;
-    queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span>'s turn`);
-    startEffectCheck(user);
 }
 
 function startEffectCheck(user) {
-    console.log(`[DEBUG]: Checking startOfTurn effects for ${user.name}`, user.statusEffects);
-    let allEffectsProcessed = true;
     try {
+        console.log(`[DEBUG]: Checking startOfTurn effects for ${user.name}`, user.statusEffects);
+        let allEffectsProcessed = true;
         user.statusEffects.forEach(effect => {
             if (effect.startOfTurn && effect.startOfTurnFunction) {
                 console.log(`[DEBUG]: Processing ${effect.name} for ${user.name}`);
@@ -62,14 +74,13 @@ function startEffectCheck(user) {
             user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
             allEffectsProcessed = false;
         }
+        if (allEffectsProcessed && user.hp > 0) {
+            skillAction(user);
+        } else {
+            endTurn();
+        }
     } catch (e) {
-        console.error("[ERROR]: Start effect check failed:", e);
-        allEffectsProcessed = false;
-    }
-    if (allEffectsProcessed && user.hp > 0) {
-        skillAction(user);
-    } else {
-        endTurn();
+        console.error("[ERROR]: startEffectCheck failed:", e);
     }
 }
 
@@ -84,40 +95,35 @@ function deathCheck() {
             endBattle();
         }
     } catch (e) {
-        console.error("[ERROR]: Death check failed:", e);
+        console.error("[ERROR]: deathCheck failed:", e);
     }
 }
 
 function skillAction(user) {
-    let skillSet = new Skills();
-    let skill = user.skills[Math.floor(Math.random() * user.skills.length)];
-    if (!skill) {
-        queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> has no skills to use!`);
-        endTurn();
-        return;
-    }
-    let isSupportSkill = skillSet.findSkill(skill.name)?.support || false;
-    queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> uses ${skill.name}!`);
-    if (isSupportSkill || skill.name === "Lightning Edge") {
-        try {
-            skill.skillFunction(user, game.target, game.battleScene);
-        } catch (e) {
-            console.error("[ERROR]: Support skill execution failed:", e);
+    try {
+        let skillSet = new Skills();
+        let skill = user.skills[Math.floor(Math.random() * user.skills.length)];
+        if (!skill) {
+            queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> has no skills to use!`);
+            endTurn();
+            return;
         }
-    } else {
-        activeEffectCheck(user);
-        triggeredEffectCheck(user, game.target, skill.style);
-        try {
+        let isSupportSkill = skillSet.findSkill(skill.name)?.support || false;
+        queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> uses ${skill.name}!`);
+        if (isSupportSkill || skill.name === "Lightning Edge") {
+            skill.skillFunction(user, game.target, game.battleScene);
+        } else {
+            activeEffectCheck(user);
+            triggeredEffectCheck(user, game.target, skill.style);
             let skillResult = skill.skillFunction(user, game.target, game.battleScene);
             console.log("[DEBUG]: Skill", skill.name, "executed with result:", skillResult, "Status Effects:", user.statusEffects, game.target.statusEffects);
-            updateStatus(); // Sync UI after skill
-        } catch (e) {
-            console.error("[ERROR]: Skill execution failed:", e);
-            queueOutput(`<span class='output-text-${user === game.player ? 'player' : 'enemy'}'>${user.name}</span> encountered an error with ${skill.name}!`);
+            updateStatus();
         }
+        endTurn();
+        deathCheck();
+    } catch (e) {
+        console.error("[ERROR]: skillAction failed:", e);
     }
-    endTurn();
-    deathCheck();
 }
 
 function activeEffectCheck(user) {
@@ -128,7 +134,7 @@ function activeEffectCheck(user) {
             }
         });
     } catch (e) {
-        console.error("[ERROR]: Active effect check failed:", e);
+        console.error("[ERROR]: activeEffectCheck failed:", e);
     }
 }
 
@@ -141,65 +147,73 @@ function triggeredEffectCheck(user, target, skillStyle) {
             }
         });
     } catch (e) {
-        console.error("[ERROR]: Triggered effect check failed:", e);
+        console.error("[ERROR]: triggeredEffectCheck failed:", e);
     }
 }
 
 function endTurn() {
-    console.log("[DEBUG]: Ending turn, scheduling next turn", { user: game.user, target: game.target, gameState: game.gameState });
-    let temp = game.user;
-    game.user = game.target;
-    game.target = temp;
     try {
+        console.log("[DEBUG]: Ending turn, scheduling next turn", { user: game.user, target: game.target, gameState: game.gameState });
+        let temp = game.user;
+        game.user = game.target;
+        game.target = temp;
         updateStatus();
+        setTimeout(() => takeTurn(game.user), 1000);
     } catch (e) {
-        console.error("[ERROR]: Update status failed:", e);
+        console.error("[ERROR]: endTurn failed:", e);
     }
-    setTimeout(() => takeTurn(game.user), 1000);
 }
 
 function endBattle() {
-    console.log("[DEBUG]: endBattle - gameState:", game.gameState, "target.hp:", game.target.hp, "target.name:", game.target.name, "battleType:", game.battleType);
-    game.gameState = "postBattle";
-    let controls = document.getElementById("main-controls");
-    if (controls) controls.style.display = "block";
-    document.getElementById("skill-controls").innerHTML = "";
-    queueOutput("<span class='battle-ready'>Battle ended!</span>");
-    if (game.target.hp <= 0) {
-        if (game.battleType === "training") {
-            performJutsuSelection(1, false, () => ArriveVillage(game.user.lastVillage));
-        } else if (game.battleType === "travel") {
-            game.player.travelFightsCompleted = (game.player.travelFightsCompleted || 0) + 1;
-            queueOutput(`<span class='output-text-neutral'>Travel fight completed! ${game.player.travelFightsCompleted}/4 fights done.</span>`);
-            if (game.player.travelFightsCompleted < 4) {
-                startTravelFight();
-            } else {
-                let targetIsVillage = MapData[game.player.lastVillage]?.areas.includes(game.target.lastVillage) ? false : true;
-                if (targetIsVillage) {
-                    game.player.lastVillage = game.target.lastVillage;
-                    ArriveVillage(game.player.lastVillage);
+    try {
+        console.log("[DEBUG]: endBattle - gameState:", game.gameState, "target.hp:", game.target.hp, "target.name:", game.target.name, "battleType:", game.battleType);
+        game.gameState = "postBattle";
+        let controls = document.getElementById("main-controls");
+        if (controls) controls.style.display = "block";
+        document.getElementById("skill-controls").innerHTML = "";
+        queueOutput("<span class='battle-ready'>Battle ended!</span>");
+        if (game.target.hp <= 0) {
+            if (game.battleType === "training") {
+                performJutsuSelection(1, false, () => ArriveVillage(game.user.lastVillage));
+            } else if (game.battleType === "travel") {
+                game.player.travelFightsCompleted = (game.player.travelFightsCompleted || 0) + 1;
+                queueOutput(`<span class='output-text-neutral'>Travel fight completed! ${game.player.travelFightsCompleted}/4 fights done.</span>`);
+                if (game.player.travelFightsCompleted < 4) {
+                    startTravelFight();
                 } else {
-                    game.gameState = "inArea";
-                    queueOutput(`<span class='output-text-neutral'>Arrived at ${game.target.lastVillage}! State set to inArea.</span>`);
-                    let eventControls = document.getElementById("travel-controls");
-                    eventControls.style.display = "flex";
-                    eventControls.innerHTML = `<button onclick="startEventFight()">Start Event Fight</button><button onclick="talkToNPC()">Talk to NPC</button><button onclick="returnToVillage()">Return to ${game.player.lastVillage}</button>`;
+                    let targetIsVillage = MapData[game.player.lastVillage]?.areas.includes(game.target.lastVillage) ? false : true;
+                    if (targetIsVillage) {
+                        game.player.lastVillage = game.target.lastVillage;
+                        ArriveVillage(game.player.lastVillage);
+                    } else {
+                        game.gameState = "inArea";
+                        queueOutput(`<span class='output-text-neutral'>Arrived at ${game.target.lastVillage}! State set to inArea.</span>`);
+                        let eventControls = document.getElementById("travel-controls");
+                        eventControls.style.display = "flex";
+                        eventControls.innerHTML = `<button onclick="startEventFight()">Start Event Fight</button><button onclick="talkToNPC()">Talk to NPC</button><button onclick="returnToVillage()">Return to ${game.player.lastVillage}</button>`;
+                    }
                 }
+            } else if (game.battleType === "eventFight" && game.target.name === "SparringDummy") {
+                console.log("[DEBUG]: Event fight win, gameState:", game.gameState);
+                applyEventReward(game.target.name);
             }
-        } else if (game.battleType === "eventFight" && game.target.name === "SparringDummy") {
-            console.log("[DEBUG]: Event fight win, gameState:", game.gameState);
-            applyEventReward(game.target.name);
+        } else if (game.user.hp <= 0) {
+            ArriveVillage(game.user.lastVillage);
         }
-    } else if (game.user.hp <= 0) {
-        ArriveVillage(game.user.lastVillage);
+        game.user = null;
+        game.target = null;
+    } catch (e) {
+        console.error("[ERROR]: endBattle failed:", e);
     }
-    game.user = null;
-    game.target = null;
 }
 
 function startTravelFight() {
-    game.battleType = "travel";
-    startBattle(game.player, generateTravelEnemy());
+    try {
+        game.battleType = "travel";
+        startBattle(game.player, generateTravelEnemy());
+    } catch (e) {
+        console.error("[ERROR]: startTravelFight failed:", e);
+    }
 }
 
 function generateTravelEnemy() {
