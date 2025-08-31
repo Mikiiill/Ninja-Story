@@ -117,21 +117,7 @@ function startTutorialFight() {
             game.gameState = "chooseStyles"; // Set state for style selection
             initiateStyleSelection(); // Trigger style selection
         }
-    };
-
-function startTutorialFight() {
-    game.battleType = "eventFight"; // Explicitly set to eventFight
-    game.enemy = SpecialTrainingDummy; // Use the defined character
-    game.isTutorialBattle = true; // Set tutorial flag
-    console.log("[DEBUG]: Before startBattle - enemy:", game.enemy); // Debug before battle
-    game.gameState = "battle";
-    startBattle(game.player, game.enemy);
-    console.log("[DEBUG]: After startBattle - enemy:", game.enemy); // Debug after battle start
-    if (game.enemy.name !== "SpecialTrainingDummy") {
-        console.error("[ERROR]: Enemy name overridden to:", game.enemy.name);
-        game.enemy = SpecialTrainingDummy; // Force correct name
     }
-}
 
 function startGame() {
     let playerName = prompt("Enter your name, future shinobi:");
