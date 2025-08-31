@@ -56,3 +56,12 @@ function generateTravelEnemy() {
     ];
     return enemies[Math.floor(Math.random() * enemies.length)];
 }
+const SparringDummy = {
+    name: "SparringDummy",
+    hp: 6,
+    maxHp: 6,
+    skills: [new Skills().findSkill("Healing Stance"), new Skills().findSkill("Bite")],
+    skillInventory: [],
+    statusEffects: [{ name: "Burn", duration: 2, effect: (target) => target.hp = Math.max(0, target.hp - 1) }],
+    lastVillage: "Newb Village"
+};
