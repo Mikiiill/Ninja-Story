@@ -1,4 +1,4 @@
-// startup.js (Using your latest version with special Dummy)
+// startup.js
 let game = {
     player: {
         name: "Shinobi",
@@ -93,7 +93,12 @@ function updateStatus() {
     let playerEffects = [...new Set(game.player.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("");
     document.getElementById("player-status").innerHTML = `${game.player.name} [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] ${playerEffects}`;
     let enemyEffects = game.enemy ? [...new Set(game.enemy.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("") : "";
-    document.getElementById("enemy-status").innerHTML = game.enemy ? `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>] ${enemyEffects}` : "Enemy [HP: <span class='enemy-hp'>0/0</span>]";
+    if (game.enemy) {
+        // Explicitly use game.enemy's maxHp to prevent override
+        document.getElementById("enemy-status").innerHTML = `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>] ${enemyEffects}`;
+    } else {
+        document.getElementById("enemy-status").innerHTML = "Enemy [HP: <span class='enemy-hp'>0/0</span>]";
+    }
 }
 
 function updateSkillCount() {
@@ -106,7 +111,9 @@ function updateSkillCount() {
 
 function startTutorialFight() {
     game.battleType = "tutorial";
-    game.enemy = generateSpecialTutorialDummy(); // Use special Dummy
+    game.enemy = generateSpecialTutorialDummy();
+    game.gameState = "battle"; // Ensure battle state
+    queueOutput(`${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.`); // Before fight
     startBattle(game.player, game.enemy);
     game.battleScene.onEnd = () => endTutorial();
 }
@@ -122,10 +129,9 @@ function startGame() {
 }
 
 function generateSpecialTutorialDummy() {
-    // Special Dummy with varied stats and skills
     return {
         name: "Special Training Dummy",
-        hp: 6, // Fixed to 6 HP
+        hp: 6,
         maxHp: 6,
         skills: [new Skills().findSkill("Healing Stance"), new Skills().findSkill("Bite")],
         skillInventory: [],
@@ -135,7 +141,7 @@ function generateSpecialTutorialDummy() {
 }
 
 function endTutorial() {
-    queueOutput(`${game.player.name}! Graduation is soon, demonstrate your abilities to your Teacher.`);
+    queueOutput("Train and learn 10 Jutsu to prepare for your Genin promotion!"); // After fight
     showStyleSelect();
 }
 
@@ -162,7 +168,6 @@ function showSkillSelect() {
         <button class="skills-button" onclick="selectSkill('Bite')">Bite</button>
         <button class="skills-button" onclick="selectSkill('Substitution Jutsu')">Substitution Jutsu</button>
     `;
-    queueOutput("Train and learn 10 skills before you are ready to become a Genin.");
 }
 
 function selectSkill(skillName) {
@@ -182,6 +187,9 @@ function arriveVillage() {
     document.getElementById("travel-controls").style.display = "flex";
     document.getElementById("travel-controls").innerHTML = `<button class="travel-button" onclick="startTravel()">Travel</button>`;
     queueOutput("You have arrived at Newb Village. Prepare to travel!");
+    game.player.hp = game.player.maxHp;
+    game.player.statusEffects = [];
+    updateStatus();
 }
 
 function startTravel() {
