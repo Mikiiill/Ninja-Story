@@ -104,7 +104,7 @@ function updateSkillCount() {
 
 function startTutorialFight() {
     game.battleType = "tutorial";
-    game.enemy = generateTrainingEnemy();
+    game.enemy = generateTutorialEnemy();
     startBattle(game.player, game.enemy); // Calls Battle.js function
 }
 
@@ -124,7 +124,7 @@ function startGame() {
     startTutorialFight();
 }
 
-function generateTrainingEnemy() {
+function generateTutorialEnemy() {
     return {
         name: "Training Dummy",
         hp: 6, // Fixed to 6 HP
