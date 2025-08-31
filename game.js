@@ -108,9 +108,9 @@ class Skills {
     substitutionJutsu(user, target) {
         user.statusEffects.push(new StatusEffect("Swap", 1, 0, false, false, true, null, null, 
             (user, target, skillStyle) => {
-                logBattle(`<span class='output-text-${user === player ? 'player' : 'enemy'}'>${user.name}</span> uses Substitution to dodge the attack with a log!`);
+                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses Substitution to dodge the attack with a log!`);
                 user.statusEffects = user.statusEffects.filter(e => e.name !== "Swap");
-                return true;
+                return true; // End the turn
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> prepares <span class="output-text-neutral">Substitution Jutsu</span> <span class="status-substitution">🪵</span>!`);
         return true;
@@ -131,7 +131,7 @@ class Skills {
             (user, target) => {
                 let cloneCount = user.statusEffects.filter(e => e.name === "ShadowCloneEffect").length;
                 for (let i = 0; i < cloneCount; i++) {
-                    logBattle(`<span class='output-text-${user === player ? 'player' : 'enemy'}'>Shadow Clone ${i + 1} uses Barrage on ${target.name}!</span>`);
+                    logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">Shadow Clone ${i + 1} uses Barrage on ${target.name}!</span>`);
                     this.barrage(user, target);
                 }
                 user.statusEffects = user.statusEffects.filter(e => e.name !== "ShadowCloneEffect");
@@ -140,9 +140,9 @@ class Skills {
             (user, target, skillStyle) => {
                 let cloneCount = user.statusEffects.filter(e => e.name === "ShadowCloneEffect").length;
                 if (cloneCount > 0) {
-                    logBattle(`<span class='output-text-${target === player ? 'player' : 'enemy'}'>${target.name}</span>'s Shadow Clone absorbs the attack!`);
+                    logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span>'s Shadow Clone absorbs the attack!`);
                     user.statusEffects.splice(user.statusEffects.findIndex(e => e.name === "ShadowCloneEffect"), 1);
-                    return true;
+                    return true; // End the turn
                 }
                 return false;
             }));
@@ -156,7 +156,7 @@ class Skills {
         target.statusEffects.push(new StatusEffect("Doom", 5, 1, true, false, false, 
             (user, target) => {
                 target.hp = Math.max(0, target.hp - target.statusEffects.find(e => e.name === "Doom").damage);
-                logBattle(`<span class='output-text-${target === player ? 'player' : 'enemy'}'>${target.name}</span> takes ${target.statusEffects.find(e => e.name === "Doom").damage} damage from <span class='status-doom'>Doom 💀</span>!`);
+                logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> takes ${target.statusEffects.find(e => e.name === "Doom").damage} damage from <span class="status-doom">Doom 💀</span>!`);
                 return false;
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-genjutsu">Demonic Vision</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-doom">Doom 💀</span>!`);
@@ -170,7 +170,7 @@ class Skills {
             (user, target) => {
                 let heal = user.hp < user.maxHp ? user.statusEffects.find(e => e.name === "Regen").damage : 0;
                 user.hp = Math.min(user.maxHp, user.hp + heal);
-                if (heal > 0) logBattle(`<span class='output-text-${user === player ? 'player' : 'enemy'}'>${user.name}</span> heals ${heal} HP from <span class='status-regen'>Regen 🌿</span>!`);
+                if (heal > 0) logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> heals ${heal} HP from <span class="status-regen">Regen 🌿</span>!`);
                 return false;
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> enters <span class="output-text-neutral">Healing Stance</span>${heal > 0 ? `, healing ${heal} HP` : ""} <span class="status-regen">🌿</span>!`);
@@ -181,11 +181,11 @@ class Skills {
         user.statusEffects.push(new StatusEffect("Dome", 2, 0, false, false, true, null, null, 
             (user, target, skillStyle) => {
                 if (skillStyle !== "genjutsu") {
-                    logBattle(`<span class='output-text-${user === player ? 'player' : 'enemy'}'>${user.name}</span> uses Earth Dome to mitigate the attack!`);
+                    logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses Earth Dome to mitigate the attack!`);
                     user.statusEffects = user.statusEffects.filter(e => e.name !== "Dome");
-                    return true;
+                    return true; // End the turn
                 }
-                return false;
+                return false; // Allow skill to proceed
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> raises <span class="output-text-earth">Earth Dome Jutsu</span> <span class="status-dome">🪨</span>!`);
         return true;
@@ -197,7 +197,7 @@ class Skills {
         target.statusEffects.push(new StatusEffect("Burn", 1, 2, true, false, false, 
             (user, target) => {
                 target.hp = Math.max(0, target.hp - target.statusEffects.find(e => e.name === "Burn").damage);
-                logBattle(`<span class='output-text-${target === player ? 'player' : 'enemy'}'>${target.name}</span> takes ${target.statusEffects.find(e => e.name === "Burn").damage} damage from <span class='status-burn'>Burn 🔥</span>!`);
+                logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> takes ${target.statusEffects.find(e => e.name === "Burn").damage} damage from <span class="status-burn">Burn 🔥</span>!`);
                 return false;
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Flame Throw Jutsu</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burn">Burn 🔥</span>!`);
@@ -209,15 +209,15 @@ class Skills {
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         user.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
             (user, target) => {
-                logBattle(`<span class='output-text-${user === player ? 'player' : 'enemy'}'>${user.name}</span> is stunned by Numb and skips their turn!`);
+                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> is stunned by Numb and skips their turn!`);
                 user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
-                return true;
+                return true; // End the turn
             }));
         target.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
             (user, target) => {
-                logBattle(`<span class='output-text-${target === player ? 'player' : 'enemy'}'>${target.name}</span> is stunned by Numb and skips their turn!`);
+                logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> is stunned by Numb and skips their turn!`);
                 target.statusEffects = target.statusEffects.filter(e => e.name !== "Numb");
-                return true;
+                return true; // End the turn
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-lightning">Static Field Jutsu</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-numb">Numb ⚡️</span> on both!`);
         return target.hp <= 0;
@@ -229,7 +229,7 @@ class Skills {
         target.statusEffects.push(new StatusEffect("Burn", 1, 1, true, false, false, 
             (user, target) => {
                 target.hp = Math.max(0, target.hp - target.statusEffects.find(e => e.name === "Burn").damage);
-                logBattle(`<span class='output-text-${target === player ? 'player' : 'enemy'}'>${target.name}</span> takes ${target.statusEffects.find(e => e.name === "Burn").damage} damage from <span class='status-burn'>Burn 🔥</span>!`);
+                logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> takes ${target.statusEffects.find(e => e.name === "Burn").damage} damage from <span class="status-burn">Burn 🔥</span>!`);
                 return false;
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Fireball Jutsu</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burn">Burn 🔥</span>!`);
@@ -259,9 +259,9 @@ class Skills {
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         target.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
             (user, target) => {
-                logBattle(`<span class='output-text-${target === player ? 'player' : 'enemy'}'>${target.name}</span> is stunned by Numb and skips their turn!`);
-                target.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
-                return true;
+                logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> is stunned by Numb and skips their turn!`);
+                target.statusEffects = target.statusEffects.filter(e => e.name !== "Numb");
+                return true; // End the turn
             }));
         user.statusEffects.push(new StatusEffect("READY", 1, 0, false, true, false, null, 
             (user, target) => {
@@ -286,11 +286,11 @@ class Skills {
         user.statusEffects.push(new StatusEffect("Release", 1, 0, false, false, true, null, null, 
             (user, target, skillStyle) => {
                 if (skillStyle === "genjutsu") {
-                    logBattle(`<span class='output-text-${user === player ? 'player' : 'enemy'}'>${user.name}</span> uses Release to resist the Genjutsu attack!`);
+                    logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses Release to resist the Genjutsu attack!`);
                     user.statusEffects = user.statusEffects.filter(e => e.name !== "Release");
-                    return true;
+                    return true; // End the turn
                 }
-                return false;
+                return false; // Allow skill to proceed
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-genjutsu">Genjutsu Release</span>, dispelling Doom and gaining <span class="status-substitution">Release 🌀</span>!`);
         return true;
@@ -312,7 +312,7 @@ class Skills {
         target.statusEffects.push(new StatusEffect("Bleed", 2, 1, true, false, false, 
             (user, target) => {
                 target.hp = Math.max(0, target.hp - target.statusEffects.find(e => e.name === "Bleed").damage);
-                logBattle(`<span class='output-text-${target === player ? 'player' : 'enemy'}'>${target.name}</span> takes ${target.statusEffects.find(e => e.name === "Bleed").damage} damage from <span class='status-bleed'>Bleed 🩸</span>!`);
+                logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> takes ${target.statusEffects.find(e => e.name === "Bleed").damage} damage from <span class="status-bleed">Bleed 🩸</span>!`);
                 return false;
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-feral">Bite</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage${heal > 0 ? `, healing ${heal} HP` : ""}, inflicting <span class="status-bleed">Bleed 🩸</span>!`);
@@ -333,9 +333,9 @@ function logBattle(message) {
         newMessage.innerHTML = message;
         log.appendChild(newMessage);
         setTimeout(() => {
-            log.scrollTop = log.scrollHeight; // Primary auto-scroll
-            newMessage.scrollIntoView({ behavior: "smooth", block: "end" }); // Fallback
-        }, 200); // Increased delay for mobile
+            log.scrollTop = log.scrollHeight;
+            newMessage.scrollIntoView({ behavior: "smooth", block: "end" });
+        }, 200);
     }
 }
 
@@ -528,6 +528,7 @@ function setTurnOrder() {
 function takeTurn() {
     if (!inBattle) return;
     updateBattleUI();
+    logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span>'s turn`);
 
     let skipTurn = false;
     user.statusEffects.forEach(status => {
@@ -545,32 +546,49 @@ function takeTurn() {
         return;
     }
 
-    let attackBlocked = false;
-    if (target.statusEffects.some(status => status.triggered && status.triggeredFunction)) {
-        target.statusEffects.forEach(status => {
-            if (status.triggered && status.triggeredFunction) {
-                attackBlocked = status.triggeredFunction(user, target, user.activeJutsu.length > 0 ? user.activeJutsu[0].style : "neutral") || attackBlocked;
-            }
-        });
-    }
-    if (user.statusEffects.some(status => status.active && status.activeFunction)) {
-        user.statusEffects.forEach(status => {
-            if (status.active && status.activeFunction) {
-                status.activeFunction(user, target);
-            }
-        });
+    skillAction();
+}
+
+function skillAction() {
+    if (!user.activeJutsu.length) {
+        logBattle(`${user.name} has no Active Jutsu!`);
+        endTurn();
+        return;
     }
 
-    if (!attackBlocked && user.activeJutsu.length > 0) {
-        const jutsu = user.activeJutsu[Math.floor(Math.random() * user.activeJutsu.length)];
-        if (jutsu.support) {
-            jutsu.skillFunction(user, target);
-        } else {
-            jutsu.skillFunction(user, target);
-        }
-    } else if (!attackBlocked) {
-        logBattle(`${user.name} has no Active Jutsu!`);
+    const jutsu = user.activeJutsu[Math.floor(Math.random() * user.activeJutsu.length)];
+    logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses ${jutsu.name}!`);
+
+    if (jutsu.support) {
+        jutsu.skillFunction(user, target);
+        endTurn();
+        return;
     }
+
+    // Check active effects
+    user.statusEffects.forEach(status => {
+        if (status.active && status.activeFunction) {
+            status.activeFunction(user, target);
+        }
+    });
+
+    // Check target's triggered effects
+    let endTurn = false;
+    target.statusEffects.forEach(status => {
+        if (status.triggered && status.triggeredFunction) {
+            if (status.triggeredFunction(user, target, jutsu.style)) {
+                endTurn = true;
+            }
+        }
+    });
+
+    if (endTurn) {
+        endTurn();
+        return;
+    }
+
+    // Execute non-support Jutsu
+    jutsu.skillFunction(user, target);
 
     if (checkForDeath()) {
         return;
@@ -636,7 +654,7 @@ const opponent = new Mob(
     [],
     [],
     [],
-    "Assets/NINJA1.png"
+    "https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/NINJA2.PNG"
 );
 
 // Initialize Game
