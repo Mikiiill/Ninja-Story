@@ -93,46 +93,8 @@
     <script src="Map.js" defer></script>
 
     <script defer>
-        let game = {
-            player: {
-                name: "Shinobi",
-                hp: 10,
-                maxHp: 10,
-                Rank: "Student",
-                ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
-                skills: [new Skills().findSkill("Barrage"), new Skills().findSkill("Barrage")],
-                skillInventory: [],
-                statusEffects: [],
-                lastVillage: "Newb Village"
-            },
-            user: null,
-            target: null,
-            enemy: null,
-            battleNum: 1,
-            output: [],
-            gameState: "start",
-            battleScene: null,
-            outputQueue: [],
-            isOutputting: false,
-            tutorialDone: false
-        };
-
-        game.asciiMap = {
-            "Burn": "🔥",
-            "Numb": "⚡️",
-            "Bleed": "🩸",
-            "Regen": "🌿",
-            "Doom": "💀",
-            "ShadowCloneEffect": "👥",
-            "Substitution": "🪵",
-            "DoubleImage": "🌫️",
-            "Dome": "🪨",
-            "READY": "",
-            "Release": "🌀"
-        };
-
-        function resetGameState() {
-            game = {
+        document.addEventListener('DOMContentLoaded', () => {
+            let game = {
                 player: {
                     name: "Shinobi",
                     hp: 10,
@@ -155,167 +117,185 @@
                 isOutputting: false,
                 tutorialDone: false
             };
-            document.getElementById("output").innerHTML = "Welcome to ShinobiWay!";
-            let startControls = document.getElementById("start-controls");
-            if (startControls) {
-                let nameInput = startControls.querySelector("#name-input");
-                let startButton = startControls.querySelector("#start-button");
-                if (!nameInput || !startButton) {
-                    startControls.innerHTML = '<input type="text" id="name-input" class="name-input" placeholder="Enter your name, future shinobi"><button id="start-button" class="start-button" onclick="startTutorial()">Start Game</button>';
-                }
-            }
-            document.getElementById("style-controls").innerHTML = "";
-            document.getElementById("jutsu-controls").innerHTML = "";
-            document.getElementById("skill-controls").innerHTML = "";
-            document.getElementById("main-controls").innerHTML = "";
-            document.getElementById("travel-controls").innerHTML = "";
-            updateStatus();
-        }
 
-        function queueOutput(text) {
-            game.outputQueue.push(text);
-            if (!game.isOutputting) processOutputQueue();
-        }
+            game.asciiMap = {
+                "Burn": "🔥",
+                "Numb": "⚡️",
+                "Bleed": "🩸",
+                "Regen": "🌿",
+                "Doom": "💀",
+                "ShadowCloneEffect": "👥",
+                "Substitution": "🪵",
+                "DoubleImage": "🌫️",
+                "Dome": "🪨",
+                "READY": "",
+                "Release": "🌀"
+            };
 
-        function processOutputQueue() {
-            if (game.outputQueue.length === 0) {
-                game.isOutputting = false;
-                return;
-            }
-            game.isOutputting = true;
-            let text = game.outputQueue.shift();
-            game.output.push(text);
-            let outputDiv = document.getElementById("output");
-            if (outputDiv) {
-                outputDiv.innerHTML = game.output.join("<br>");
-                outputDiv.scrollTop = outputDiv.scrollHeight;
-            }
-            setTimeout(processOutputQueue, 1000);
-        }
-
-        function updateStatus() {
-            let playerEffects = [...new Set(game.player.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("");
-            document.getElementById("player-status").innerHTML = `${game.player.name} [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] ${playerEffects}`;
-            let enemyEffects = game.enemy ? [...new Set(game.enemy.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("") : "";
-            document.getElementById("enemy-status").innerHTML = game.enemy ? `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>] ${enemyEffects}` : "Enemy [HP: <span class='enemy-hp'>0/0</span>]";
-        }
-
-        function updateSkillCount() {
-            let totalCards = game.player.skills.length + game.player.skillInventory.length;
-            if (totalCards >= 10 && game.player.Rank === "Student") {
-                game.player.Rank = "Genin";
-                queueOutput("<span class='battle-ready'>Promoted to Genin!</span>");
-            }
-        }
-
-        function startTutorialFight() {
-            try {
-                game.battleType = "eventFight";
-                if (typeof SparringDummy === "undefined") {
-                    console.error("[ERROR]: SparringDummy is undefined. Check Characters.js loading.");
-                    return;
-                }
-                game.enemy = SparringDummy;
-                console.log("[DEBUG]: Before startBattle - enemy:", game.enemy);
-                game.gameState = "battle";
-                if (typeof startBattle === "undefined") {
-                    console.error("[ERROR]: startBattle is undefined. Check Battle.js loading.");
-                    return;
-                }
-                startBattle(game.player, game.enemy);
-                console.log("[DEBUG]: After startBattle - enemy:", game.enemy);
-                if (game.enemy.name !== "SparringDummy") {
-                    console.error("[ERROR]: Enemy name overridden to:", game.enemy.name);
-                    game.enemy = SparringDummy;
-                }
-            } catch (e) {
-                console.error("[ERROR]: startTutorialFight failed:", e);
-            }
-        }
-
-        function startTutorial() {
-            try {
-                let nameInput = document.getElementById("name-input");
-                if (nameInput) {
-                    game.player.name = nameInput.value.trim() || "Shinobi";
-                    let outputDiv = document.getElementById("output");
-                    if (outputDiv) {
-                        outputDiv.innerHTML += `<br><span class='output-text-player'>${game.player.name}</span><span class='output-text-neutral'>! Graduation is soon, demonstrate your abilities to your Teacher.</span>`;
-                        outputDiv.scrollTop = outputDiv.scrollHeight;
+            function resetGameState() {
+                game = {
+                    player: {
+                        name: "Shinobi",
+                        hp: 10,
+                        maxHp: 10,
+                        Rank: "Student",
+                        ninjaStyles: { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
+                        skills: [new Skills().findSkill("Barrage"), new Skills().findSkill("Barrage")],
+                        skillInventory: [],
+                        statusEffects: [],
+                        lastVillage: "Newb Village"
+                    },
+                    user: null,
+                    target: null,
+                    enemy: null,
+                    battleNum: 1,
+                    output: [],
+                    gameState: "start",
+                    battleScene: null,
+                    outputQueue: [],
+                    isOutputting: false,
+                    tutorialDone: false
+                };
+                document.getElementById("output").innerHTML = "Welcome to ShinobiWay!";
+                let startControls = document.getElementById("start-controls");
+                if (startControls) {
+                    let nameInput = startControls.querySelector("#name-input");
+                    let startButton = startControls.querySelector("#start-button");
+                    if (!nameInput || !startButton) {
+                        startControls.innerHTML = '<input type="text" id="name-input" class="name-input" placeholder="Enter your name, future shinobi"><button id="start-button" class="start-button" onclick="startTutorial()">Start Game</button>';
                     }
-                    nameInput.value = ""; // Clear input
-                    startTutorialFight(); // Start event fight after graduation message
-                } else {
-                    console.error("Name input not found");
                 }
-            } catch (e) {
-                console.error("[ERROR]: startTutorial failed:", e);
-            }
-        }
-
-        function initiateStyleSelection() {
-            document.getElementById("style-controls").style.display = "flex";
-            document.getElementById("style-controls").innerHTML = `
-                <button class="skills-button" onclick="selectStyle('Ninjutsu')">Ninjutsu</button>
-                <button class="skills-button" onclick="selectStyle('Taijutsu')">Taijutsu</button>
-                <button class="skills-button" onclick="selectStyle('Genjutsu')">Genjutsu</button>
-            `;
-        }
-
-        function selectStyle(style) {
-            game.player.ninjaStyles[style] = "C-Rank";
-            queueOutput(`Selected ${style} style upgraded to C-Rank!`);
-            showSkillSelect();
-        }
-
-        function showSkillSelect() {
-            document.getElementById("skill-controls").style.display = "flex";
-            document.getElementById("skill-controls").innerHTML = `
-                <button class="skills-button" onclick="selectSkill('Barrage')">Barrage</button>
-                <button class="skills-button" onclick="selectSkill('Healing Stance')">Healing Stance</button>
-                <button class="skills-button" onclick="selectSkill('Bite')">Bite</button>
-                <button class="skills-button" onclick="selectSkill('Substitution Jutsu')">Substitution Jutsu</button>
-            `;
-        }
-
-        function selectSkill(skillName) {
-            let skill = new Skills().findSkill(skillName);
-            if (skill && game.player.skills.length < 4) {
-                game.player.skills.push(skill);
-                queueOutput(`Added ${skillName} to skills!`);
-                if (game.player.skills.length >= 2) {
-                    arriveVillage();
-                }
-            }
-        }
-
-        function arriveVillage() {
-            if (game.gameState !== "postBattle" && game.gameState !== "battle") {
-                document.getElementById("style-controls").style.display = "none";
-                document.getElementById("skill-controls").style.display = "none";
-                document.getElementById("travel-controls").style.display = "flex";
-                document.getElementById("travel-controls").innerHTML = `<button class="travel-button" onclick="startTravel()">Travel</button>`;
-                queueOutput("You have arrived at Newb Village. Prepare to travel!");
-                game.player.hp = game.player.maxHp;
-                game.player.statusEffects = [];
+                document.getElementById("style-controls").innerHTML = "";
+                document.getElementById("jutsu-controls").innerHTML = "";
+                document.getElementById("skill-controls").innerHTML = "";
+                document.getElementById("main-controls").innerHTML = "";
+                document.getElementById("travel-controls").innerHTML = "";
                 updateStatus();
-                game.gameState = "In Village";
             }
-        }
 
-        function startTravel() {
-            game.gameState = "travel";
-            document.getElementById("travel-controls").style.display = "none";
-            document.getElementById("main-controls").style.display = "flex";
-            queueOutput("Traveling... Encountering a random Genin!");
-            // Placeholder for Travel Genin battle
-        }
+            function queueOutput(text) {
+                game.outputQueue.push(text);
+                if (!game.isOutputting) processOutputQueue();
+            }
 
-        function initializeGame() {
-            resetGameState();
-        }
+            function processOutputQueue() {
+                if (game.outputQueue.length === 0) {
+                    game.isOutputting = false;
+                    return;
+                }
+                game.isOutputting = true;
+                let text = game.outputQueue.shift();
+                game.output.push(text);
+                let outputDiv = document.getElementById("output");
+                if (outputDiv) {
+                    outputDiv.innerHTML = game.output.join("<br>");
+                    outputDiv.scrollTop = outputDiv.scrollHeight;
+                }
+                setTimeout(processOutputQueue, 1000);
+            }
 
-        document.addEventListener('DOMContentLoaded', initializeGame);
-    </script>
-</body>
-</html>
+            function updateStatus() {
+                try {
+                    let playerEffects = [...new Set(game.player.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("");
+                    document.getElementById("player-status").innerHTML = `${game.player.name} [HP: <span class="player-hp">${game.player.hp}/${game.player.maxHp}</span>] ${playerEffects}`;
+                    let enemyEffects = game.enemy ? [...new Set(game.enemy.statusEffects.map(e => `<span class="status-${e.name.toLowerCase().replace(" ", "")}">${game.asciiMap[e.name] || ""}</span>`))].join("") : "";
+                    document.getElementById("enemy-status").innerHTML = game.enemy ? `${game.enemy.name} [HP: <span class="enemy-hp">${game.enemy.hp}/${game.enemy.maxHp}</span>] ${enemyEffects}` : "Enemy [HP: <span class='enemy-hp'>0/0</span>]";
+                } catch (e) {
+                    console.error("[ERROR]: updateStatus failed:", e);
+                }
+            }
+
+            function updateSkillCount() {
+                let totalCards = game.player.skills.length + game.player.skillInventory.length;
+                if (totalCards >= 10 && game.player.Rank === "Student") {
+                    game.player.Rank = "Genin";
+                    queueOutput("<span class='battle-ready'>Promoted to Genin!</span>");
+                }
+            }
+
+            function startTutorialFight() {
+                try {
+                    if (typeof SparringDummy === "undefined") {
+                        console.error("[ERROR]: SparringDummy is undefined. Check Characters.js loading.");
+                        return;
+                    }
+                    game.battleType = "eventFight";
+                    game.enemy = Object.assign({}, SparringDummy); // Shallow copy to avoid reference issues
+                    console.log("[DEBUG]: Before startBattle - enemy:", game.enemy);
+                    game.gameState = "battle";
+                    if (typeof startBattle === "undefined") {
+                        console.error("[ERROR]: startBattle is undefined. Check Battle.js loading.");
+                        return;
+                    }
+                    startBattle(game.player, game.enemy);
+                    console.log("[DEBUG]: After startBattle - enemy:", game.enemy);
+                    if (game.enemy.name !== "SparringDummy") {
+                        console.error("[ERROR]: Enemy name overridden to:", game.enemy.name);
+                        game.enemy = Object.assign({}, SparringDummy);
+                    }
+                } catch (e) {
+                    console.error("[ERROR]: startTutorialFight failed:", e);
+                }
+            }
+
+            function startTutorial() {
+                try {
+                    let nameInput = document.getElementById("name-input");
+                    if (nameInput) {
+                        game.player.name = nameInput.value.trim() || "Shinobi";
+                        let outputDiv = document.getElementById("output");
+                        if (outputDiv) {
+                            outputDiv.innerHTML += `<br><span class='output-text-player'>${game.player.name}</span><span class='output-text-neutral'>! Graduation is soon, demonstrate your abilities to your Teacher.</span>`;
+                            outputDiv.scrollTop = outputDiv.scrollHeight;
+                        }
+                        nameInput.value = ""; // Clear input
+                        startTutorialFight(); // Start event fight after graduation message
+                    } else {
+                        console.error("Name input not found");
+                    }
+                } catch (e) {
+                    console.error("[ERROR]: startTutorial failed:", e);
+                }
+            }
+
+            function initiateStyleSelection() {
+                document.getElementById("style-controls").style.display = "flex";
+                document.getElementById("style-controls").innerHTML = `
+                    <button class="skills-button" onclick="selectStyle('Ninjutsu')">Ninjutsu</button>
+                    <button class="skills-button" onclick="selectStyle('Taijutsu')">Taijutsu</button>
+                    <button class="skills-button" onclick="selectStyle('Genjutsu')">Genjutsu</button>
+                `;
+            }
+
+            function selectStyle(style) {
+                game.player.ninjaStyles[style] = "C-Rank";
+                queueOutput(`Selected ${style} style upgraded to C-Rank!`);
+                showSkillSelect();
+            }
+
+            function showSkillSelect() {
+                document.getElementById("skill-controls").style.display = "flex";
+                document.getElementById("skill-controls").innerHTML = `
+                    <button class="skills-button" onclick="selectSkill('Barrage')">Barrage</button>
+                    <button class="skills-button" onclick="selectSkill('Healing Stance')">Healing Stance</button>
+                    <button class="skills-button" onclick="selectSkill('Bite')">Bite</button>
+                    <button class="skills-button" onclick="selectSkill('Substitution Jutsu')">Substitution Jutsu</button>
+                `;
+            }
+
+            function selectSkill(skillName) {
+                let skill = new Skills().findSkill(skillName);
+                if (skill && game.player.skills.length < 4) {
+                    game.player.skills.push(skill);
+                    queueOutput(`Added ${skillName} to skills!`);
+                    if (game.player.skills.length >= 2) {
+                        arriveVillage();
+                    }
+                }
+            }
+
+            function arriveVillage() {
+                if (game.gameState !== "postBattle" && game.gameState !== "battle") {
+                    document.getElementById("style-controls").style.display = "none";
+                    document.getElementById("skill-controls").style.display = "none";
+                    document.getElementById("travel-controls
