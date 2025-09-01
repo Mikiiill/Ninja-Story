@@ -260,7 +260,7 @@ class Skills {
         target.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
             (user, target) => {
                 logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> is stunned by Numb and skips their turn!`);
-                target.statusEffects = target.statusEffects.filter(e => e.name === "Numb");
+                target.statusEffects = target.statusEffects.filter(e => e.name !== "Numb");
                 return true; // End the turn
             }));
         user.statusEffects.push(new StatusEffect("READY", 1, 0, false, true, false, null, 
@@ -326,7 +326,7 @@ function compareRanks(rank1, rank2) {
 }
 
 // Utility Functions
-function logBattle(message) {
+function logBattle(message, delay = 1000) {
     const log = document.getElementById("battle-log-content");
     if (log) {
         const newMessage = document.createElement("p");
@@ -335,7 +335,7 @@ function logBattle(message) {
         setTimeout(() => {
             log.scrollTop = log.scrollHeight;
             newMessage.scrollIntoView({ behavior: "smooth", block: "end" });
-        }, 200);
+        }, delay);
     }
 }
 
@@ -489,7 +489,7 @@ function checkForDeath() {
         const loser = player.hp <= 0 ? player : opponent;
         logBattle(`${loser.name} is defeated! ${winner.name} wins!`);
         awardReward(winner, loser);
-        inBattle = false; // Moved here for clarity
+        inBattle = false;
         return true;
     }
     return false;
@@ -532,7 +532,11 @@ function takeTurn() {
     }
     try {
         updateBattleUI();
-        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span>'s turn`);
+        // Add empty line before turn message
+        logBattle("", 0);
+        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span>'s turn`, 2000);
+        // Add empty line after turn message
+        logBattle("", 0);
 
         let skipTurn = false;
         user.statusEffects.forEach(status => {
@@ -613,10 +617,8 @@ function endTurn() {
             logBattle("Cannot end turn: Battle is not active!");
             return;
         }
-        logBattle(`Ending turn for ${user.name}, switching to ${target.name}`);
         [user, target] = [target, user];
         updateBattleUI();
-        logBattle(`Scheduling next turn for ${user.name}`);
         setTimeout(takeTurn, 1000);
     } catch (e) {
         logBattle(`Error in endTurn: ${e.message}`);
