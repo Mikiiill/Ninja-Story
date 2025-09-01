@@ -470,6 +470,7 @@ let player = new Mob(
 
 function toggleJutsuMenu() {
     logBattle("toggleJutsuMenu clicked!");
+    console.log("toggleJutsuMenu: inBattle =", inBattle);
     if (inBattle) {
         logBattle(`Cannot toggle Jutsu menu during battle! inBattle: ${inBattle}`);
         return;
@@ -477,8 +478,11 @@ function toggleJutsuMenu() {
     const content = document.getElementById("jutsu-management-content");
     if (content) {
         content.classList.toggle("hidden");
+        console.log("jutsu-management-content classes:", content.classList);
+        logBattle(`Toggled jutsu-management-content, hidden: ${content.classList.contains("hidden")}`);
     } else {
         logBattle("Error: jutsu-management-content not found");
+        console.error("jutsu-management-content not found");
     }
 }
 
@@ -487,6 +491,7 @@ const skills = new Skills();
 
 function openJutsuSelect() {
     logBattle("openJutsuSelect clicked!");
+    console.log("openJutsuSelect: inBattle =", inBattle);
     if (inBattle) {
         logBattle(`Cannot select Jutsu during battle! inBattle: ${inBattle}`);
         return;
@@ -545,7 +550,6 @@ function updateJutsuDisplay() {
     if (activeDiv && inventoryDiv) {
         activeDiv.innerHTML = "";
         inventoryDiv.innerHTML = "";
-
         player.activeJutsu.forEach((jutsu, index) => {
             const card = document.createElement("div");
             card.className = "jutsu-card";
@@ -557,7 +561,6 @@ function updateJutsuDisplay() {
             `;
             activeDiv.appendChild(card);
         });
-
         player.inventory.forEach((jutsu, index) => {
             const card = document.createElement("div");
             card.className = "jutsu-card";
@@ -569,7 +572,6 @@ function updateJutsuDisplay() {
             `;
             inventoryDiv.appendChild(card);
         });
-
         const selectJutsuBtn = document.getElementById("select-jutsu-btn");
         const toggleJutsuBtn = document.getElementById("toggle-jutsu-btn");
         if (selectJutsuBtn) selectJutsuBtn.disabled = inBattle;
@@ -1026,6 +1028,7 @@ function updateBattleUI() {
 
 // Initialize Game
 function initializeGame() {
+    console.log("Initializing game...");
     player = new Mob(
         "Shinobi",
         10,
@@ -1039,7 +1042,8 @@ function initializeGame() {
     );
     game.player = player;
     inBattle = false;
-    assignRandomJutsu(player, 3); // Changed to 3 to match previous behavior
+    console.log("inBattle set to:", inBattle);
+    assignRandomJutsu(player, 3);
     updateJutsuDisplay();
     updateBattleUI();
     ArriveVillage("Newb Village");
