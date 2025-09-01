@@ -90,10 +90,18 @@ class Skills {
             new BattleSkill("Lightning Edge", ["Lightning", "Ninjutsu"], { Lightning: "C-Rank", Ninjutsu: "C-Rank" }, this.lightningEdge.bind(this), "lightning", false, "B-Rank"),
             new BattleSkill("Bite", ["Beast"], { Beast: "C-Rank" }, this.bite.bind(this), "beast", false, "C-Rank")
         ];
+        if (this.skills.length === 0) {
+            console.error("Skills initialization failed!");
+            logBattle("Error: No skills initialized!");
+        }
     }
 
     canUseSkill(mob, skill) {
-        return Object.keys(skill.requirements).every(key => mob.fightingStyles[key] && compareRanks(mob.fightingStyles[key], skill.requirements[key]) >= 0);
+        const result = Object.keys(skill.requirements).every(key => mob.fightingStyles[key] && compareRanks(mob.fightingStyles[key], skill.requirements[key]) >= 0);
+        if (!result) {
+            console.log(`Cannot use ${skill.name}: Requirements not met`, skill.requirements, mob.fightingStyles);
+        }
+        return result;
     }
 
     findSkill(name) {
@@ -646,8 +654,8 @@ function ArriveVillage(village) {
     } else {
         logBattle("Error: battle-screen, fight-controls, or travel-controls not found");
     }
-    updateBattleUI();
     updateJutsuDisplay();
+    updateBattleUI();
     logBattle(`<span class="output-text-neutral">Arrived at ${village}! inBattle: ${inBattle}</span>`);
     const villageName = document.getElementById("village-name");
     if (villageName) {
@@ -722,10 +730,11 @@ async function startBattle(user, target) {
         travelControls.classList.add("hidden");
     } else {
         logBattle("Error: battle-screen, fight-controls, or travel-controls not found");
-        inBattle = false; // Reset to prevent lock
+        inBattle = false;
         return;
     }
     updateJutsuDisplay();
+    updateBattleUI();
     logBattle(`<span class="output-text-player">${user.name}</span> vs <span class="output-text-enemy">${target.name}</span>!`);
     await sleep(3000);
     await setTurnOrder();
@@ -852,8 +861,8 @@ async function endBattle() {
     }
     queueOutput("<span class='battle-ready'>Battle ended!</span>");
     game.target = null;
-    updateBattleUI();
     updateJutsuDisplay();
+    updateBattleUI();
     logBattle(`endBattle finished! inBattle: ${inBattle}`);
 }
 
@@ -908,7 +917,7 @@ async function takeTurn() {
     } catch (e) {
         logBattle(`Error in takeTurn: ${e.message}`);
         await sleep(3000);
-        inBattle = false; // Prevent lock
+        inBattle = false;
     }
 }
 
@@ -959,7 +968,7 @@ async function skillAction() {
     } catch (e) {
         logBattle(`Error in skillAction: ${e.message}`);
         await sleep(3000);
-        inBattle = false; // Prevent lock
+        inBattle = false;
     }
 }
 
@@ -976,7 +985,7 @@ async function endTurn() {
     } catch (e) {
         logBattle(`Error in endTurn: ${e.message}`);
         await sleep(3000);
-        inBattle = false; // Prevent lock
+        inBattle = false;
     }
 }
 
@@ -995,6 +1004,7 @@ function updateBattleUI() {
 
         if (!userName || !userHp || !userStatus || !userSprite || !opponentName || !opponentHp || !opponentStatus || !opponentSprite || !playerRank || !playerXp) {
             logBattle("Error: One or more UI elements missing in updateBattleUI!");
+            inBattle = false;
             return;
         }
 
@@ -1010,7 +1020,7 @@ function updateBattleUI() {
         playerXp.textContent = player.xp;
     } catch (e) {
         logBattle(`Error in updateBattleUI: ${e.message}`);
-        inBattle = false; // Prevent lock
+        inBattle = false;
     }
 }
 
@@ -1029,19 +1039,25 @@ function initializeGame() {
     );
     game.player = player;
     inBattle = false;
-    assignRandomJutsu(player, 4);
+    assignRandomJutsu(player, 3); // Changed to 3 to match previous behavior
     updateJutsuDisplay();
     updateBattleUI();
     ArriveVillage("Newb Village");
     logBattle("Game initialized!");
-    logBattle(`Initial activeJutsu: ${player.activeJutsu.map(j => j.name).join(", ")}`);
+    logBattle(`Initial activeJutsu: ${player.activeJutsu.map(j => j.name).join(", ") || "None"}`);
 }
 
 function assignRandomJutsu(mob, count) {
     const eligibleJutsu = skills.skills.filter(jutsu => skills.canUseSkill(mob, jutsu));
+    if (eligibleJutsu.length === 0) {
+        logBattle("Error: No eligible Jutsu found! Assigning Barrage as fallback.");
+        console.error("No eligible Jutsu", mob.fightingStyles, skills.skills.map(s => ({ name: s.name, requirements: s.requirements })));
+        mob.activeJutsu = [skills.findSkill("Barrage")];
+        return;
+    }
     const shuffled = eligibleJutsu.sort(() => 0.5 - Math.random()).slice(0, count);
     mob.activeJutsu = shuffled;
-    logBattle(`Assigned ${count} Jutsu to ${mob.name}: ${shuffled.map(j => j.name).join(", ")}`);
+    logBattle(`Assigned ${count} Jutsu to ${mob.name}: ${shuffled.map(j => j.name).join(", ") || "None"}`);
 }
 
 // Run initialization
