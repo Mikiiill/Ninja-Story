@@ -669,6 +669,8 @@ function ArriveVillage(village) {
 const game = {
     battleType: null,
     player: null,
+    enemy: null,
+    user: null,
     target: null,
     targetDestination: null
 };
@@ -719,8 +721,8 @@ async function startBattle(user, target) {
         return;
     }
     inBattle = true;
-    game.player = user;
-    game.target = target;
+    game.player = player;
+    game.enemy = enemy;
     const battleScreen = document.getElementById("battle-screen");
     const fightControls = document.getElementById("fight-controls");
     const travelControls = document.getElementById("travel-controls");
@@ -870,11 +872,11 @@ async function setTurnOrder() {
     logBattle(`setTurnOrder called!`);
     if (Math.random() < 0.5) {
         game.user = player;
-        game.target = game.target;
+        game.target = enemy;
         logBattle(`<span class="output-text-player">${player.name}</span> goes first!`);
         await sleep(3000);
     } else {
-        game.user = game.target;
+        game.user = enemy;
         game.target = player;
         logBattle(`<span class="output-text-enemy">${game.target.name}</span> goes first!`);
         await sleep(3000);
