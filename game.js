@@ -739,7 +739,7 @@ async function startBattle(user, target) {
     updateBattleUI();
     logBattle(`<span class="output-text-player">${user.name}</span> vs <span class="output-text-enemy">${target.name}</span>!`);
     await sleep(3000);
-    await setTurnOrder();
+    setTurnOrder();
 }
 
 async function startTrainingFight() {
@@ -881,7 +881,7 @@ async function setTurnOrder() {
         logBattle(`<span class="output-text-enemy">${game.target.name}</span> goes first!`);
         await sleep(3000);
     }
-    await takeTurn();
+    takeTurn();
 }
 
 async function takeTurn() {
