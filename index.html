@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shinobi Way: Naruto Card Battler</title>
+    <title>Shinobi Way: Ninja Battler</title>
     <style>
         body {
             margin: 0;
@@ -22,7 +22,7 @@
 
         .battle-screen {
             display: flex;
-            justify-content: space-around; /* Center characters */
+            justify-content: space-around;
             align-items: flex-start;
             background: linear-gradient(to bottom, #e6d7b8, #d2b48c);
             border: 4px solid #8b4513;
@@ -33,8 +33,8 @@
         }
 
         .character {
-            width: 45%; /* Adjusted for side-by-side */
-            min-height: 250px; /* Ensure consistent height */
+            width: 45%;
+            min-height: 250px;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -43,9 +43,9 @@
         }
 
         .character h2 {
-            height: 40px; /* Fixed height for names */
+            height: 40px;
             margin: 0 0 10px;
-            font-size: 1.2em; /* Readable on mobile */
+            font-size: 1.2em;
         }
 
         .character img {
@@ -54,11 +54,11 @@
             width: 120px;
             height: 160px;
             object-fit: contain;
-            background-color: #ccc; /* Fallback if sprite fails */
+            background-color: #ccc;
         }
 
         .battle-log-container {
-            width: calc(100% - 40px); /* Almost full width */
+            width: calc(100% - 40px);
             margin: 0 auto 20px;
         }
 
@@ -67,12 +67,17 @@
             border: 2px solid #000;
             border-radius: 5px;
             padding: 10px;
-            max-height: 200px; /* Adjusted for mobile */
+            max-height: 200px;
             overflow-y: auto;
             overflow-anchor: auto;
             scroll-behavior: smooth;
             text-align: left;
             font-size: 14px;
+        }
+
+        .battle-log p {
+            margin: 5px 0;
+            padding: 5px 0;
         }
 
         .jutsu-select, .jutsu-management, .jutsu-management-content {
@@ -154,7 +159,7 @@
             </div>
             <div class="character opponent">
                 <h2 id="opponent-name">Training Dummy</h2>
-                <img id="opponent-sprite" src="Assets/NINJA1.png" alt="Opponent Sprite">
+                <img id="opponent-sprite" src="https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/NINJA2.PNG" alt="Opponent Sprite">
                 <p>HP: <span id="opponent-hp">6/6</span></p>
                 <p>Status: <span id="opponent-status">None</span></p>
             </div>
