@@ -675,7 +675,7 @@ const game = {
     targetDestination: null
 };
 
-async function awardReward(winner, loser) {
+async function awardReward(winner, enemy) {
     if (game.battleType === "training") {
         player.xp += 1;
         logBattle(`<span class="output-text-player">${player.name}</span> gained 1 EXP!`);
@@ -708,7 +708,7 @@ function checkForDeath() {
     return false;
 }
 
-async function startBattle(player, enemy) {
+async function startBattle(player, opponent) {
     logBattle(`startBattle called! inBattle: ${inBattle}, activeJutsu: ${user.activeJutsu.length}`);
     if (inBattle) {
         logBattle("Battle already in progress!");
@@ -722,7 +722,7 @@ async function startBattle(player, enemy) {
     }
     inBattle = true;
     game.player = player;
-    game.enemy = enemy;
+    game.opponent = enemy;
     const battleScreen = document.getElementById("battle-screen");
     const fightControls = document.getElementById("fight-controls");
     const travelControls = document.getElementById("travel-controls");
@@ -739,7 +739,7 @@ async function startBattle(player, enemy) {
     updateBattleUI();
     logBattle(`<span class="output-text-player">${user.name}</span> vs <span class="output-text-enemy">${target.name}</span>!`);
     await sleep(3000);
-    setTurnOrder();
+    await setTurnOrder();
 }
 
 async function startTrainingFight() {
@@ -862,7 +862,7 @@ async function endBattle() {
         logBattle("Error: battle-screen, fight-controls, or travel-controls not found");
     }
     queueOutput("<span class='battle-ready'>Battle ended!</span>");
-    game.target = null;
+    game.opponent = null;
     updateJutsuDisplay();
     updateBattleUI();
     logBattle(`endBattle finished! inBattle: ${inBattle}`);
@@ -871,13 +871,13 @@ async function endBattle() {
 async function setTurnOrder() {
     logBattle(`setTurnOrder called!`);
     if (Math.random() < 0.5) {
-        game.user = player;
-        game.target = enemy;
+        game.user = opponent;
+        game.target = player;
         logBattle(`<span class="output-text-player">${player.name}</span> goes first!`);
         await sleep(3000);
     } else {
-        game.user = enemy;
-        game.target = player;
+        game.target = opponent;
+        game.user = player;
         logBattle(`<span class="output-text-enemy">${game.target.name}</span> goes first!`);
         await sleep(3000);
     }
