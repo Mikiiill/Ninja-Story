@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shinobi Way: Ninja Battler</title>
+    <title>Shinobi Way: Naruto Card Battler</title>
     <style>
         body {
             margin: 0;
@@ -18,6 +18,20 @@
             margin: 0 auto;
             padding: 20px;
             text-align: center;
+        }
+
+        .village-info {
+            background: linear-gradient(to bottom, #e6d7b8, #d2b48c);
+            border: 4px solid #8b4513;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .village-info h3 {
+            margin: 0;
+            font-size: 1.2em;
         }
 
         .battle-screen {
@@ -80,7 +94,7 @@
             padding: 5px 0;
         }
 
-        .jutsu-select, .jutsu-management, .jutsu-management-content {
+        .jutsu-select, .jutsu-management, .jutsu-management-content, .fight-controls, .travel-controls {
             background: linear-gradient(to bottom, #e6d7b8, #d2b48c);
             border: 4px solid #8b4513;
             border-radius: 10px;
@@ -89,10 +103,11 @@
             box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
-        .jutsu-list {
+        .jutsu-list, .fight-controls, .travel-controls {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
+            justify-content: center;
         }
 
         .jutsu-card {
@@ -145,12 +160,49 @@
             background: #666;
             cursor: not-allowed;
         }
+
+        .output-text-player { color: #006400; }
+        .output-text-enemy { color: #8b0000; }
+        .output-text-neutral { color: #000000; }
+        .output-text-fire { color: #ff4500; }
+        .output-text-earth { color: #8b4513; }
+        .output-text-lightning { color: #ffd700; }
+        .output-text-genjutsu { color: #800080; }
+        .output-text-beast { color: #8b0000; }
+        .status-substitution { color: #8b4513; }
+        .status-shadowcloneeffect { color: #4682b4; }
+        .status-doom { color: #000000; }
+        .status-regen { color: #32cd32; }
+        .status-dome { color: #8b4513; }
+        .status-burn { color: #ff4500; }
+        .status-numb { color: #ffd700; }
+        .status-ready { color: #ff0000; }
+        .status-release { color: #800080; }
+        .status-bleed { color: #dc143c; }
+        .battle-ready { color: #0000ff; }
     </style>
 </head>
 <body>
     <div class="game-container">
+        <!-- Village Info -->
+        <div class="village-info">
+            <h3 id="village-name">Newb Village</h3>
+            <p>Player Rank: <span id="player-rank">Student</span> | EXP: <span id="player-xp">0</span></p>
+        </div>
+
+        <!-- Fight Controls -->
+        <div class="fight-controls" id="fight-controls">
+            <button onclick="startTrainingFight()">Training Fight</button>
+            <button onclick="openTravelSelect()">Travel</button>
+            <button onclick="startEventFight()">Event Fight</button>
+            <button onclick="startArenaFight()">Arena Fight</button>
+        </div>
+
+        <!-- Travel Controls (for non-village areas) -->
+        <div class="travel-controls hidden" id="travel-controls"></div>
+
         <!-- Battle Screen -->
-        <div class="battle-screen">
+        <div class="battle-screen hidden" id="battle-screen">
             <div class="character user">
                 <h2 id="user-name">Shinobi</h2>
                 <img id="user-sprite" src="https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/NINJA1.PNG" alt="User Sprite">
@@ -189,7 +241,6 @@
                 <h3>Inventory</h3>
                 <div id="inventory-jutsu" class="jutsu-list"></div>
                 <button id="select-jutsu-btn" onclick="openJutsuSelect()">Select New Jutsu</button>
-                <button id="start-battle-btn" onclick="startBattle()">Start Battle</button>
             </div>
         </div>
     </div>
