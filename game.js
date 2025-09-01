@@ -469,7 +469,7 @@ let player = new Mob(
 );
 
 function toggleJutsuMenu() {
-    logBattle("toggleJutsuMenu clicked!");
+    logBattle("Jutsu clicked!");
     if (inBattle) {
         logBattle(`Cannot toggle Jutsu menu during battle! inBattle: ${inBattle}`);
         return;
@@ -510,6 +510,7 @@ function openJutsuSelect() {
         const jutsuSelect = document.querySelector(".jutsu-select");
         if (jutsuSelect) {
             jutsuSelect.classList.remove("hidden");
+            optionsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
         } else {
             logBattle("Error: jutsu-select not found");
         }
@@ -536,6 +537,74 @@ function addJutsuToInventory(jutsu) {
     player.inventory.push(jutsu);
     updateJutsuDisplay();
     closeJutsuSelect();
+}
+
+// Rank Up Selection
+function openRankUpSelect() {
+    logBattle("RANKUP clicked!");
+    if (inBattle) {
+        logBattle(`Cannot rank up during battle! inBattle: ${inBattle}`);
+        return;
+    }
+    const optionsDiv = document.getElementById("jutsu-options");
+    if (optionsDiv) {
+        optionsDiv.innerHTML = "";
+        const availableStyles = ["Ninjutsu", "Genjutsu", "Taijutsu", "Fire", "Lightning", "Earth"];
+        availableStyles.forEach(style => {
+            const currentRank = player.fightingStyles[style] || "None";
+            const card = document.createElement("div");
+            card.className = "jutsu-card";
+            card.innerHTML = `
+                <h4>${style}</h4>
+                <p>Current Rank: ${currentRank}</p>
+            `;
+            card.onclick = () => upgradeFightingStyle(style);
+            optionsDiv.appendChild(card);
+        });
+        const jutsuSelect = document.querySelector(".jutsu-select");
+        if (jutsuSelect) {
+            jutsuSelect.classList.remove("hidden");
+            optionsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
+            game.rankUpPoints = 2; // Initialize 2 points for rank up
+        } else {
+            logBattle("Error: jutsu-select not found");
+        }
+    } else {
+        logBattle("Error: jutsu-options not found");
+    }
+}
+
+function upgradeFightingStyle(style) {
+    if (inBattle) {
+        logBattle(`Cannot upgrade fighting style during battle! inBattle: ${inBattle}`);
+        return;
+    }
+    if (!game.rankUpPoints || game.rankUpPoints <= 0) {
+        logBattle("No RANKUP points remaining!");
+        closeJutsuSelect();
+        return;
+    }
+    const ranks = ["D-Rank", "C-Rank", "B-Rank", "A-Rank", "S-Rank"];
+    const currentRank = player.fightingStyles[style] || "None";
+    let newRank;
+    if (currentRank === "None") {
+        newRank = "C-Rank"; // Unlearned styles start at C-Rank
+    } else if (currentRank === "S-Rank") {
+        logBattle(`${style} is already at maximum rank (S-Rank)!`);
+        return;
+    } else {
+        const currentIndex = ranks.indexOf(currentRank);
+        newRank = ranks[currentIndex + 1]; // Upgrade by one rank
+    }
+    player.fightingStyles[style] = newRank;
+    game.rankUpPoints -= 1;
+    logBattle(`Upgraded ${style} to ${newRank}! ${game.rankUpPoints} RANKUP point(s) remaining.`);
+    if (game.rankUpPoints === 0) {
+        closeJutsuSelect();
+    } else {
+        openRankUpSelect(); // Refresh menu to show updated ranks
+    }
+    updateJutsuDisplay(); // Update in case new jutsu are available
 }
 
 // Jutsu Management
@@ -572,8 +641,10 @@ function updateJutsuDisplay() {
 
         const selectJutsuBtn = document.getElementById("select-jutsu-btn");
         const toggleJutsuBtn = document.getElementById("toggle-jutsu-btn");
+        const rankUpBtn = document.getElementById("rankup-btn");
         if (selectJutsuBtn) selectJutsuBtn.disabled = inBattle;
         if (toggleJutsuBtn) toggleJutsuBtn.disabled = inBattle;
+        if (rankUpBtn) rankUpBtn.disabled = inBattle;
     } else {
         logBattle("Error: active-jutsu or inventory-jutsu not found");
     }
@@ -630,6 +701,7 @@ function openTravelSelect() {
         const jutsuSelect = document.querySelector(".jutsu-select");
         if (jutsuSelect) {
             jutsuSelect.classList.remove("hidden");
+            optionsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
         } else {
             logBattle("Error: jutsu-select not found");
         }
@@ -672,7 +744,8 @@ const game = {
     opponent: null, // Constant for enemy
     user: null,     // Turn-specific
     target: null,   // Turn-specific
-    targetDestination: null
+    targetDestination: null,
+    rankUpPoints: 0 // Track remaining points for RANKUP
 };
 
 async function awardReward(winner, enemy) {
@@ -1004,8 +1077,10 @@ function updateBattleUI() {
         const opponentSprite = document.getElementById("opponent-sprite");
         const playerRank = document.getElementById("player-rank");
         const playerXp = document.getElementById("player-xp");
+        const topBar = document.getElementById("top-bar");
+        const rankUpBtn = document.getElementById("rankup-btn");
 
-        if (!userName || !userHp || !userStatus || !userSprite || !opponentName || !opponentHp || !opponentStatus || !opponentSprite || !playerRank || !playerXp) {
+        if (!userName || !userHp || !userStatus || !userSprite || !opponentName || !opponentHp || !opponentStatus || !opponentSprite || !playerRank || !playerXp || !topBar) {
             logBattle("Error: One or more UI elements missing in updateBattleUI!");
             inBattle = false;
             return;
@@ -1021,6 +1096,8 @@ function updateBattleUI() {
         opponentSprite.src = game.opponent ? game.opponent.sprite : "https://via.placeholder.com/120x160";
         playerRank.textContent = game.player ? game.player.rank : "None";
         playerXp.textContent = game.player ? game.player.xp : 0;
+        topBar.classList.toggle("battle-mode", inBattle);
+        if (rankUpBtn) rankUpBtn.disabled = inBattle;
     } catch (e) {
         logBattle(`Error in updateBattleUI: ${e.message}`);
         inBattle = false;
