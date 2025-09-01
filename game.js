@@ -880,8 +880,9 @@ async function setTurnOrder() {
         game.user = game.player;
         logBattle(`<span class="output-text-enemy">${game.target.name}</span> goes first!`);
         await sleep(3000);
+        await takeTurn();
     }
-    await takeTurn();
+
 }
 
 async function takeTurn() {
