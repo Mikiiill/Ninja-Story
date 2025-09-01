@@ -12,31 +12,36 @@
         }
 
         body {
-            font-family: Arial, Helvetica, sans-serif;
-            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            background-image: url('https://raw.githubusercontent.com/Mikiiill/ShinobiWay/main/Assets/BG.png');
+            background-size: cover;
+            background-attachment: fixed;
             color: #333;
-            line-height: 1.6;
-            padding: 10px;
+            margin: 0;
+            padding: 20px;
         }
 
         .container {
             max-width: 800px;
             margin: 0 auto;
             padding: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
         }
 
         #village-name {
             text-align: center;
-            font-size: 1.8em;
+            font-size: 2em;
             color: #2c3e50;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .battle-screen {
-            padding: 10px;
+            padding: 15px;
             background-color: #fff;
             border: 1px solid #ccc;
             border-radius: 5px;
+            margin-bottom: 20px;
         }
 
         .battle-screen.hidden {
@@ -47,30 +52,29 @@
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 15px;
         }
 
         .user-info, .opponent-info {
             flex: 1;
-            min-width: 120px;
+            min-width: 150px;
             text-align: center;
         }
 
         .sprite {
-            width: 100px;
-            height: 140px;
+            width: 120px;
+            height: 160px;
             object-fit: cover;
             border-radius: 5px;
         }
 
         .battle-log {
-            border: 1px solid black;
+            border: 1px solid #000;
             padding: 10px;
             max-height: 200px;
             overflow-y: auto;
-            margin-top: 10px;
             background-color: #fff;
-            color: #333;
+            margin-top: 10px;
             font-size: 0.9em;
         }
 
@@ -99,21 +103,27 @@
 
         .fight-controls {
             text-align: center;
-            margin: 10px 0;
+            margin: 15px 0;
         }
 
         .fight-controls button {
-            background-color: #4CAF50;
+            background-color: #008CBA;
             color: white;
             padding: 10px 20px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             margin: 5px;
+            transition: background-color 0.3s;
         }
 
         .fight-controls button:hover {
-            background-color: #45a049;
+            background-color: #005f87;
+        }
+
+        .fight-controls button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
         }
 
         .fight-controls.hidden {
@@ -122,21 +132,27 @@
 
         .travel-controls {
             text-align: center;
-            margin: 10px 0;
+            margin: 15px 0;
         }
 
         .travel-controls button {
-            background-color: #4CAF50;
+            background-color: #008CBA;
             color: white;
             padding: 10px 20px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             margin: 5px;
+            transition: background-color 0.3s;
         }
 
         .travel-controls button:hover {
-            background-color: #45a049;
+            background-color: #005f87;
+        }
+
+        .travel-controls button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
         }
 
         .travel-controls.hidden {
@@ -145,6 +161,9 @@
 
         .jutsu-management {
             margin-top: 20px;
+            padding: 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
         }
 
         .jutsu-management.hidden {
@@ -152,17 +171,18 @@
         }
 
         .jutsu-management button {
-            background-color: #4CAF50;
+            background-color: #008CBA;
             color: white;
             padding: 8px 16px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             margin: 5px;
+            transition: background-color 0.3s;
         }
 
         .jutsu-management button:hover {
-            background-color: #45a049;
+            background-color: #005f87;
         }
 
         .jutsu-management button:disabled {
@@ -171,7 +191,7 @@
         }
 
         .jutsu-card {
-            background-color: #000000;
+            background-color: #2c3e50;
             color: white;
             padding: 10px;
             margin: 5px;
@@ -180,6 +200,11 @@
             width: 150px;
             text-align: center;
             cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .jutsu-card:hover {
+            transform: scale(1.05);
         }
 
         .jutsu-card button {
@@ -213,6 +238,7 @@
             border-radius: 5px;
             cursor: pointer;
             margin: 5px;
+            transition: background-color 0.3s;
         }
 
         .jutsu-select button:hover {
@@ -220,7 +246,7 @@
         }
 
         .player-stats {
-            margin-top: 10px;
+            margin-top: 15px;
             text-align: center;
         }
 
@@ -256,7 +282,7 @@
 
             .fight-controls button, .travel-controls button, .jutsu-management button {
                 width: 100%;
-                padding: 10px;
+                padding: 8px;
                 font-size: 0.9em;
             }
 
@@ -274,13 +300,13 @@
         <div class="battle-screen hidden" id="battle-screen">
             <div class="battle-area">
                 <div class="user-info">
-                    <img class="sprite" id="user-sprite" src="https://via.placeholder.com/120x160" alt="User Sprite">
+                    <img class="sprite" id="user-sprite" src="https://raw.githubusercontent.com/Mikiiill/ShinobiWay/main/Assets/NINJA1.PNG" alt="User Sprite">
                     <h3 id="user-name">Shinobi</h3>
                     <p>HP: <span id="user-hp">10/10</span></p>
                     <p>Status: <span id="user-status">None</span></p>
                 </div>
                 <div class="opponent-info">
-                    <img class="sprite" id="opponent-sprite" src="https://via.placeholder.com/120x160" alt="Opponent Sprite">
+                    <img class="sprite" id="opponent-sprite" src="https://raw.githubusercontent.com/Mikiiill/ShinobiWay/main/Assets/NINJA2.PNG" alt="Opponent Sprite">
                     <h3 id="opponent-name">None</h3>
                     <p>HP: <span id="opponent-hp">0/0</span></p>
                     <p>Status: <span id="opponent-status">None</span></p>
@@ -297,7 +323,7 @@
             <button onclick="startArenaFight()">Arena Fight</button>
         </div>
         <div class="travel-controls hidden" id="travel-controls"></div>
-        <div class="jutsu-management hidden" id="jutsu-management-content">
+        <div class="jutsu-management" id="jutsu-management-content">
             <h2>Jutsu Management</h2>
             <button onclick="toggleJutsuMenu()" id="toggle-jutsu-btn">Toggle Jutsu Menu</button>
             <button onclick="openJutsuSelect()" id="select-jutsu-btn">Select New Jutsu</button>
