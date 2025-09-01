@@ -1,26 +1,5 @@
-// Utility Function for Delay
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-// Status Effect Class
-class StatusEffect {
-    constructor(name, duration, damage = 0, startOfTurn = false, active = false, triggered = false, 
-                startOfTurnFunction = null, activeFunction = null, triggeredFunction = null) {
-        this.name = name;
-        this.duration = duration;
-        this.damage = damage;
-        this.new = true;
-        this.startOfTurn = startOfTurn;
-        this.active = active;
-        this.triggered = triggered;
-        this.startOfTurnFunction = startOfTurnFunction;
-        this.activeFunction = activeFunction;
-        this.triggeredFunction = triggeredFunction;
-    }
-}
-
-// Emoji Map for Status Effects
+// game.js
+const logOutput = document.getElementById("log-output");
 const statusEmojis = {
     "Swap": "🪵",
     "ShadowCloneEffect": "👥",
@@ -33,8 +12,71 @@ const statusEmojis = {
     "Release": "🌀",
     "Bleed": "🩸"
 };
+let inBattle = false;
+let currentTurn = 0;
+let turnOrder = [];
+const game = {
+    player: null,
+    enemy: null,
+    user: null,
+    target: null,
+    battleType: null,
+    targetDestination: null,
+    jutsuList: []
+};
+let player = new Character("Shinobi", 20, 20, [], [], "https://via.placeholder.com/120x160");
+const skills = {
+    skills: [],
+    canUseSkill: (player, jutsu) => {
+        return Object.keys(jutsu.requirements).every(req => {
+            return player.styleRanks[req] && player.styleRanks[req] >= jutsu.requirements[req];
+        });
+    }
+};
 
-// Battle Skill Class
+class StatusEffect {
+    constructor(name, duration, power, isPermanent, active, triggered, onTurn, activeFunction, triggeredFunction) {
+        this.name = name;
+        this.duration = duration;
+        this.power = power;
+        this.damage = power;
+        this.isPermanent = isPermanent;
+        this.active = active;
+        this.triggered = triggered;
+        this.onTurn = onTurn;
+        this.activeFunction = activeFunction;
+        this.triggeredFunction = triggeredFunction;
+    }
+}
+
+class Character {
+    constructor(name, hp, maxHp, statusEffects, jutsuList, sprite, rank = "Genin", xp = 0) {
+        this.name = name;
+        this.hp = hp;
+        this.maxHp = maxHp;
+        this.statusEffects = statusEffects;
+        this.jutsuList = jutsuList;
+        this.activeJutsu = [];
+        this.sprite = sprite;
+        this.rank = rank;
+        this.xp = xp;
+        this.styleRanks = {
+            Taijutsu: "B-Rank",
+            Ninjutsu: "C-Rank",
+            Genjutsu: "B-Rank",
+            Earth: "B-Rank",
+            Fire: "C-Rank",
+            Lightning Brown: "C-Rank",
+            Lightning: "C-Rank",
+            Beast: "C-Rank"
+        };
+    }
+
+    findSkill(name) {
+        return this.activeJutsu.find(skill => skill.name === name);
+    }
+}
+
 class BattleSkill {
     constructor(name, attributes, requirements, skillFunction, style, support, rank) {
         this.name = name;
@@ -47,68 +89,9 @@ class BattleSkill {
     }
 }
 
-// Mob Class
-class Mob {
-    constructor(name, hp, maxHp, rank, fightingStyles, activeJutsu, inventory, statusEffects, sprite) {
-        this.name = name;
-        this.hp = hp;
-        this.maxHp = maxHp;
-        this.rank = rank;
-        this.fightingStyles = fightingStyles;
-        this.activeJutsu = activeJutsu || [];
-        this.inventory = inventory || [];
-        this.statusEffects = statusEffects || [];
-        this.sprite = sprite || "https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/NINJA2.PNG";
-        this.xp = 0;
-        this.travelFightsCompleted = 0;
-        this.lastVillage = "Newb Village";
-    }
-}
-
-// Skills Class
-class Skills {
-    constructor() {
-        this.skills = [];
-        this.initializeSkills();
-    }
-
-    initializeSkills() {
-        this.skills = [
-            new BattleSkill("Barrage", ["Taijutsu"], {}, this.barrage.bind(this), "neutral", false, "D-Rank"),
-            new BattleSkill("Substitution Jutsu", [], { Ninjutsu: "D-Rank", Taijutsu: "D-Rank" }, this.substitutionJutsu.bind(this), "neutral", true, "D-Rank"),
-            new BattleSkill("Shadow Clone Jutsu", ["Ninjutsu"], { Ninjutsu: "C-Rank" }, this.shadowCloneJutsu.bind(this), "neutral", true, "C-Rank"),
-            new BattleSkill("Demonic Vision", ["Genjutsu"], { Genjutsu: "C-Rank" }, this.demonicVision.bind(this), "genjutsu", false, "C-Rank"),
-            new BattleSkill("Healing Stance", ["Ninjutsu"], {}, this.healingStance.bind(this), "neutral", true, "D-Rank"),
-            new BattleSkill("Earth Dome Jutsu", ["Earth", "Ninjutsu"], { Earth: "C-Rank" }, this.earthDomeJutsu.bind(this), "earth", true, "C-Rank"),
-            new BattleSkill("Flame Throw Jutsu", ["Fire", "Ninjutsu"], { Fire: "C-Rank", Ninjutsu: "C-Rank" }, this.flameThrowJutsu.bind(this), "fire", false, "B-Rank"),
-            new BattleSkill("Static Field Jutsu", ["Lightning", "Ninjutsu"], { Lightning: "C-Rank" }, this.staticFieldJutsu.bind(this), "lightning", false, "C-Rank"),
-            new BattleSkill("Fireball Jutsu", ["Fire", "Ninjutsu"], { Fire: "C-Rank" }, this.fireballJutsu.bind(this), "fire", false, "C-Rank"),
-            new BattleSkill("Dynamic Entry", ["Taijutsu"], { Taijutsu: "C-Rank" }, this.dynamicEntry.bind(this), "neutral", false, "C-Rank"),
-            new BattleSkill("Falcon Drop", ["Taijutsu"], { Taijutsu: "B-Rank" }, this.falconDrop.bind(this), "neutral", false, "B-Rank"),
-            new BattleSkill("Rock Smash Jutsu", ["Earth", "Taijutsu"], { Earth: "B-Rank" }, this.rockSmashJutsu.bind(this), "earth", false, "B-Rank"),
-            new BattleSkill("Genjutsu Release", ["Genjutsu"], { Genjutsu: "B-Rank" }, this.genjutsuRelease.bind(this), "genjutsu", true, "B-Rank"),
-            new BattleSkill("Lightning Edge", ["Lightning", "Ninjutsu"], { Lightning: "C-Rank", Ninjutsu: "C-Rank" }, this.lightningEdge.bind(this), "lightning", false, "B-Rank"),
-            new BattleSkill("Bite", ["Beast"], { Beast: "C-Rank" }, this.bite.bind(this), "beast", false, "C-Rank")
-        ];
-        if (this.skills.length === 0) {
-            console.error("Skills initialization failed!");
-            logBattle("Error: No skills initialized!");
-        }
-    }
-
-    canUseSkill(mob, skill) {
-        const result = Object.keys(skill.requirements).every(key => mob.fightingStyles[key] && compareRanks(mob.fightingStyles[key], skill.requirements[key]) >= 0);
-        if (!result) {
-            console.log(`Cannot use ${skill.name}: Requirements not met`, skill.requirements, mob.fightingStyles);
-        }
-        return result;
-    }
-
-    findSkill(name) {
-        return this.skills.find(skill => skill.name === name);
-    }
-
-    async barrage(user, target) {
+// Jutsu Functions (as provided)
+async function barrage(user, target) {
+    try {
         let baseDamage = Math.floor(Math.random() * 2) + 1;
         let comboDamage = Math.floor(Math.random() * 2) + 1;
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - baseDamage));
@@ -120,9 +103,15 @@ class Skills {
             await sleep(3000);
         }
         return target.hp <= 0;
+    } catch (e) {
+        logBattle(`Error in barrage: ${e.message}`);
+        inBattle = false;
+        return false;
     }
+}
 
-    async substitutionJutsu(user, target) {
+async function substitutionJutsu(user, target) {
+    try {
         user.statusEffects.push(new StatusEffect("Swap", 1, 0, false, false, true, null, null, 
             async (target, user, skillStyle) => {
                 logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> uses Substitution to dodge the attack with a log!`);
@@ -133,9 +122,15 @@ class Skills {
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> prepares <span class="output-text-neutral">Substitution Jutsu</span> <span class="status-substitution">🪵</span>!`);
         await sleep(3000);
         return true;
+    } catch (e) {
+        logBattle(`Error in substitutionJutsu: ${e.message}`);
+        inBattle = false;
+        return false;
     }
+}
 
-    async shadowCloneJutsu(user, target) {
+async function shadowCloneJutsu(user, target) {
+    try {
         if (user.hp < 2) {
             logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> does not have enough HP to cast <span class="output-text-neutral">Shadow Clone Jutsu</span>!`);
             await sleep(3000);
@@ -154,7 +149,7 @@ class Skills {
                 for (let i = 0; i < cloneCount; i++) {
                     logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">Shadow Clone ${i + 1} uses Barrage on ${target.name}!</span>`);
                     await sleep(3000);
-                    await this.barrage(user, target);
+                    await barrage(user, target);
                 }
                 user.statusEffects = user.statusEffects.filter(e => e.name !== "ShadowCloneEffect");
                 return false;
@@ -172,9 +167,15 @@ class Skills {
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-neutral">Shadow Clone Jutsu</span>, adding a clone <span class="status-shadowcloneeffect">👥</span>!`);
         await sleep(3000);
         return true;
+    } catch (e) {
+        logBattle(`Error in shadowCloneJutsu: ${e.message}`);
+        inBattle = false;
+        return false;
     }
+}
 
-    async demonicVision(user, target) {
+async function demonicVision(user, target) {
+    try {
         let damage = 1;
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         target.statusEffects.push(new StatusEffect("Doom", 5, 1, true, false, false, 
@@ -187,9 +188,15 @@ class Skills {
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-genjutsu">Demonic Vision</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-doom">Doom 💀</span>!`);
         await sleep(3000);
         return target.hp <= 0;
+    } catch (e) {
+        logBattle(`Error in demonicVision: ${e.message}`);
+        inBattle = false;
+        return false;
     }
+}
 
-    async healingStance(user, target) {
+async function healingStance(user, target) {
+    try {
         let heal = user.hp < user.maxHp ? 1 : 0;
         user.hp = Math.max(0, Math.min(user.maxHp, user.hp + heal));
         user.statusEffects.push(new StatusEffect("Regen", 3, 1, true, false, false, 
@@ -205,9 +212,15 @@ class Skills {
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> enters <span class="output-text-neutral">Healing Stance</span>${heal > 0 ? `, healing ${heal} HP` : ""} <span class="status-regen">🌿</span>!`);
         await sleep(3000);
         return true;
+    } catch (e) {
+        logBattle(`Error in healingStance: ${e.message}`);
+        inBattle = false;
+        return false;
     }
+}
 
-    async earthDomeJutsu(user, target) {
+async function earthDomeJutsu(user, target) {
+    try {
         user.statusEffects.push(new StatusEffect("Dome", 2, 0, false, false, true, null, null, 
             async (target, user, skillStyle) => {
                 if (skillStyle !== "genjutsu") {
@@ -221,9 +234,15 @@ class Skills {
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> raises <span class="output-text-earth">Earth Dome Jutsu</span> <span class="status-dome">🪨</span>!`);
         await sleep(3000);
         return true;
+    } catch (e) {
+        logBattle(`Error in earthDomeJutsu: ${e.message}`);
+        inBattle = false;
+        return false;
     }
+}
 
-    async flameThrowJutsu(user, target) {
+async function flameThrowJutsu(user, target) {
+    try {
         let damage = Math.floor(Math.random() * 2) + 4;
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         target.statusEffects.push(new StatusEffect("Burn", 1, 2, true, false, false, 
@@ -236,9 +255,15 @@ class Skills {
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Flame Throw Jutsu</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burn">Burn 🔥</span>!`);
         await sleep(3000);
         return target.hp <= 0;
+    } catch (e) {
+        logBattle(`Error in flameThrowJutsu: ${e.message}`);
+        inBattle = false;
+        return false;
     }
+}
 
-    async staticFieldJutsu(user, target) {
+async function staticFieldJutsu(user, target) {
+    try {
         let damage = Math.floor(Math.random() * 2) + 2;
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         user.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
@@ -258,9 +283,15 @@ class Skills {
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-lightning">Static Field Jutsu</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-numb">Numb ⚡️</span> on both!`);
         await sleep(3000);
         return target.hp <= 0;
+    } catch (e) {
+        logBattle(`Error in staticFieldJutsu: ${e.message}`);
+        inBattle = false;
+        return false;
     }
+}
 
-    async fireballJutsu(user, target) {
+async function fireballJutsu(user, target) {
+    try {
         let damage = Math.floor(Math.random() * 2) + 3;
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         target.statusEffects.push(new StatusEffect("Burn", 1, 1, true, false, false, 
@@ -273,9 +304,15 @@ class Skills {
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Fireball Jutsu</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burn">Burn 🔥</span>!`);
         await sleep(3000);
         return target.hp <= 0;
+    } catch (e) {
+        logBattle(`Error in fireballJutsu: ${e.message}`);
+        inBattle = false;
+        return false;
     }
+}
 
-    async dynamicEntry(user, target) {
+async function dynamicEntry(user, target) {
+    try {
         let damage = 1;
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-neutral">Dynamic Entry</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage!`);
@@ -292,9 +329,15 @@ class Skills {
             user.statusEffects = user.statusEffects.filter(e => e.name !== "DynamicEntryProc");
         }
         return target.hp <= 0;
+    } catch (e) {
+        logBattle(`Error in dynamicEntry: ${e.message}`);
+        inBattle = false;
+        return false;
     }
+}
 
-    async falconDrop(user, target) {
+async function falconDrop(user, target) {
+    try {
         let damage = 2;
         user.hp = Math.max(0, Math.min(user.maxHp, user.hp - 2));
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
@@ -307,7 +350,7 @@ class Skills {
             }));
         user.statusEffects.push(new StatusEffect("READY", 1, 0, false, true, false, null, 
             async (user, target) => {
-                let barrageSkill = this.findSkill("Barrage");
+                let barrageSkill = user.findSkill("Barrage");
                 if (barrageSkill) await barrageSkill.skillFunction(user, target);
                 user.statusEffects = user.statusEffects.filter(e => e.name !== "READY");
                 return false;
@@ -315,17 +358,29 @@ class Skills {
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-neutral">Falcon Drop</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, stunning target and taking 2 damage!`);
         await sleep(3000);
         return target.hp <= 0;
+    } catch (e) {
+        logBattle(`Error in falconDrop: ${e.message}`);
+        inBattle = false;
+        return false;
     }
+}
 
-    async rockSmashJutsu(user, target) {
+async function rockSmashJutsu(user, target) {
+    try {
         let damage = 6;
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-earth">Rock Smash Jutsu</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage!`);
         await sleep(3000);
         return target.hp <= 0;
+    } catch (e) {
+        logBattle(`Error in rockSmashJutsu: ${e.message}`);
+        inBattle = false;
+        return false;
     }
+}
 
-    async genjutsuRelease(user, target) {
+async function genjutsuRelease(user, target) {
+    try {
         user.statusEffects = user.statusEffects.filter(e => e.name !== "Doom");
         user.statusEffects.push(new StatusEffect("Release", 1, 0, false, false, true, null, null, 
             async (target, user, skillStyle) => {
@@ -337,21 +392,33 @@ class Skills {
                 }
                 return false;
             }));
-        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-genjutsu">Genjutsu Release</span>, dispelling Doom and gaining <span class="status-release">Release 🌀</span>!`);
+        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-genjutsu">Genjutsu Release</span>, dispelling Doom and gaining <span class="status-substitution">Release 🌀</span>!`);
         await sleep(3000);
         return true;
+    } catch (e) {
+        logBattle(`Error in genjutsuRelease: ${e.message}`);
+        inBattle = false;
+        return false;
     }
+}
 
-    async lightningEdge(user, target) {
+async function lightningEdge(user, target) {
+    try {
         let damage = Math.floor(Math.random() * 2) + 4;
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         target.statusEffects = target.statusEffects.filter(effect => !effect.triggered);
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> strikes with <span class="output-text-lightning">Lightning Edge</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, breaking all triggered status effects!`);
         await sleep(3000);
         return target.hp <= 0;
+    } catch (e) {
+        logBattle(`Error in lightningEdge: ${e.message}`);
+        inBattle = false;
+        return false;
     }
+}
 
-    async bite(user, target) {
+async function bite(user, target) {
+    try {
         let damage = 1;
         let heal = user.hp < user.maxHp ? 1 : 0;
         user.hp = Math.max(0, Math.min(user.maxHp, user.hp + heal));
@@ -366,608 +433,291 @@ class Skills {
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-beast">Bite</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage${heal > 0 ? `, healing ${heal} HP` : ""}, inflicting <span class="status-bleed">Bleed 🩸</span>!`);
         await sleep(3000);
         return target.hp <= 0;
+    } catch (e) {
+        logBattle(`Error in bite: ${e.message}`);
+        inBattle = false;
+        return false;
     }
 }
 
-function compareRanks(rank1, rank2) {
-    const ranks = ["D-Rank", "C-Rank", "B-Rank", "A-Rank", "S-Rank"];
-    return ranks.indexOf(rank1) - ranks.indexOf(rank2);
-}
+// Define Jutsu
+const barrageSkill = new BattleSkill("Barrage", ["Taijutsu"], {}, barrage, "neutral", false, "D-Rank");
+const substitutionJutsuSkill = new BattleSkill("Substitution Jutsu", [], { Ninjutsu: "D-Rank", Taijutsu: "D-Rank" }, substitutionJutsu, "neutral", true, "D-Rank");
+const shadowCloneJutsuSkill = new BattleSkill("Shadow Clone Jutsu", ["Ninjutsu"], { Ninjutsu: "C-Rank" }, shadowCloneJutsu, "neutral", true, "C-Rank");
+const demonicVisionSkill = new BattleSkill("Demonic Vision", ["Genjutsu"], { Genjutsu: "C-Rank" }, demonicVision, "genjutsu", false, "C-Rank");
+const healingStanceSkill = new BattleSkill("Healing Stance", ["Ninjutsu"], {}, healingStance, "neutral", true, "D-Rank");
+const earthDomeJutsuSkill = new BattleSkill("Earth Dome Jutsu", ["Earth", "Ninjutsu"], { Earth: "C-Rank" }, earthDomeJutsu, "earth", true, "C-Rank");
+const flameThrowJutsuSkill = new BattleSkill("Flame Throw Jutsu", ["Fire", "Ninjutsu"], { Fire: "C-Rank", Ninjutsu: "C-Rank" }, flameThrowJutsu, "fire", false, "B-Rank");
+const staticFieldJutsuSkill = new BattleSkill("Static Field Jutsu", ["Lightning", "Ninjutsu"], { Lightning: "C-Rank" }, staticFieldJutsu, "lightning", false, "C-Rank");
+const fireballJutsuSkill = new BattleSkill("Fireball Jutsu", ["Fire", "Ninjutsu"], { Fire: "C-Rank" }, fireballJutsu, "fire", false, "C-Rank");
+const dynamicEntrySkill = new BattleSkill("Dynamic Entry", ["Taijutsu"], { Taijutsu: "C-Rank" }, dynamicEntry, "neutral", false, "C-Rank");
+const falconDropSkill = new BattleSkill("Falcon Drop", ["Taijutsu"], { Taijutsu: "B-Rank" }, falconDrop, "neutral", false, "B-Rank");
+const rockSmashJutsuSkill = new BattleSkill("Rock Smash Jutsu", ["Earth", "Taijutsu"], { Earth: "B-Rank" }, rockSmashJutsu, "earth", false, "B-Rank");
+const genjutsuReleaseSkill = new BattleSkill("Genjutsu Release", ["Genjutsu"], { Genjutsu: "B-Rank" }, genjutsuRelease, "genjutsu", true, "B-Rank");
+const lightningEdgeSkill = new BattleSkill("Lightning Edge", ["Lightning", "Ninjutsu"], { Lightning: "C-Rank", Ninjutsu: "C-Rank" }, lightningEdge, "lightning", false, "B-Rank");
+const biteSkill = new BattleSkill("Bite", ["Beast"], { Beast: "C-Rank" }, bite, "beast", false, "C-Rank");
 
-// Map Data
-const MapData = {
-    "Newb Village": {
-        areas: ["Academy"],
-        isVillage: true
-    },
-    "Abandoned Village": {
-        areas: ["Burnt Tower"],
-        isVillage: true
-    },
-    "Academy": {
-        areas: ["Newb Village"],
-        isVillage: false
-    },
-    "Burnt Tower": {
-        areas: ["Abandoned Village"],
-        isVillage: false
-    }
-};
+// Deckbuilding: All jutsu available for selection
+game.jutsuList = [
+    barrageSkill,
+    substitutionJutsuSkill,
+    shadowCloneJutsuSkill,
+    demonicVisionSkill,
+    healingStanceSkill,
+    earthDomeJutsuSkill,
+    flameThrowJutsuSkill,
+    staticFieldJutsuSkill,
+    fireballJutsuSkill,
+    dynamicEntrySkill,
+    falconDropSkill,
+    rockSmashJutsuSkill,
+    genjutsuReleaseSkill,
+    lightningEdgeSkill,
+    biteSkill
+];
+skills.skills = game.jutsuList;
 
-// Enemy Generation
-function generateEnemySkills(rank, styles) {
-    let skillSet = new Skills();
-    let availableSkills = skillSet.skills.filter(skill => 
-        Object.keys(skill.requirements).every(style => styles[style] && compareRanks(styles[style], skill.requirements[style]) >= 0)
-    );
-    let selectedSkills = [];
-    for (let i = 0; i < 6 && availableSkills.length > 0; i++) {
-        let index = Math.floor(Math.random() * availableSkills.length);
-        selectedSkills.push(availableSkills.splice(index, 1)[0]);
-    }
-    return selectedSkills.length > 0 ? selectedSkills : [skillSet.findSkill("Barrage")];
-}
+player.activeJutsu = [barrageSkill, substitutionJutsuSkill, healingStanceSkill];
 
-function generateEnemy() {
-    let styles = ["Fire", "Lightning", "Earth", "Water", "Wind", "Beast", "Ninjutsu", "Taijutsu", "Genjutsu"];
-    let styleCount = { Genin: 2, Chunin: 4, Jounin: 6 }[player.rank] || 2;
-    let rank = { Student: "C-Rank", Genin: "C-Rank", Chunin: "B-Rank", Jounin: "A-Rank" }[player.rank] || "C-Rank";
-    let hp = { Genin: 12, Chunin: 16, Jounin: 20 }[player.rank] || 12;
-    let randomStyles = {};
-    for (let i = 0; i < styleCount; i++) {
-        let style = styles.splice(Math.floor(Math.random() * styles.length), 1)[0];
-        randomStyles[style] = rank;
-    }
-    let skills = generateEnemySkills(rank, randomStyles);
-    let name = player.rank === "Genin" ? "Genin Opponent" : player.rank === "Chunin" ? "Chunin Opponent" : "Jounin Opponent";
-    return new Mob(name, hp, hp, rank, randomStyles, skills, []);
-}
-
-function generateTrainingEnemy() {
-    let enemies = [
-        new Mob("Rabid Dog", 8, 8, "D-Rank", { Beast: "C-Rank" }, [new Skills().findSkill("Bite")], []),
-        new Mob("Thief", 10, 10, "D-Rank", { Taijutsu: "D-Rank" }, [
-            new Skills().findSkill("Barrage"),
-            new Skills().findSkill("Barrage"),
-            new Skills().findSkill("Substitution Jutsu")
-        ], []),
-        new Mob("Training Dummy", 6, 6, "D-Rank", { Ninjutsu: "D-Rank" }, [new Skills().findSkill("Healing Stance")], [])
-    ];
-    return enemies[Math.floor(Math.random() * enemies.length)];
-}
-
-// Utility Functions
-function logBattle(message) {
-    const log = document.getElementById("battle-log-content");
-    if (log) {
-        const newMessage = document.createElement("p");
-        newMessage.innerHTML = message;
-        log.appendChild(newMessage);
-        log.scrollTop = log.scrollHeight;
-        newMessage.scrollIntoView({ behavior: "smooth", block: "end" });
-    } else {
-        console.error("battle-log-content not found");
+function addJutsuToInventory(jutsu) {
+    try {
+        if (!player.activeJutsu.includes(jutsu)) {
+            player.activeJutsu.push(jutsu);
+            logBattle(`<span class="output-text-player">${player.name}</span> learned <span class="output-text-${jutsu.style}">${jutsu.name}</span>!`);
+            updateJutsuUI();
+            document.querySelector(".jutsu-select").classList.add("hidden");
+        } else {
+            logBattle(`<span class="output-text-player">${player.name}</span> already knows <span class="output-text-${jutsu.style}">${jutsu.name}</span>!`);
+        }
+    } catch (e) {
+        logBattle(`Error in addJutsuToInventory: ${e.message}`);
     }
 }
-
-function queueOutput(message) {
-    logBattle(message);
-}
-
-// Jutsu Menu Toggle
-let inBattle = false;
-let player = new Mob(
-    "Shinobi",
-    10,
-    10,
-    "Student",
-    { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
-    [],
-    [],
-    [],
-    "https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/NINJA1.PNG"
-);
-
-function toggleJutsuMenu() {
-    logBattle("toggleJutsuMenu clicked!");
-    if (inBattle) {
-        logBattle(`Cannot toggle Jutsu menu during battle! inBattle: ${inBattle}`);
-        return;
-    }
-    const content = document.getElementById("jutsu-management-content");
-    if (content) {
-        content.classList.toggle("hidden");
-    } else {
-        logBattle("Error: jutsu-management-content not found");
-    }
-}
-
-// Jutsu Selection
-const skills = new Skills();
 
 function openJutsuSelect() {
-    logBattle("openJutsuSelect clicked!");
-    if (inBattle) {
-        logBattle(`Cannot select Jutsu during battle! inBattle: ${inBattle}`);
-        return;
-    }
-    const optionsDiv = document.getElementById("jutsu-options");
-    if (optionsDiv) {
-        optionsDiv.innerHTML = "";
-        const eligibleJutsu = skills.skills.filter(jutsu => skills.canUseSkill(player, jutsu));
-        const shuffled = eligibleJutsu.sort(() => 0.5 - Math.random()).slice(0, 3);
-        shuffled.forEach(jutsu => {
-            const card = document.createElement("div");
-            card.className = "jutsu-card";
-            card.innerHTML = `
-                <h4>${jutsu.name}</h4>
-                <p>Style: ${jutsu.style}</p>
-                <p>Rank: ${jutsu.rank}</p>
-            `;
-            card.onclick = () => addJutsuToInventory(jutsu);
-            optionsDiv.appendChild(card);
-        });
-        const jutsuSelect = document.querySelector(".jutsu-select");
-        if (jutsuSelect) {
-            jutsuSelect.classList.remove("hidden");
-        } else {
-            logBattle("Error: jutsu-select not found");
+    try {
+        if (inBattle) {
+            logBattle("Cannot select Jutsu during battle!");
+            return;
         }
-    } else {
-        logBattle("Error: jutsu-options not found");
+        const optionsDiv = document.getElementById("jutsu-options");
+        if (optionsDiv) {
+            optionsDiv.innerHTML = "";
+            const eligibleJutsu = skills.skills.filter(jutsu => skills.canUseSkill(player, jutsu));
+            const shuffled = eligibleJutsu.sort(() => 0.5 - Math.random()).slice(0, 3);
+            shuffled.forEach(jutsu => {
+                const card = document.createElement("div");
+                card.className = "jutsu-card";
+                card.innerHTML = `
+                    <h4>${jutsu.name}</h4>
+                    <p>Style: ${jutsu.style}</p>
+                    <p>Rank: ${jutsu.rank}</p>
+                `;
+                card.onclick = () => addJutsuToInventory(jutsu);
+                optionsDiv.appendChild(card);
+            });
+            document.querySelector(".jutsu-select").classList.remove("hidden");
+        }
+    } catch (e) {
+        logBattle(`Error in openJutsuSelect: ${e.message}`);
     }
 }
 
 function closeJutsuSelect() {
-    const jutsuSelect = document.querySelector(".jutsu-select");
-    if (jutsuSelect) {
-        jutsuSelect.classList.add("hidden");
-    } else {
-        logBattle("Error: jutsu-select not found");
-    }
-}
-
-function addJutsuToInventory(jutsu) {
-    const totalCopies = player.activeJutsu.concat(player.inventory).filter(j => j.name === jutsu.name).length;
-    if (totalCopies >= 4) {
-        logBattle(`Cannot add ${jutsu.name}: Max 4 copies allowed!`);
-        return;
-    }
-    player.inventory.push(jutsu);
-    updateJutsuDisplay();
-    closeJutsuSelect();
-}
-
-// Jutsu Management
-function updateJutsuDisplay() {
-    const activeDiv = document.getElementById("active-jutsu");
-    const inventoryDiv = document.getElementById("inventory-jutsu");
-    if (activeDiv && inventoryDiv) {
-        activeDiv.innerHTML = "";
-        inventoryDiv.innerHTML = "";
-
-        player.activeJutsu.forEach((jutsu, index) => {
-            const card = document.createElement("div");
-            card.className = "jutsu-card";
-            card.innerHTML = `
-                <h4>${jutsu.name}</h4>
-                <p>Style: ${jutsu.style}</p>
-                <p>Rank: ${jutsu.rank}</p>
-                <button onclick="moveJutsuToInventory(${index})" ${inBattle ? "disabled" : ""}>To Inventory</button>
-            `;
-            activeDiv.appendChild(card);
-        });
-
-        player.inventory.forEach((jutsu, index) => {
-            const card = document.createElement("div");
-            card.className = "jutsu-card";
-            card.innerHTML = `
-                <h4>${jutsu.name}</h4>
-                <p>Style: ${jutsu.style}</p>
-                <p>Rank: ${jutsu.rank}</p>
-                <button onclick="moveJutsuToActive(${index})" ${inBattle ? "disabled" : ""}>To Active</button>
-            `;
-            inventoryDiv.appendChild(card);
-        });
-
-        const selectJutsuBtn = document.getElementById("select-jutsu-btn");
-        const toggleJutsuBtn = document.getElementById("toggle-jutsu-btn");
-        if (selectJutsuBtn) selectJutsuBtn.disabled = inBattle;
-        if (toggleJutsuBtn) toggleJutsuBtn.disabled = inBattle;
-    } else {
-        logBattle("Error: active-jutsu or inventory-jutsu not found");
-    }
-}
-
-function moveJutsuToInventory(index) {
-    logBattle("moveJutsuToInventory clicked!");
-    if (inBattle) {
-        logBattle(`Cannot move Jutsu during battle! inBattle: ${inBattle}`);
-        return;
-    }
-    if (player.activeJutsu.length > 0 && index >= 0 && index < player.activeJutsu.length) {
-        player.inventory.push(player.activeJutsu.splice(index, 1)[0]);
-        updateJutsuDisplay();
-    }
-}
-
-function moveJutsuToActive(index) {
-    logBattle("moveJutsuToActive clicked!");
-    if (inBattle) {
-        logBattle(`Cannot move Jutsu during battle! inBattle: ${inBattle}`);
-        return;
-    }
-    if (player.activeJutsu.length < 10 && index >= 0 && index < player.inventory.length) {
-        const jutsu = player.inventory[index];
-        const totalCopies = player.activeJutsu.concat(player.inventory).filter(j => j.name === jutsu.name).length;
-        if (totalCopies <= 4) {
-            player.activeJutsu.push(player.inventory.splice(index, 1)[0]);
-            updateJutsuDisplay();
-        } else {
-            logBattle(`Cannot equip ${jutsu.name}: Max 4 copies allowed!`);
-        }
-    }
-}
-
-// Travel and Village
-function openTravelSelect() {
-    logBattle("openTravelSelect clicked!");
-    if (inBattle) {
-        logBattle(`Cannot travel during battle! inBattle: ${inBattle}`);
-        return;
-    }
-    const optionsDiv = document.getElementById("jutsu-options");
-    if (optionsDiv) {
-        optionsDiv.innerHTML = "";
-        const destinations = Object.keys(MapData).filter(loc => loc !== player.lastVillage);
-        destinations.forEach(dest => {
-            const card = document.createElement("div");
-            card.className = "jutsu-card";
-            card.innerHTML = `<h4>${dest}</h4>`;
-            card.onclick = () => startTravelFight(dest);
-            optionsDiv.appendChild(card);
-        });
+    try {
         const jutsuSelect = document.querySelector(".jutsu-select");
         if (jutsuSelect) {
-            jutsuSelect.classList.remove("hidden");
-        } else {
-            logBattle("Error: jutsu-select not found");
+            jutsuSelect.classList.add("hidden");
         }
-    } else {
-        logBattle("Error: jutsu-options not found");
+    } catch (e) {
+        logBattle(`Error in closeJutsuSelect: ${e.message}`);
     }
 }
 
-function ArriveVillage(village) {
-    logBattle(`ArriveVillage called for ${village}`);
-    player.hp = player.maxHp;
-    player.statusEffects = [];
-    player.lastVillage = village;
-    inBattle = false;
-    const battleScreen = document.getElementById("battle-screen");
-    const fightControls = document.getElementById("fight-controls");
-    const travelControls = document.getElementById("travel-controls");
-    if (battleScreen && fightControls && travelControls) {
-        battleScreen.classList.add("hidden");
-        fightControls.classList.remove("hidden");
-        travelControls.classList.add("hidden");
-    } else {
-        logBattle("Error: battle-screen, fight-controls, or travel-controls not found");
-    }
-    updateJutsuDisplay();
-    updateBattleUI();
-    logBattle(`<span class="output-text-neutral">Arrived at ${village}! inBattle: ${inBattle}</span>`);
-    const villageName = document.getElementById("village-name");
-    if (villageName) {
-        villageName.textContent = village;
-    } else {
-        logBattle("Error: village-name not found");
+function generateTrainingEnemy() {
+    const enemy = new Character("Thief", 20, 20, [], [barrageSkill], "https://via.placeholder.com/120x160");
+    enemy.activeJutsu = [barrageSkill];
+    return enemy;
+}
+
+function generateEnemy() {
+    const enemy = new Character("Thief", 20, 20, [], [barrageSkill], "https://via.placeholder.com/120x160");
+    enemy.activeJutsu = [barrageSkill];
+    return enemy;
+}
+
+function logBattle(message) {
+    if (logOutput) {
+        logOutput.innerHTML += message + "<br>";
+        logOutput.scrollTop = logOutput.scrollHeight;
     }
 }
 
-// Battle System
-const game = {
-    battleType: null,
-    player: null,
-    target: null,
-    targetDestination: null
-};
-
-async function awardReward(winner, loser) {
-    if (game.battleType === "training") {
-        player.xp += 1;
-        logBattle(`<span class="output-text-player">${player.name}</span> gained 1 EXP!`);
-        await sleep(3000);
-        const playerXp = document.getElementById("player-xp");
-        if (playerXp) {
-            playerXp.textContent = player.xp;
-        } else {
-            logBattle("Error: player-xp not found");
-        }
-        if (player.xp >= 10) {
-            player.xp = 0;
-            logBattle(`<span class="output-text-neutral">${player.name} has enough EXP to learn a new Jutsu!</span>`);
-            await sleep(3000);
-            openJutsuSelect();
-        }
-    }
-    updateJutsuDisplay();
+async function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function checkForDeath() {
-    if (player.hp <= 0 || (game.target && game.target.hp <= 0)) {
-        const winner = player.hp <= 0 ? game.target : player;
-        const loser = player.hp <= 0 ? player : game.target;
-        logBattle(`<span class="output-text-${loser === player ? 'player' : 'enemy'}">${loser.name}</span> is defeated! <span class="output-text-${winner === player ? 'player' : 'enemy'}">${winner.name}</span> wins!`);
-        awardReward(winner, loser);
-        endBattle();
+    if (game.player.hp <= 0) {
+        logBattle(`<span class="output-text-player">${game.player.name}</span> has been defeated!`);
+        inBattle = false;
+        return true;
+    }
+    if (game.enemy && game.enemy.hp <= 0) {
+        logBattle(`<span class="output-text-enemy">${game.enemy.name}</span> has been defeated!`);
+        inBattle = false;
         return true;
     }
     return false;
 }
 
-async function startBattle(user, target) {
-    logBattle(`startBattle called! inBattle: ${inBattle}, activeJutsu: ${user.activeJutsu.length}`);
-    if (inBattle) {
-        logBattle("Battle already in progress!");
-        await sleep(3000);
-        return;
+function updateJutsuUI() {
+    try {
+        const jutsuList = document.getElementById("jutsu-list");
+        if (!jutsuList) {
+            logBattle("Error: jutsu-list element not found!");
+            return;
+        }
+        jutsuList.innerHTML = "";
+        for (let jutsu of player.activeJutsu) {
+            const li = document.createElement("li");
+            li.textContent = jutsu.name;
+            li.classList.add("jutsu-item");
+            jutsuList.appendChild(li);
+        }
+    } catch (e) {
+        logBattle(`Error in updateJutsuUI: ${e.message}`);
     }
-    if (user.activeJutsu.length === 0) {
-        logBattle("Cannot start battle: No active Jutsu equipped!");
-        await sleep(3000);
-        return;
-    }
-    inBattle = true;
-    game.player = user;
-    game.target = target;
-    const battleScreen = document.getElementById("battle-screen");
-    const fightControls = document.getElementById("fight-controls");
-    const travelControls = document.getElementById("travel-controls");
-    if (battleScreen && fightControls && travelControls) {
-        battleScreen.classList.remove("hidden");
-        fightControls.classList.add("hidden");
-        travelControls.classList.add("hidden");
-    } else {
-        logBattle("Error: battle-screen, fight-controls, or travel-controls not found");
+}
+
+async function processStatusEffects(user, target) {
+    try {
+        for (let i = user.statusEffects.length - 1; i >= 0; i--) {
+            let effect = user.statusEffects[i];
+            if (effect.onTurn) {
+                if (await effect.onTurn(user, target)) {
+                    continue;
+                }
+            }
+            effect.duration--;
+            if (effect.duration <= 0 && !effect.isPermanent) {
+                user.statusEffects.splice(i, 1);
+            }
+        }
+    } catch (e) {
+        logBattle(`Error in processStatusEffects: ${e.message}`);
         inBattle = false;
-        return;
     }
-    updateJutsuDisplay();
-    updateBattleUI();
-    logBattle(`<span class="output-text-player">${user.name}</span> vs <span class="output-text-enemy">${target.name}</span>!`);
-    await sleep(3000);
-    await setTurnOrder();
-}
-
-async function startTrainingFight() {
-    logBattle("startTrainingFight clicked!");
-    if (inBattle) {
-        logBattle(`Cannot start Training fights during battle! inBattle: ${inBattle}`);
-        return;
-    }
-    game.battleType = "training";
-    const enemy = generateTrainingEnemy();
-    logBattle(`Generated enemy: ${enemy.name}, Jutsu: ${enemy.activeJutsu.map(j => j.name).join(", ")}`);
-    await startBattle(player, enemy);
-}
-
-async function startTravelFight(destination) {
-    logBattle("startTravelFight clicked!");
-    if (inBattle) {
-        logBattle(`Cannot start Travel fights during battle! inBattle: ${inBattle}`);
-        return;
-    }
-    game.battleType = "travel";
-    player.travelFightsCompleted = player.travelFightsCompleted || 0;
-    game.targetDestination = destination;
-    closeJutsuSelect();
-    const enemy = generateEnemy();
-    logBattle(`Generated enemy: ${enemy.name}, Jutsu: ${enemy.activeJutsu.map(j => j.name).join(", ")}`);
-    await startBattle(player, enemy);
-}
-
-async function startEventFight() {
-    logBattle("startEventFight clicked!");
-    if (inBattle) {
-        logBattle(`Cannot start Event fights during battle! inBattle: ${inBattle}`);
-        return;
-    }
-    game.battleType = "event";
-    queueOutput("<span class='output-text-neutral'>Event fight started!</span>");
-    const enemy = generateEnemy();
-    logBattle(`Generated enemy: ${enemy.name}, Jutsu: ${enemy.activeJutsu.map(j => j.name).join(", ")}`);
-    await startBattle(player, enemy);
-}
-
-async function startArenaFight() {
-    logBattle("startArenaFight clicked!");
-    if (inBattle) {
-        logBattle(`Cannot start Arena fights during battle! inBattle: ${inBattle}`);
-        return;
-    }
-    game.battleType = "arena";
-    queueOutput("<span class='output-text-neutral'>Arena fight started!</span>");
-    const enemy = generateEnemy();
-    logBattle(`Generated enemy: ${enemy.name}, Jutsu: ${enemy.activeJutsu.map(j => j.name).join(", ")}`);
-    await startBattle(player, enemy);
-}
-
-async function talkToNPC() {
-    logBattle("talkToNPC clicked!");
-    if (inBattle) {
-        logBattle(`Cannot talk to NPCs during battle! inBattle: ${inBattle}`);
-        return;
-    }
-    queueOutput("<span class='output-text-neutral'>Talking to NPC! (Placeholder)</span>");
-}
-
-async function returnToVillage() {
-    logBattle("returnToVillage clicked!");
-    if (inBattle) {
-        logBattle(`Cannot return to village during battle! inBattle: ${inBattle}`);
-        return;
-    }
-    ArriveVillage(player.lastVillage);
 }
 
 async function endBattle() {
-    logBattle("endBattle called!");
-    inBattle = false;
-    game.player = player;
-    const battleScreen = document.getElementById("battle-screen");
-    const fightControls = document.getElementById("fight-controls");
-    const travelControls = document.getElementById("travel-controls");
-    if (battleScreen && fightControls && travelControls) {
-        battleScreen.classList.add("hidden");
-        if (game.battleType === "travel" && game.target && game.target.hp <= 0) {
-            player.travelFightsCompleted = (player.travelFightsCompleted || 0) + 1;
-            queueOutput(`<span class='output-text-neutral'>Travel fight completed! ${player.travelFightsCompleted}/4 fights done.</span>`);
-            await sleep(3000);
-            if (player.travelFightsCompleted < 4) {
-                await startTravelFight(game.targetDestination);
-            } else {
-                player.travelFightsCompleted = 0;
-                const targetIsVillage = MapData[game.targetDestination]?.isVillage;
-                if (targetIsVillage) {
-                    ArriveVillage(game.targetDestination);
-                } else {
-                    queueOutput(`<span class='output-text-neutral'>Arrived at ${game.targetDestination}!</span>`);
-                    travelControls.classList.remove("hidden");
-                    travelControls.innerHTML = `
-                        <button onclick="startEventFight()">Start Event Fight</button>
-                        <button onclick="talkToNPC()">Talk to NPC</button>
-                        <button onclick="returnToVillage()">Return to ${player.lastVillage}</button>
-                    `;
-                    fightControls.classList.add("hidden");
-                    const villageName = document.getElementById("village-name");
-                    if (villageName) {
-                        villageName.textContent = game.targetDestination;
-                    } else {
-                        logBattle("Error: village-name not found");
-                    }
-                }
-            }
-        } else {
-            if (player.hp <= 0) {
-                ArriveVillage(player.lastVillage);
-            } else {
-                fightControls.classList.remove("hidden");
-                travelControls.classList.add("hidden");
-            }
-        }
-    } else {
-        logBattle("Error: battle-screen, fight-controls, or travel-controls not found");
-    }
-    queueOutput("<span class='battle-ready'>Battle ended!</span>");
-    game.target = null;
-    updateJutsuDisplay();
-    updateBattleUI();
-    logBattle(`endBattle finished! inBattle: ${inBattle}`);
-}
-
-async function setTurnOrder() {
-    logBattle(`setTurnOrder called!`);
-    if (Math.random() < 0.5) {
-        game.user = player;
-        game.target = game.target;
-        logBattle(`<span class="output-text-player">${player.name}</span> goes first!`);
-        await sleep(3000);
-    } else {
-        game.user = game.target;
-        game.target = player;
-        logBattle(`<span class="output-text-enemy">${game.target.name}</span> goes first!`);
-        await sleep(3000);
-    }
-    await takeTurn();
-}
-
-async function takeTurn() {
-    if (!inBattle) {
-        logBattle("Battle stopped unexpectedly!");
-        await sleep(3000);
-        return;
-    }
     try {
-        updateBattleUI();
-        logBattle("");
-        logBattle(`✧✧ <strong><span class="output-text-${game.user === player ? 'player' : 'enemy'}">${game.user.name}'s Turn</span></strong> ✧✧`);
+        inBattle = false;
+        logBattle("Battle has ended!");
         await sleep(3000);
-        logBattle("");
+        openJutsuSelect();
+    } catch (e) {
+        logBattle(`Error in endBattle: ${e.message}`);
+    }
+}
 
-        let skipTurn = false;
-        for (let status of game.user.statusEffects) {
-            if (status.startOfTurn && status.startOfTurnFunction) {
-                if (await status.startOfTurnFunction(game.user, game.target)) {
-                    skipTurn = true;
-                }
-            }
-            status.duration--;
-        }
-        game.user.statusEffects = game.user.statusEffects.filter(status => status.duration > 0);
-
-        if (skipTurn) {
-            logBattle(`${game.user.name}'s turn skipped due to status effect!`);
-            await sleep(3000);
-            await endTurn();
+async function startTrainingFight() {
+    try {
+        logBattle("startTrainingFight clicked!");
+        if (inBattle) {
+            logBattle(`Cannot start Training fights during battle! inBattle: ${inBattle}`);
             return;
         }
-
-        await skillAction();
+        game.battleType = "training";
+        const enemy = generateTrainingEnemy();
+        logBattle(`Generated enemy: ${enemy.name}, Jutsu: ${enemy.activeJutsu.map(j => j.name).join(", ")}`);
+        await startBattle(player, enemy);
     } catch (e) {
-        logBattle(`Error in takeTurn: ${e.message}`);
-        await sleep(3000);
+        logBattle(`Error in startTrainingFight: ${e.message}`);
+    }
+}
+
+async function startTravelFight(destination) {
+    try {
+        logBattle("startTravelFight clicked!");
+        if (inBattle) {
+            logBattle(`Cannot start Travel fights during battle! inBattle: ${inBattle}`);
+            return;
+        }
+        game.battleType = "travel";
+        player.travelFightsCompleted = player.travelFightsCompleted || 0;
+        game.targetDestination = destination;
+        closeJutsuSelect();
+        const enemy = generateEnemy();
+        logBattle(`Generated enemy: ${enemy.name}, Jutsu: ${enemy.activeJutsu.map(j => j.name).join(", ")}`);
+        await startBattle(player, enemy);
+    } catch (e) {
+        logBattle(`Error in startTravelFight: ${e.message}`);
+    }
+}
+
+async function startBattle(player, enemy) {
+    try {
+        logBattle(`startBattle called! inBattle: ${inBattle}, activeJutsu: ${player.activeJutsu.length}`);
+        if (inBattle) {
+            logBattle("Battle already in progress!");
+            await sleep(3000);
+            return;
+        }
+        if (player.activeJutsu.length === 0) {
+            logBattle("Cannot start battle: No active Jutsu equipped!");
+            await sleep(3000);
+            return;
+        }
+        inBattle = true;
+        game.player = player; // Shinobi
+        game.enemy = enemy; // Thief
+        turnOrder = [player, enemy];
+        logBattle(`<span class="output-text-player">${player.name}</span> vs <span class="output-text-enemy">${enemy.name}</span>!`);
+        await updateBattleUI();
+        await setTurnOrder();
+    } catch (e) {
+        logBattle(`Error in startBattle: ${e.message}`);
         inBattle = false;
     }
 }
 
-async function skillAction() {
+async function setTurnOrder() {
     try {
-        if (!game.user.activeJutsu.length) {
-            logBattle(`${game.user.name} has no Active Jutsu!`);
+        logBattle(`setTurnOrder called!`);
+        if (Math.random() < 0.5) {
+            game.user = game.player;
+            game.target = game.enemy;
+            logBattle(`<span class="output-text-player">${game.player.name}</span> goes first!`);
             await sleep(3000);
-            await endTurn();
-            return;
+        } else {
+            game.user = game.enemy;
+            game.target = game.player;
+            logBattle(`<span class="output-text-enemy">${game.enemy.name}</span> goes first!`);
+            await sleep(3000);
         }
-
-        const jutsu = game.user.activeJutsu[Math.floor(Math.random() * game.user.activeJutsu.length)];
-        logBattle(`<span class="output-text-${game.user === player ? 'player' : 'enemy'}">${game.user.name}</span> uses ${jutsu.name}!`);
-        await sleep(3000);
-
-        if (jutsu.support) {
-            await jutsu.skillFunction(game.user, game.target);
-            if (checkForDeath()) return;
-            await endTurn();
-            return;
-        }
-
-        for (let status of game.user.statusEffects) {
-            if (status.active && status.activeFunction) {
-                await status.activeFunction(game.user, game.target);
-            }
-        }
-
-        let endTurnFlag = false;
-        for (let status of game.target.statusEffects) {
-            if (status.triggered && status.triggeredFunction) {
-                if (await status.triggeredFunction(game.target, game.user, jutsu.style)) {
-                    endTurnFlag = true;
-                }
-            }
-        }
-
-        if (endTurnFlag) {
-            if (checkForDeath()) return;
-            await endTurn();
-            return;
-        }
-
-        await jutsu.skillFunction(game.user, game.target);
-        if (checkForDeath()) return;
-        await endTurn();
+        await takeTurn();
     } catch (e) {
-        logBattle(`Error in skillAction: ${e.message}`);
-        await sleep(3000);
+        logBattle(`Error in setTurnOrder: ${e.message}`);
+        inBattle = false;
+    }
+}
+
+async function takeTurn() {
+    try {
+        if (!inBattle) {
+            logBattle("Battle ended or not in progress!");
+            return;
+        }
+        let currentCharacter = game.user;
+        let target = game.target;
+        logBattle(`<br><span class="turn-text">✧✧ ${currentCharacter.name}'s Turn ✧✧</span>`);
+        await sleep(1000);
+        await processStatusEffects(currentCharacter, target);
+        if (checkForDeath()) return;
+        await skillAction();
+    } catch (e) {
+        logBattle(`Error in takeTurn: ${e.message}`);
         inBattle = false;
     }
 }
@@ -980,16 +730,68 @@ async function endTurn() {
             return;
         }
         [game.user, game.target] = [game.target, game.user];
-        updateBattleUI();
+        await updateBattleUI();
         setTimeout(takeTurn, 1000);
     } catch (e) {
         logBattle(`Error in endTurn: ${e.message}`);
-        await sleep(3000);
         inBattle = false;
     }
 }
 
-function updateBattleUI() {
+async function skillAction() {
+    try {
+        if (!game.user || !game.target) {
+            logBattle("Error: game.user or game.target is undefined!");
+            inBattle = false;
+            return;
+        }
+        if (!game.user.activeJutsu.length) {
+            logBattle(`${game.user.name} has no Active Jutsu!`);
+            await sleep(3000);
+            await endTurn();
+            return;
+        }
+        const jutsu = game.user.activeJutsu[Math.floor(Math.random() * game.user.activeJutsu.length)];
+        logBattle(`<span class="output-text-${game.user === player ? 'player' : 'enemy'}">${game.user.name}</span> uses ${jutsu.name}!`);
+        await sleep(3000);
+        if (jutsu.support) {
+            await jutsu.skillFunction(game.user, game.target);
+            if (checkForDeath()) return;
+            await endTurn();
+            return;
+        }
+        for (let status of game.user.statusEffects) {
+            if (status.active && status.activeFunction) {
+                if (await status.activeFunction(game.user, game.target)) {
+                    if (checkForDeath()) return;
+                    await endTurn();
+                    return;
+                }
+            }
+        }
+        let endTurnFlag = false;
+        for (let status of game.target.statusEffects) {
+            if (status.triggered && status.triggeredFunction) {
+                if (await status.triggeredFunction(game.target, game.user, jutsu.style)) {
+                    endTurnFlag = true;
+                }
+            }
+        }
+        if (endTurnFlag) {
+            if (checkForDeath()) return;
+            await endTurn();
+            return;
+        }
+        await jutsu.skillFunction(game.user, game.target);
+        if (checkForDeath()) return;
+        await endTurn();
+    } catch (e) {
+        logBattle(`Error in skillAction: ${e.message}`);
+        inBattle = false;
+    }
+}
+
+async function updateBattleUI() {
     try {
         const userName = document.getElementById("user-name");
         const userHp = document.getElementById("user-hp");
@@ -1008,57 +810,18 @@ function updateBattleUI() {
             return;
         }
 
-        userName.textContent = player.name;
-        userHp.textContent = `${player.hp}/${player.maxHp}`;
-        userStatus.textContent = player.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None";
-        userSprite.src = player.sprite;
-        opponentName.textContent = game.target ? game.target.name : "None";
-        opponentHp.textContent = game.target ? `${game.target.hp}/${game.target.maxHp}` : "0/0";
-        opponentStatus.textContent = game.target ? game.target.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None" : "None";
-        opponentSprite.src = game.target ? game.target.sprite : "https://via.placeholder.com/120x160";
-        playerRank.textContent = player.rank;
-        playerXp.textContent = player.xp;
+        userName.textContent = game.player.name;
+        userHp.textContent = `${game.player.hp}/${game.player.maxHp}`;
+        userStatus.textContent = game.player.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None";
+        userSprite.src = game.player.sprite;
+        opponentName.textContent = game.enemy ? game.enemy.name : "None";
+        opponentHp.textContent = game.enemy ? `${game.enemy.hp}/${game.enemy.maxHp}` : "0/0";
+        opponentStatus.textContent = game.enemy ? game.enemy.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None" : "None";
+        opponentSprite.src = game.enemy ? game.enemy.sprite : "https://via.placeholder.com/120x160";
+        playerRank.textContent = game.player.rank;
+        playerXp.textContent = game.player.xp;
     } catch (e) {
         logBattle(`Error in updateBattleUI: ${e.message}`);
         inBattle = false;
     }
-}
-
-// Initialize Game
-function initializeGame() {
-    player = new Mob(
-        "Shinobi",
-        10,
-        10,
-        "Student",
-        { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
-        [],
-        [],
-        [],
-        "https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/NINJA1.PNG"
-    );
-    game.player = player;
-    inBattle = false;
-    assignRandomJutsu(player, 3); // Changed to 3 to match previous behavior
-    updateJutsuDisplay();
-    updateBattleUI();
-    ArriveVillage("Newb Village");
-    logBattle("Game initialized!");
-    logBattle(`Initial activeJutsu: ${player.activeJutsu.map(j => j.name).join(", ") || "None"}`);
-}
-
-function assignRandomJutsu(mob, count) {
-    const eligibleJutsu = skills.skills.filter(jutsu => skills.canUseSkill(mob, jutsu));
-    if (eligibleJutsu.length === 0) {
-        logBattle("Error: No eligible Jutsu found! Assigning Barrage as fallback.");
-        console.error("No eligible Jutsu", mob.fightingStyles, skills.skills.map(s => ({ name: s.name, requirements: s.requirements })));
-        mob.activeJutsu = [skills.findSkill("Barrage")];
-        return;
-    }
-    const shuffled = eligibleJutsu.sort(() => 0.5 - Math.random()).slice(0, count);
-    mob.activeJutsu = shuffled;
-    logBattle(`Assigned ${count} Jutsu to ${mob.name}: ${shuffled.map(j => j.name).join(", ") || "None"}`);
-}
-
-// Run initialization
-initializeGame();
+                                       }
