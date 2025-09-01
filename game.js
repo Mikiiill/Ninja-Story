@@ -169,8 +169,8 @@ class Skills {
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         target.statusEffects.push(new StatusEffect("Doom", 5, 1, true, false, false, 
             async (user, target) => {
-                target.hp = Math.max(0, target.hp - target.statusEffects.find(e => e.name === "Doom").damage);
-                logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> takes ${target.statusEffects.find(e => e.name === "Doom").damage} damage from <span class="status-doom">Doom 💀</span>!`);
+                user.hp = Math.max(0, user.hp - user.statusEffects.find(e => e.name === "Doom").damage);
+                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> takes ${user.statusEffects.find(e => e.name === "Doom").damage} damage from <span class="status-doom">Doom 💀</span>!`);
                 await sleep(3000);
                 return false;
             }));
@@ -218,8 +218,8 @@ class Skills {
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         target.statusEffects.push(new StatusEffect("Burn", 1, 2, true, false, false, 
             async (user, target) => {
-                target.hp = Math.max(0, target.hp - target.statusEffects.find(e => e.name === "Burn").damage);
-                logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> takes ${target.statusEffects.find(e => e.name === "Burn").damage} damage from <span class="status-burn">Burn 🔥</span>!`);
+                user.hp = Math.max(0, user.hp - user.statusEffects.find(e => e.name === "Burn").damage);
+                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> takes ${user.statusEffects.find(e => e.name === "Burn").damage} damage from <span class="status-burn">Burn 🔥</span>!`);
                 await sleep(3000);
                 return false;
             }));
@@ -242,7 +242,7 @@ class Skills {
             async (user, target) => {
                 logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> is stunned by Numb and skips their turn!`);
                 await sleep(3000);
-                target.statusEffects = target.statusEffects.filter(e => e.name !== "Numb");
+                target.statusEffects = target.statusEffects.filter(e => e.name === "Numb");
                 return true; // End the turn
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-lightning">Static Field Jutsu</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-numb">Numb ⚡️</span> on both!`);
@@ -255,8 +255,8 @@ class Skills {
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         target.statusEffects.push(new StatusEffect("Burn", 1, 1, true, false, false, 
             async (user, target) => {
-                target.hp = Math.max(0, target.hp - target.statusEffects.find(e => e.name === "Burn").damage);
-                logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> takes ${target.statusEffects.find(e => e.name === "Burn").damage} damage from <span class="status-burn">Burn 🔥</span>!`);
+                user.hp = Math.max(0, user.hp - user.statusEffects.find(e => e.name === "Burn").damage);
+                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> takes ${user.statusEffects.find(e => e.name === "Burn").damage} damage from <span class="status-burn">Burn 🔥</span>!`);
                 await sleep(3000);
                 return false;
             }));
@@ -279,7 +279,7 @@ class Skills {
                 await sleep(3000);
                 await nextSkill.skillFunction(user, target);
             }
-            user.getElementByIdstatusEffects = user.statusEffects.filter(e => e.name !== "DynamicEntryProc");
+            user.statusEffects = user.statusEffects.filter(e => e.name !== "DynamicEntryProc");
         }
         return target.hp <= 0;
     }
@@ -327,7 +327,7 @@ class Skills {
                 }
                 return false; // Allow skill to proceed
             }));
-        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-genjutsu">Genjutsu Release</span>, dispelling Doom and gaining <span class="status-release">Release 🌀</span>!`);
+        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-genjutsu">Genjutsu Release</span>, dispelling Doom and gaining <span class="status-substitution">Release 🌀</span>!`);
         await sleep(3000);
         return true;
     }
@@ -348,8 +348,8 @@ class Skills {
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         target.statusEffects.push(new StatusEffect("Bleed", 2, 1, true, false, false, 
             async (user, target) => {
-                target.hp = Math.max(0, target.hp - target.statusEffects.find(e => e.name === "Bleed").damage);
-                logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> takes ${target.statusEffects.find(e => e.name === "Bleed").damage} damage from <span class="status-bleed">Bleed 🩸</span>!`);
+                user.hp = Math.max(0, user.hp - user.statusEffects.find(e => e.name === "Bleed").damage);
+                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> takes ${user.statusEffects.find(e => e.name === "Bleed").damage} damage from <span class="status-bleed">Bleed 🩸</span>!`);
                 await sleep(3000);
                 return false;
             }));
@@ -721,7 +721,7 @@ const player = new Mob(
     10,
     10,
     "Student",
-    { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank", Beast: "C-Rank" },
+    { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
     [],
     [],
     [],
@@ -733,7 +733,7 @@ const opponent = new Mob(
     6,
     6,
     "Student",
-    { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank", Beast: "C-Rank" },
+    { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
     [],
     [],
     [],
