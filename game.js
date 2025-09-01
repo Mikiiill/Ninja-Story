@@ -469,17 +469,18 @@ let player = new Mob(
 );
 
 function toggleJutsuMenu() {
-    logBattle("toggleJutsuMenu clicked!");
     console.log("toggleJutsuMenu: inBattle =", inBattle);
     if (inBattle) {
         logBattle(`Cannot toggle Jutsu menu during battle! inBattle: ${inBattle}`);
+        console.log("toggleJutsuMenu: Blocked due to inBattle");
         return;
     }
     const content = document.getElementById("jutsu-management-content");
     if (content) {
+        const isHidden = content.classList.contains("hidden");
         content.classList.toggle("hidden");
-        console.log("jutsu-management-content classes:", content.classList);
-        logBattle(`Toggled jutsu-management-content, hidden: ${content.classList.contains("hidden")}`);
+        logBattle(`Toggled jutsu-management-content to ${isHidden ? "visible" : "hidden"}`);
+        console.log("jutsu-management-content classes:", content.classList.toString());
     } else {
         logBattle("Error: jutsu-management-content not found");
         console.error("jutsu-management-content not found");
@@ -490,7 +491,6 @@ function toggleJutsuMenu() {
 const skills = new Skills();
 
 function openJutsuSelect() {
-    logBattle("openJutsuSelect clicked!");
     console.log("openJutsuSelect: inBattle =", inBattle);
     if (inBattle) {
         logBattle(`Cannot select Jutsu during battle! inBattle: ${inBattle}`);
@@ -1019,50 +1019,4 @@ function updateBattleUI() {
         opponentStatus.textContent = game.target ? game.target.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None" : "None";
         opponentSprite.src = game.target ? game.target.sprite : "https://via.placeholder.com/120x160";
         playerRank.textContent = player.rank;
-        playerXp.textContent = player.xp;
-    } catch (e) {
-        logBattle(`Error in updateBattleUI: ${e.message}`);
-        inBattle = false;
-    }
-}
-
-// Initialize Game
-function initializeGame() {
-    console.log("Initializing game...");
-    player = new Mob(
-        "Shinobi",
-        10,
-        10,
-        "Student",
-        { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
-        [],
-        [],
-        [],
-        "https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/NINJA1.PNG"
-    );
-    game.player = player;
-    inBattle = false;
-    console.log("inBattle set to:", inBattle);
-    assignRandomJutsu(player, 3);
-    updateJutsuDisplay();
-    updateBattleUI();
-    ArriveVillage("Newb Village");
-    logBattle("Game initialized!");
-    logBattle(`Initial activeJutsu: ${player.activeJutsu.map(j => j.name).join(", ") || "None"}`);
-}
-
-function assignRandomJutsu(mob, count) {
-    const eligibleJutsu = skills.skills.filter(jutsu => skills.canUseSkill(mob, jutsu));
-    if (eligibleJutsu.length === 0) {
-        logBattle("Error: No eligible Jutsu found! Assigning Barrage as fallback.");
-        console.error("No eligible Jutsu", mob.fightingStyles, skills.skills.map(s => ({ name: s.name, requirements: s.requirements })));
-        mob.activeJutsu = [skills.findSkill("Barrage")];
-        return;
-    }
-    const shuffled = eligibleJutsu.sort(() => 0.5 - Math.random()).slice(0, count);
-    mob.activeJutsu = shuffled;
-    logBattle(`Assigned ${count} Jutsu to ${mob.name}: ${shuffled.map(j => j.name).join(", ") || "None"}`);
-}
-
-// Run initialization
-initializeGame();
+        playerXp.textContent = player.xp
