@@ -260,7 +260,7 @@ class Skills {
         target.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
             (user, target) => {
                 logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> is stunned by Numb and skips their turn!`);
-                target.statusEffects = target.statusEffects.filter(e => e.name !== "Numb");
+                target.statusEffects = target.statusEffects.filter(e => e.name === "Numb");
                 return true; // End the turn
             }));
         user.statusEffects.push(new StatusEffect("READY", 1, 0, false, true, false, null, 
@@ -480,7 +480,6 @@ function awardReward(winner, loser) {
     }
     winner.xp += 50;
     logBattle(`${winner.name} gained 50 XP!`);
-    inBattle = false;
     updateJutsuDisplay();
 }
 
@@ -490,6 +489,7 @@ function checkForDeath() {
         const loser = player.hp <= 0 ? player : opponent;
         logBattle(`${loser.name} is defeated! ${winner.name} wins!`);
         awardReward(winner, loser);
+        inBattle = false; // Moved here for clarity
         return true;
     }
     return false;
@@ -526,94 +526,119 @@ function setTurnOrder() {
 }
 
 function takeTurn() {
-    if (!inBattle) return;
-    updateBattleUI();
-    logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span>'s turn`);
-
-    let skipTurn = false;
-    user.statusEffects.forEach(status => {
-        if (status.startOfTurn && status.startOfTurnFunction) {
-            if (status.startOfTurnFunction(user, target)) {
-                skipTurn = true;
-            }
-        }
-        status.duration--;
-    });
-    user.statusEffects = user.statusEffects.filter(status => status.duration > 0);
-
-    if (skipTurn) {
-        endTurn();
+    if (!inBattle) {
+        logBattle("Battle stopped unexpectedly!");
         return;
     }
+    try {
+        updateBattleUI();
+        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span>'s turn`);
 
-    skillAction();
+        let skipTurn = false;
+        user.statusEffects.forEach(status => {
+            if (status.startOfTurn && status.startOfTurnFunction) {
+                if (status.startOfTurnFunction(user, target)) {
+                    skipTurn = true;
+                }
+            }
+            status.duration--;
+        });
+        user.statusEffects = user.statusEffects.filter(status => status.duration > 0);
+
+        if (skipTurn) {
+            logBattle(`${user.name}'s turn skipped due to status effect!`);
+            endTurn();
+            return;
+        }
+
+        skillAction();
+    } catch (e) {
+        logBattle(`Error in takeTurn: ${e.message}`);
+    }
 }
 
 function skillAction() {
-    if (!user.activeJutsu.length) {
-        logBattle(`${user.name} has no Active Jutsu!`);
-        endTurn();
-        return;
-    }
-
-    const jutsu = user.activeJutsu[Math.floor(Math.random() * user.activeJutsu.length)];
-    logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses ${jutsu.name}!`);
-
-    if (jutsu.support) {
-        jutsu.skillFunction(user, target);
-        endTurn();
-        return;
-    }
-
-    // Check active effects
-    user.statusEffects.forEach(status => {
-        if (status.active && status.activeFunction) {
-            status.activeFunction(user, target);
+    try {
+        if (!user.activeJutsu.length) {
+            logBattle(`${user.name} has no Active Jutsu!`);
+            endTurn();
+            return;
         }
-    });
 
-    // Check target's triggered effects
-    let endTurn = false;
-    target.statusEffects.forEach(status => {
-        if (status.triggered && status.triggeredFunction) {
-            if (status.triggeredFunction(user, target, jutsu.style)) {
-                endTurn = true;
+        const jutsu = user.activeJutsu[Math.floor(Math.random() * user.activeJutsu.length)];
+        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses ${jutsu.name}!`);
+
+        if (jutsu.support) {
+            jutsu.skillFunction(user, target);
+            if (checkForDeath()) return;
+            endTurn();
+            return;
+        }
+
+        // Check active effects
+        user.statusEffects.forEach(status => {
+            if (status.active && status.activeFunction) {
+                status.activeFunction(user, target);
             }
+        });
+
+        // Check target's triggered effects
+        let endTurnFlag = false;
+        target.statusEffects.forEach(status => {
+            if (status.triggered && status.triggeredFunction) {
+                if (status.triggeredFunction(user, target, jutsu.style)) {
+                    endTurnFlag = true;
+                }
+            }
+        });
+
+        if (endTurnFlag) {
+            if (checkForDeath()) return;
+            endTurn();
+            return;
         }
-    });
 
-    if (endTurn) {
+        // Execute non-support Jutsu
+        jutsu.skillFunction(user, target);
+        if (checkForDeath()) return;
         endTurn();
-        return;
+    } catch (e) {
+        logBattle(`Error in skillAction: ${e.message}`);
     }
-
-    // Execute non-support Jutsu
-    jutsu.skillFunction(user, target);
-
-    if (checkForDeath()) {
-        return;
-    }
-
-    endTurn();
 }
 
 function endTurn() {
-    if (!inBattle) return;
-    [user, target] = [target, user];
-    setTimeout(takeTurn, 1000);
+    try {
+        if (!inBattle) {
+            logBattle("Cannot end turn: Battle is not active!");
+            return;
+        }
+        logBattle(`Ending turn for ${user.name}, switching to ${target.name}`);
+        [user, target] = [target, user];
+        updateBattleUI();
+        logBattle(`Scheduling next turn for ${user.name}`);
+        setTimeout(takeTurn, 1000);
+    } catch (e) {
+        logBattle(`Error in endTurn: ${e.message}`);
+    }
 }
 
 function updateBattleUI() {
-    const userName = document.getElementById("user-name");
-    const userHp = document.getElementById("user-hp");
-    const userStatus = document.getElementById("user-status");
-    const userSprite = document.getElementById("user-sprite");
-    const opponentName = document.getElementById("opponent-name");
-    const opponentHp = document.getElementById("opponent-hp");
-    const opponentStatus = document.getElementById("opponent-status");
-    const opponentSprite = document.getElementById("opponent-sprite");
+    try {
+        const userName = document.getElementById("user-name");
+        const userHp = document.getElementById("user-hp");
+        const userStatus = document.getElementById("user-status");
+        const userSprite = document.getElementById("user-sprite");
+        const opponentName = document.getElementById("opponent-name");
+        const opponentHp = document.getElementById("opponent-hp");
+        const opponentStatus = document.getElementById("opponent-status");
+        const opponentSprite = document.getElementById("opponent-sprite");
 
-    if (userName && userHp && userStatus && userSprite && opponentName && opponentHp && opponentStatus && opponentSprite) {
+        if (!userName || !userHp || !userStatus || !userSprite || !opponentName || !opponentHp || !opponentStatus || !opponentSprite) {
+            logBattle("Error: One or more UI elements missing!");
+            return;
+        }
+
         userName.textContent = player.name;
         userHp.textContent = `${player.hp}/${player.maxHp}`;
         userStatus.textContent = player.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None";
@@ -622,6 +647,8 @@ function updateBattleUI() {
         opponentHp.textContent = `${opponent.hp}/${opponent.maxHp}`;
         opponentStatus.textContent = opponent.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None";
         opponentSprite.src = opponent.sprite || "https://via.placeholder.com/120x160";
+    } catch (e) {
+        logBattle(`Error in updateBattleUI: ${e.message}`);
     }
 }
 
