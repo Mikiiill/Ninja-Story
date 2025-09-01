@@ -1,11 +1,3 @@
-// Game State
-const game = {
-    battleType: null,
-    player: null,
-    target: null,
-    targetDestination: null
-};
-
 // Utility Function for Delay
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -66,10 +58,8 @@ class Mob {
         this.activeJutsu = activeJutsu || [];
         this.inventory = inventory || [];
         this.statusEffects = statusEffects || [];
-        this.sprite = sprite || "https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/NINJA2.PNG";
+        this.sprite = sprite;
         this.xp = 0;
-        this.travelFightsCompleted = 0;
-        this.lastVillage = "Newb Village";
     }
 }
 
@@ -332,7 +322,7 @@ class Skills {
                 if (skillStyle === "genjutsu") {
                     logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> uses Release to resist the Genjutsu attack!`);
                     await sleep(3000);
-                    target.statusEffects = target.statusEffects.filter(e => e.name !== "Release");
+                    target.statusEffects = target.statusEffects.filter(e => e.name === "Release");
                     return true;
                 }
                 return false;
@@ -374,69 +364,6 @@ function compareRanks(rank1, rank2) {
     return ranks.indexOf(rank1) - ranks.indexOf(rank2);
 }
 
-// Map Data
-const MapData = {
-    "Newb Village": {
-        areas: ["Academy"],
-        isVillage: true
-    },
-    "Abandoned Village": {
-        areas: ["Burnt Tower"],
-        isVillage: true
-    },
-    "Academy": {
-        areas: ["Newb Village"],
-        isVillage: false
-    },
-    "Burnt Tower": {
-        areas: ["Abandoned Village"],
-        isVillage: false
-    }
-};
-
-// Enemy Generation
-function generateEnemySkills(rank, styles) {
-    let skillSet = new Skills();
-    let availableSkills = skillSet.skills.filter(skill => 
-        Object.keys(skill.requirements).every(style => styles[style] && compareRanks(styles[style], skill.requirements[style]) >= 0) &&
-        skill.rank === rank
-    );
-    let selectedSkills = [];
-    for (let i = 0; i < 4 && availableSkills.length > 0; i++) {
-        let index = Math.floor(Math.random() * availableSkills.length);
-        selectedSkills.push(availableSkills.splice(index, 1)[0]);
-    }
-    return selectedSkills.length > 0 ? selectedSkills : [];
-}
-
-function generateEnemy() {
-    let styles = ["Fire", "Lightning", "Earth", "Water", "Wind", "Beast", "Ninjutsu", "Taijutsu", "Genjutsu"];
-    let styleCount = { Genin: 2, Chunin: 4, Jounin: 6 }[game.player.rank] || 2;
-    let rank = { Student: "D-Rank", Genin: "C-Rank", Chunin: "B-Rank", Jounin: "A-Rank" }[game.player.rank] || "D-Rank";
-    let hp = { Genin: 12, Chunin: 16, Jounin: 20 }[game.player.rank] || 12;
-    let randomStyles = {};
-    for (let i = 0; i < styleCount; i++) {
-        let style = styles.splice(Math.floor(Math.random() * styles.length), 1)[0];
-        randomStyles[style] = rank;
-    }
-    let skills = generateEnemySkills(rank, randomStyles);
-    let name = game.player.rank === "Genin" ? "Genin Opponent" : game.player.rank === "Chunin" ? "Chunin Opponent" : "Jounin Opponent";
-    return new Mob(name, hp, hp, rank, randomStyles, skills, []);
-}
-
-function generateTrainingEnemy() {
-    let enemies = [
-        new Mob("Rabid Dog", 8, 8, "D-Rank", { Beast: "C-Rank" }, [new Skills().findSkill("Bite")], []),
-        new Mob("Thief", 10, 10, "D-Rank", { Taijutsu: "D-Rank" }, [
-            new Skills().findSkill("Barrage"),
-            new Skills().findSkill("Barrage"),
-            new Skills().findSkill("Substitution Jutsu")
-        ], []),
-        new Mob("Training Dummy", 6, 6, "D-Rank", { Ninjutsu: "D-Rank" }, [new Skills().findSkill("Healing Stance")], [])
-    ];
-    return enemies[Math.floor(Math.random() * enemies.length)];
-}
-
 // Utility Functions
 function logBattle(message) {
     const log = document.getElementById("battle-log-content");
@@ -449,17 +376,12 @@ function logBattle(message) {
     }
 }
 
-function queueOutput(message) {
-    logBattle(message);
-}
-
 // Jutsu Menu Toggle
 let inBattle = false;
 
 function toggleJutsuMenu() {
-    logBattle("toggleJutsuMenu clicked!");
     if (inBattle) {
-        logBattle(`Cannot toggle Jutsu menu during battle! inBattle: ${inBattle}`);
+        logBattle("Cannot toggle Jutsu menu during battle!");
         return;
     }
     const content = document.getElementById("jutsu-management-content");
@@ -472,9 +394,8 @@ function toggleJutsuMenu() {
 const skills = new Skills();
 
 function openJutsuSelect() {
-    logBattle("openJutsuSelect clicked!");
     if (inBattle) {
-        logBattle(`Cannot select Jutsu during battle! inBattle: ${inBattle}`);
+        logBattle("Cannot select Jutsu during battle!");
         return;
     }
     const optionsDiv = document.getElementById("jutsu-options");
@@ -553,9 +474,8 @@ function updateJutsuDisplay() {
 }
 
 function moveJutsuToInventory(index) {
-    logBattle("moveJutsuToInventory clicked!");
     if (inBattle) {
-        logBattle(`Cannot move Jutsu during battle! inBattle: ${inBattle}`);
+        logBattle("Cannot move Jutsu during battle!");
         return;
     }
     if (player.activeJutsu.length > 0 && index >= 0 && index < player.activeJutsu.length) {
@@ -565,9 +485,8 @@ function moveJutsuToInventory(index) {
 }
 
 function moveJutsuToActive(index) {
-    logBattle("moveJutsuToActive clicked!");
     if (inBattle) {
-        logBattle(`Cannot move Jutsu during battle! inBattle: ${inBattle}`);
+        logBattle("Cannot move Jutsu during battle!");
         return;
     }
     if (player.activeJutsu.length < 10 && index >= 0 && index < player.inventory.length) {
@@ -584,9 +503,8 @@ function moveJutsuToActive(index) {
 
 // Travel and Village
 function openTravelSelect() {
-    logBattle("openTravelSelect clicked!");
     if (inBattle) {
-        logBattle(`Cannot travel during battle! inBattle: ${inBattle}`);
+        logBattle("Cannot travel during battle!");
         return;
     }
     const optionsDiv = document.getElementById("jutsu-options");
@@ -611,17 +529,12 @@ function ArriveVillage(village) {
     game.player = player;
     game.target = null;
     inBattle = false;
-    const battleScreen = document.getElementById("battle-screen");
-    const fightControls = document.getElementById("fight-controls");
-    const travelControls = document.getElementById("travel-controls");
-    if (battleScreen && fightControls && travelControls) {
-        battleScreen.classList.add("hidden");
-        fightControls.classList.remove("hidden");
-        travelControls.classList.add("hidden");
-    }
+    document.getElementById("battle-screen").classList.add("hidden");
+    document.getElementById("fight-controls").classList.remove("hidden");
+    document.getElementById("travel-controls").classList.add("hidden");
     updateBattleUI();
     updateJutsuDisplay();
-    logBattle(`<span class="output-text-neutral">Arrived at ${village}! inBattle: ${inBattle}</span>`);
+    logBattle(`<span class="output-text-neutral">Arrived at ${village}!</span>`);
     document.getElementById("village-name").textContent = village;
 }
 
@@ -650,36 +563,16 @@ async function awardReward(winner, loser) {
             await sleep(3000);
             openJutsuSelect();
         }
-    } else {
-        const eligibleJutsu = skills.skills.filter(jutsu => skills.canUseSkill(winner, jutsu));
-        const rewardJutsu = eligibleJutsu[Math.floor(Math.random() * eligibleJutsu.length)];
-        const totalCopies = winner.activeJutsu.concat(winner.inventory).filter(j => j.name === rewardJutsu.name).length;
-        if (totalCopies < 4) {
-            winner.inventory.push(rewardJutsu);
-            logBattle(`${winner.name} defeated ${loser.name}! Received ${rewardJutsu.name} as reward!`);
-            await sleep(3000);
-        } else {
-            logBattle(`${winner.name} defeated ${loser.name}! No Jutsu added (max copies reached).`);
-            await sleep(3000);
-        }
-        winner.xp += 50;
-        logBattle(`${winner.name} gained 50 XP!`);
-        await sleep(3000);
-        document.getElementById("player-xp").textContent = winner.xp;
     }
     updateJutsuDisplay();
 }
 
 function checkForDeath() {
-    if (player.hp <= 0 || (game.target && game.target.hp <= 0)) {
-        const winner = player.hp <= 0 ? game.target : player;
-        const loser = player.hp <= 0 ? player : game.target;
+    if (player.hp <= 0 || opponent.hp <= 0) {
+        const winner = player.hp <= 0 ? opponent : player;
+        const loser = player.hp <= 0 ? player : opponent;
         logBattle(`${loser.name} is defeated! ${winner.name} wins!`);
-        if (game.battleType === "training") {
-            awardReward(player, game.target);
-        } else if (winner === player) {
-            awardReward(winner, loser);
-        }
+        awardReward(winner, loser);
         endBattle();
         return true;
     }
@@ -698,21 +591,17 @@ async function startBattle(user, target) {
         return;
     }
     inBattle = true;
-    game.player = user;
-    game.target = target;
-    document.getElementById("battle-screen").classList.remove("hidden");
-    document.getElementById("fight-controls").classList.add("hidden");
-    document.getElementById("travel-controls").classList.add("hidden");
-    updateJutsuDisplay();
+    user = user;
+    target = target;
     logBattle(`${user.name} vs ${target.name}!`);
     await sleep(3000);
-    await setTurnOrder();
+    updateJutsuDisplay();
+    setTurnOrder();
 }
 
 async function startTrainingFight() {
-    logBattle("startTrainingFight clicked!");
     if (inBattle) {
-        logBattle(`Cannot start Training fights during battle! inBattle: ${inBattle}`);
+        logBattle("Cannot start Training fights during battle!");
         return;
     }
     game.battleType = "training";
@@ -720,9 +609,8 @@ async function startTrainingFight() {
 }
 
 async function startTravelFight(destination) {
-    logBattle("startTravelFight clicked!");
     if (inBattle) {
-        logBattle(`Cannot start Travel fights during battle! inBattle: ${inBattle}`);
+        logBattle("Cannot start Travel fights during battle!");
         return;
     }
     game.battleType = "travel";
@@ -733,9 +621,8 @@ async function startTravelFight(destination) {
 }
 
 async function startEventFight() {
-    logBattle("startEventFight clicked!");
     if (inBattle) {
-        logBattle(`Cannot start Event fights during battle! inBattle: ${inBattle}`);
+        logBattle("Cannot start Event fights during battle!");
         return;
     }
     game.battleType = "event";
@@ -744,9 +631,8 @@ async function startEventFight() {
 }
 
 async function startArenaFight() {
-    logBattle("startArenaFight clicked!");
     if (inBattle) {
-        logBattle(`Cannot start Arena fights during battle! inBattle: ${inBattle}`);
+        logBattle("Cannot start Arena fights during battle!");
         return;
     }
     game.battleType = "arena";
@@ -755,64 +641,56 @@ async function startArenaFight() {
 }
 
 async function talkToNPC() {
-    logBattle("talkToNPC clicked!");
     if (inBattle) {
-        logBattle(`Cannot talk to NPCs during battle! inBattle: ${inBattle}`);
+        logBattle("Cannot talk to NPCs during battle!");
         return;
     }
     queueOutput("<span class='output-text-neutral'>Talking to NPC! (Placeholder)</span>");
 }
 
 async function returnToVillage() {
-    logBattle("returnToVillage clicked!");
     if (inBattle) {
-        logBattle(`Cannot return to village during battle! inBattle: ${inBattle}`);
+        logBattle("Cannot return to village during battle!");
         return;
     }
     ArriveVillage(player.lastVillage);
 }
 
 async function endBattle() {
-    inBattle = false;
-    document.getElementById("battle-screen").classList.add("hidden");
+    game.gameState = "postBattle";
+    let controls = document.getElementById("main-controls");
+    if (controls) controls.style.display = "block";
+    document.getElementById("skill-controls").innerHTML = "";
     queueOutput("<span class='battle-ready'>Battle ended!</span>");
-    await sleep(3000);
-    if (game.battleType === "training") {
-        ArriveVillage(player.lastVillage);
-    } else if (game.battleType === "travel" && game.target && game.target.hp <= 0) {
-        player.travelFightsCompleted = (player.travelFightsCompleted || 0) + 1;
-        queueOutput(`<span class='output-text-neutral'>Travel fight completed! ${player.travelFightsCompleted}/4 fights done.</span>`);
-        await sleep(3000);
-        if (player.travelFightsCompleted < 4) {
-            startTravelFight(game.targetDestination);
-        } else {
-            player.travelFightsCompleted = 0;
-            const targetIsVillage = MapData[game.targetDestination]?.isVillage;
-            if (targetIsVillage) {
-                ArriveVillage(game.targetDestination);
+    if (game.target.hp <= 0) {
+        if (game.battleType === "travel") {
+            player.travelFightsCompleted = (player.travelFightsCompleted || 0) + 1;
+            queueOutput(`<span class='output-text-neutral'>Travel fight completed! ${player.travelFightsCompleted}/4 fights done.</span>`);
+            if (player.travelFightsCompleted < 4) {
+                startTravelFight(game.targetDestination);
             } else {
-                queueOutput(`<span class='output-text-neutral'>Arrived at ${game.targetDestination}!</span>`);
-                const eventControls = document.getElementById("travel-controls");
-                eventControls.classList.remove("hidden");
-                eventControls.innerHTML = `
-                    <button onclick="startEventFight()">Start Event Fight</button>
-                    <button onclick="talkToNPC()">Talk to NPC</button>
-                    <button onclick="returnToVillage()">Return to ${player.lastVillage}</button>
-                `;
-                document.getElementById("fight-controls").classList.add("hidden");
-                document.getElementById("village-name").textContent = game.targetDestination;
+                let targetIsVillage = MapData[game.player.lastVillage]?.areas.includes(game.targetDestination) ? false : true;
+                if (targetIsVillage) {
+                    player.lastVillage = game.targetDestination;
+                    ArriveVillage(game.player.lastVillage);
+                } else {
+                    game.gameState = "inArea";
+                    queueOutput(`<span class='output-text-neutral'>Arrived at ${game.targetDestination}! State set to inArea.</span>`);
+                    let eventControls = document.getElementById("travel-controls");
+                    eventControls.style.display = "flex";
+                    eventControls.innerHTML = `<button onclick="startEventFight()">Start Event Fight</button><button onclick="talkToNPC()">Talk to NPC</button><button onclick="returnToVillage()">Return to ${game.player.lastVillage}</button>`;
+                }
             }
         }
-    } else if (player.hp <= 0) {
-        player.travelFightsCompleted = 0;
-        ArriveVillage(player.lastVillage);
+    } else if (game.user.hp <= 0) {
+        ArriveVillage(game.user.lastVillage);
     }
     game.user = null;
     game.target = null;
-    updateBattleUI();
+    inBattle = false;
 }
 
-async function setTurnOrder() {
+function setTurnOrder() {
     if (Math.random() < 0.5) {
         game.user = player;
         game.target = game.target;
@@ -824,7 +702,7 @@ async function setTurnOrder() {
         logBattle(`${game.target.name} goes first!`);
         await sleep(3000);
     }
-    await takeTurn();
+    takeTurn();
 }
 
 async function takeTurn() {
@@ -986,11 +864,4 @@ function initializeGame() {
     logBattle("Game initialized!");
 }
 
-function assignRandomJutsu(mob, count) {
-    const eligibleJutsu = skills.skills.filter(jutsu => skills.canUseSkill(mob, jutsu));
-    const shuffled = eligibleJutsu.sort(() => 0.5 - Math.random()).slice(0, count);
-    mob.activeJutsu = shuffled;
-}
-
-// Run initialization
 initializeGame();
