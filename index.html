@@ -4,7 +4,269 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shinobi Way</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            line-height: 1.6;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        #village-name {
+            text-align: center;
+            font-size: 1.8em;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .battle-screen {
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .battle-screen.hidden {
+            display: none;
+        }
+
+        .battle-area {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .user-info, .opponent-info {
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .sprite {
+            width: 100px;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        .battle-log {
+            border: 1px solid black;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+            background-color: #fff;
+            color: #333;
+            font-size: 0.9em;
+        }
+
+        .battle-log-content p {
+            margin: 5px 0;
+        }
+
+        .battle-log-content .output-text-player { color: #0000ff; }
+        .battle-log-content .output-text-enemy { color: #ff0000; }
+        .battle-log-content .output-text-neutral { color: #333; }
+        .battle-log-content .output-text-fire { color: #e67e22; }
+        .battle-log-content .output-text-lightning { color: #f1c40f; }
+        .battle-log-content .output-text-earth { color: #8d5524; }
+        .battle-log-content .output-text-genjutsu { color: #9b59b6; }
+        .battle-log-content .output-text-beast { color: #27ae60; }
+        .battle-log-content .battle-ready { color: #2ecc71; }
+        .battle-log-content .status-substitution { color: #8d5524; }
+        .battle-log-content .status-shadowcloneeffect { color: #3498db; }
+        .battle-log-content .status-doom { color: #e74c3c; }
+        .battle-log-content .status-regen { color: #27ae60; }
+        .battle-log-content .status-dome { color: #8d5524; }
+        .battle-log-content .status-burn { color: #e67e22; }
+        .battle-log-content .status-numb { color: #f1c40f; }
+        .battle-log-content .status-release { color: #9b59b6; }
+        .battle-log-content .status-bleed { color: #c0392b; }
+
+        .fight-controls {
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .fight-controls button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .fight-controls button:hover {
+            background-color: #45a049;
+        }
+
+        .fight-controls.hidden {
+            display: none;
+        }
+
+        .travel-controls {
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .travel-controls button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .travel-controls button:hover {
+            background-color: #45a049;
+        }
+
+        .travel-controls.hidden {
+            display: none;
+        }
+
+        .jutsu-management {
+            margin-top: 20px;
+        }
+
+        .jutsu-management.hidden {
+            display: none;
+        }
+
+        .jutsu-management button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .jutsu-management button:hover {
+            background-color: #45a049;
+        }
+
+        .jutsu-management button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .jutsu-card {
+            background-color: #000000;
+            color: white;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            display: inline-block;
+            width: 150px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .jutsu-card button {
+            margin-top: 5px;
+            font-size: 0.8em;
+        }
+
+        .jutsu-select {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .jutsu-select.hidden {
+            display: none;
+        }
+
+        .jutsu-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .jutsu-select button {
+            background-color: #ff4444;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .jutsu-select button:hover {
+            background-color: #cc0000;
+        }
+
+        .player-stats {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .player-stats p {
+            font-size: 1em;
+            color: #2c3e50;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 600px) {
+            .container {
+                padding: 5px;
+            }
+
+            .battle-area {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .user-info, .opponent-info {
+                min-width: 100%;
+            }
+
+            .sprite {
+                width: 80px;
+                height: 120px;
+            }
+
+            .battle-log {
+                max-height: 150px;
+                font-size: 0.8em;
+            }
+
+            .fight-controls button, .travel-controls button, .jutsu-management button {
+                width: 100%;
+                padding: 10px;
+                font-size: 0.9em;
+            }
+
+            .jutsu-card {
+                width: 120px;
+                padding: 8px;
+                margin: 3px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -35,7 +297,7 @@
             <button onclick="startArenaFight()">Arena Fight</button>
         </div>
         <div class="travel-controls hidden" id="travel-controls"></div>
-        <div class="jutsu-management" id="jutsu-management-content">
+        <div class="jutsu-management hidden" id="jutsu-management-content">
             <h2>Jutsu Management</h2>
             <button onclick="toggleJutsuMenu()" id="toggle-jutsu-btn">Toggle Jutsu Menu</button>
             <button onclick="openJutsuSelect()" id="select-jutsu-btn">Select New Jutsu</button>
