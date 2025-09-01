@@ -708,7 +708,7 @@ function checkForDeath() {
     return false;
 }
 
-async function startBattle(user, target) {
+async function startBattle(player, enemy) {
     logBattle(`startBattle called! inBattle: ${inBattle}, activeJutsu: ${user.activeJutsu.length}`);
     if (inBattle) {
         logBattle("Battle already in progress!");
