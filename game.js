@@ -329,7 +329,7 @@ class Skills {
         user.statusEffects = user.statusEffects.filter(e => e.name !== "Doom");
         user.statusEffects.push(new StatusEffect("Release", 1, 0, false, false, true, null, null, 
             async (target, user, skillStyle) => {
-                if (statusEmojis === "genjutsu") {
+                if (skillStyle === "genjutsu") {
                     logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> uses Release to resist the Genjutsu attack!`);
                     await sleep(3000);
                     target.statusEffects = target.statusEffects.filter(e => e.name !== "Release");
@@ -641,7 +641,7 @@ function updateJutsuDisplay() {
 
         const selectJutsuBtn = document.getElementById("select-jutsu-btn");
         const toggleJutsuBtn = document.getElementById("toggle-jutsu-btn");
-        const rankUpBtn = document.getElementById("rankup-btn");
+        const rankUpBtn = document.querySelector("button[onclick='openRankUpSelect()']");
         if (selectJutsuBtn) selectJutsuBtn.disabled = inBattle;
         if (toggleJutsuBtn) toggleJutsuBtn.disabled = inBattle;
         if (rankUpBtn) rankUpBtn.disabled = inBattle;
@@ -741,11 +741,11 @@ function ArriveVillage(village) {
 const game = {
     battleType: null,
     player: null,
-    opponent: null, // Constant for enemy
-    user: null,     // Turn-specific
-    target: null,   // Turn-specific
+    opponent: null,
+    user: null,
+    target: null,
     targetDestination: null,
-    rankUpPoints: 0 // Track remaining points for RANKUP
+    rankUpPoints: 0
 };
 
 async function awardReward(winner, enemy) {
@@ -794,10 +794,10 @@ async function startBattle(player, opponent) {
         return;
     }
     inBattle = true;
-    game.player = player;       // Constant: Shinobi
-    game.opponent = opponent;   // Constant: Enemy (e.g., Thief)
-    game.user = null;           // Reset turn-specific user
-    game.target = null;         // Reset turn-specific target
+    game.player = player;
+    game.opponent = opponent;
+    game.user = null;
+    game.target = null;
     const battleScreen = document.getElementById("battle-screen");
     const fightControls = document.getElementById("fight-controls");
     const travelControls = document.getElementById("travel-controls");
@@ -892,7 +892,7 @@ async function endBattle() {
     logBattle("endBattle called!");
     inBattle = false;
     game.player = player;
-    game.opponent = null; // Clear opponent
+    game.opponent = null;
     const battleScreen = document.getElementById("battle-screen");
     const fightControls = document.getElementById("fight-controls");
     const travelControls = document.getElementById("travel-controls");
@@ -946,12 +946,12 @@ async function endBattle() {
 async function setTurnOrder() {
     logBattle(`setTurnOrder called!`);
     if (Math.random() < 0.5) {
-        game.user = game.player;   // Shinobi goes first
-        game.target = game.opponent; // Enemy
+        game.user = game.player;
+        game.target = game.opponent;
         logBattle(`<span class="output-text-player">${game.player.name}</span> goes first!`);
     } else {
-        game.user = game.opponent; // Enemy goes first
-        game.target = game.player; // Shinobi
+        game.user = game.opponent;
+        game.target = game.player;
         logBattle(`<span class="output-text-enemy">${game.opponent.name}</span> goes first!`);
     }
     await sleep(3000);
@@ -1077,10 +1077,10 @@ function updateBattleUI() {
         const opponentSprite = document.getElementById("opponent-sprite");
         const playerRank = document.getElementById("player-rank");
         const playerXp = document.getElementById("player-xp");
-        const topBar = document.getElementById("top-bar");
-        const rankUpBtn = document.getElementById("rankup-btn");
+        const villageInfo = document.getElementById("village-info");
+        const rankUpBtn = document.querySelector("button[onclick='openRankUpSelect()']");
 
-        if (!userName || !userHp || !userStatus || !userSprite || !opponentName || !opponentHp || !opponentStatus || !opponentSprite || !playerRank || !playerXp || !topBar) {
+        if (!userName || !userHp || !userStatus || !userSprite || !opponentName || !opponentHp || !opponentStatus || !opponentSprite || !playerRank || !playerXp || !villageInfo) {
             logBattle("Error: One or more UI elements missing in updateBattleUI!");
             inBattle = false;
             return;
@@ -1089,14 +1089,14 @@ function updateBattleUI() {
         userName.textContent = game.player ? game.player.name : "None";
         userHp.textContent = game.player ? `${game.player.hp}/${game.player.maxHp}` : "0/0";
         userStatus.textContent = game.player ? game.player.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None" : "None";
-        userSprite.src = game.player ? game.player.sprite : "https://via.placeholder.com/120x160";
+        userSprite.src = game.player ? game.player.sprite : "https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/NINJA1.PNG";
         opponentName.textContent = game.opponent ? game.opponent.name : "None";
         opponentHp.textContent = game.opponent ? `${game.opponent.hp}/${game.opponent.maxHp}` : "0/0";
         opponentStatus.textContent = game.opponent ? game.opponent.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None" : "None";
-        opponentSprite.src = game.opponent ? game.opponent.sprite : "https://via.placeholder.com/120x160";
+        opponentSprite.src = game.opponent ? game.opponent.sprite : "https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/NINJA2.PNG";
         playerRank.textContent = game.player ? game.player.rank : "None";
         playerXp.textContent = game.player ? game.player.xp : 0;
-        topBar.classList.toggle("battle-mode", inBattle);
+        villageInfo.classList.toggle("battle-mode", inBattle);
         if (rankUpBtn) rankUpBtn.disabled = inBattle;
     } catch (e) {
         logBattle(`Error in updateBattleUI: ${e.message}`);
@@ -1119,7 +1119,7 @@ function initializeGame() {
     );
     game.player = player;
     inBattle = false;
-    assignRandomJutsu(player, 3); // Changed to 3 to match previous behavior
+    assignRandomJutsu(player, 3);
     updateJutsuDisplay();
     updateBattleUI();
     ArriveVillage("Newb Village");
