@@ -1,3 +1,11 @@
+// Game State
+const game = {
+    battleType: null,
+    player: null,
+    target: null,
+    targetDestination: null
+};
+
 // Utility Function for Delay
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -58,8 +66,10 @@ class Mob {
         this.activeJutsu = activeJutsu || [];
         this.inventory = inventory || [];
         this.statusEffects = statusEffects || [];
-        this.sprite = sprite;
+        this.sprite = sprite || "https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/NINJA2.PNG";
         this.xp = 0;
+        this.travelFightsCompleted = 0;
+        this.lastVillage = "Newb Village";
     }
 }
 
@@ -118,7 +128,7 @@ class Skills {
                 logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> uses Substitution to dodge the attack with a log!`);
                 await sleep(3000);
                 target.statusEffects = target.statusEffects.filter(e => e.name !== "Swap");
-                return true; // End the turn
+                return true;
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> prepares <span class="output-text-neutral">Substitution Jutsu</span> <span class="status-substitution">🪵</span>!`);
         await sleep(3000);
@@ -155,7 +165,7 @@ class Skills {
                     logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span>'s Shadow Clone absorbs the attack!`);
                     await sleep(3000);
                     target.statusEffects.splice(target.statusEffects.findIndex(e => e.name === "ShadowCloneEffect"), 1);
-                    return true; // End the turn
+                    return true;
                 }
                 return false;
             }));
@@ -204,9 +214,9 @@ class Skills {
                     logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> uses Earth Dome to mitigate the attack!`);
                     await sleep(3000);
                     target.statusEffects = target.statusEffects.filter(e => e.name !== "Dome");
-                    return true; // End the turn
+                    return true;
                 }
-                return false; // Allow skill to proceed
+                return false;
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> raises <span class="output-text-earth">Earth Dome Jutsu</span> <span class="status-dome">🪨</span>!`);
         await sleep(3000);
@@ -236,14 +246,14 @@ class Skills {
                 logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> is stunned by Numb and skips their turn!`);
                 await sleep(3000);
                 user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
-                return true; // End the turn
+                return true;
             }));
         target.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
             async (user, target) => {
                 logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> is stunned by Numb and skips their turn!`);
                 await sleep(3000);
-                target.statusEffects = target.statusEffects.filter(e => e.name === "Numb");
-                return true; // End the turn
+                target.statusEffects = target.statusEffects.filter(e => e.name !== "Numb");
+                return true;
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-lightning">Static Field Jutsu</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-numb">Numb ⚡️</span> on both!`);
         await sleep(3000);
@@ -293,7 +303,7 @@ class Skills {
                 logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> is stunned by Numb and skips their turn!`);
                 await sleep(3000);
                 target.statusEffects = target.statusEffects.filter(e => e.name !== "Numb");
-                return true; // End the turn
+                return true;
             }));
         user.statusEffects.push(new StatusEffect("READY", 1, 0, false, true, false, null, 
             async (user, target) => {
@@ -323,11 +333,11 @@ class Skills {
                     logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> uses Release to resist the Genjutsu attack!`);
                     await sleep(3000);
                     target.statusEffects = target.statusEffects.filter(e => e.name !== "Release");
-                    return true; // End the turn
+                    return true;
                 }
-                return false; // Allow skill to proceed
+                return false;
             }));
-        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-genjutsu">Genjutsu Release</span>, dispelling Doom and gaining <span class="status-substitution">Release 🌀</span>!`);
+        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-genjutsu">Genjutsu Release</span>, dispelling Doom and gaining <span class="status-release">Release 🌀</span>!`);
         await sleep(3000);
         return true;
     }
@@ -364,6 +374,69 @@ function compareRanks(rank1, rank2) {
     return ranks.indexOf(rank1) - ranks.indexOf(rank2);
 }
 
+// Map Data
+const MapData = {
+    "Newb Village": {
+        areas: ["Academy"],
+        isVillage: true
+    },
+    "Abandoned Village": {
+        areas: ["Burnt Tower"],
+        isVillage: true
+    },
+    "Academy": {
+        areas: ["Newb Village"],
+        isVillage: false
+    },
+    "Burnt Tower": {
+        areas: ["Abandoned Village"],
+        isVillage: false
+    }
+};
+
+// Enemy Generation
+function generateEnemySkills(rank, styles) {
+    let skillSet = new Skills();
+    let availableSkills = skillSet.skills.filter(skill => 
+        Object.keys(skill.requirements).every(style => styles[style] && compareRanks(styles[style], skill.requirements[style]) >= 0) &&
+        skill.rank === rank
+    );
+    let selectedSkills = [];
+    for (let i = 0; i < 4 && availableSkills.length > 0; i++) {
+        let index = Math.floor(Math.random() * availableSkills.length);
+        selectedSkills.push(availableSkills.splice(index, 1)[0]);
+    }
+    return selectedSkills.length > 0 ? selectedSkills : [];
+}
+
+function generateEnemy() {
+    let styles = ["Fire", "Lightning", "Earth", "Water", "Wind", "Beast", "Ninjutsu", "Taijutsu", "Genjutsu"];
+    let styleCount = { Genin: 2, Chunin: 4, Jounin: 6 }[game.player.rank] || 2;
+    let rank = { Student: "D-Rank", Genin: "C-Rank", Chunin: "B-Rank", Jounin: "A-Rank" }[game.player.rank] || "D-Rank";
+    let hp = { Genin: 12, Chunin: 16, Jounin: 20 }[game.player.rank] || 12;
+    let randomStyles = {};
+    for (let i = 0; i < styleCount; i++) {
+        let style = styles.splice(Math.floor(Math.random() * styles.length), 1)[0];
+        randomStyles[style] = rank;
+    }
+    let skills = generateEnemySkills(rank, randomStyles);
+    let name = game.player.rank === "Genin" ? "Genin Opponent" : game.player.rank === "Chunin" ? "Chunin Opponent" : "Jounin Opponent";
+    return new Mob(name, hp, hp, rank, randomStyles, skills, []);
+}
+
+function generateTrainingEnemy() {
+    let enemies = [
+        new Mob("Rabid Dog", 8, 8, "D-Rank", { Beast: "C-Rank" }, [new Skills().findSkill("Bite")], []),
+        new Mob("Thief", 10, 10, "D-Rank", { Taijutsu: "D-Rank" }, [
+            new Skills().findSkill("Barrage"),
+            new Skills().findSkill("Barrage"),
+            new Skills().findSkill("Substitution Jutsu")
+        ], []),
+        new Mob("Training Dummy", 6, 6, "D-Rank", { Ninjutsu: "D-Rank" }, [new Skills().findSkill("Healing Stance")], [])
+    ];
+    return enemies[Math.floor(Math.random() * enemies.length)];
+}
+
 // Utility Functions
 function logBattle(message) {
     const log = document.getElementById("battle-log-content");
@@ -376,12 +449,17 @@ function logBattle(message) {
     }
 }
 
+function queueOutput(message) {
+    logBattle(message);
+}
+
 // Jutsu Menu Toggle
 let inBattle = false;
 
 function toggleJutsuMenu() {
+    logBattle("toggleJutsuMenu clicked!");
     if (inBattle) {
-        logBattle("Cannot toggle Jutsu menu during battle!");
+        logBattle(`Cannot toggle Jutsu menu during battle! inBattle: ${inBattle}`);
         return;
     }
     const content = document.getElementById("jutsu-management-content");
@@ -394,8 +472,9 @@ function toggleJutsuMenu() {
 const skills = new Skills();
 
 function openJutsuSelect() {
+    logBattle("openJutsuSelect clicked!");
     if (inBattle) {
-        logBattle("Cannot select Jutsu during battle!");
+        logBattle(`Cannot select Jutsu during battle! inBattle: ${inBattle}`);
         return;
     }
     const optionsDiv = document.getElementById("jutsu-options");
@@ -469,14 +548,14 @@ function updateJutsuDisplay() {
         });
 
         document.getElementById("select-jutsu-btn").disabled = inBattle;
-        document.getElementById("start-battle-btn").disabled = inBattle;
         document.getElementById("toggle-jutsu-btn").disabled = inBattle;
     }
 }
 
 function moveJutsuToInventory(index) {
+    logBattle("moveJutsuToInventory clicked!");
     if (inBattle) {
-        logBattle("Cannot move Jutsu during battle!");
+        logBattle(`Cannot move Jutsu during battle! inBattle: ${inBattle}`);
         return;
     }
     if (player.activeJutsu.length > 0 && index >= 0 && index < player.activeJutsu.length) {
@@ -486,8 +565,9 @@ function moveJutsuToInventory(index) {
 }
 
 function moveJutsuToActive(index) {
+    logBattle("moveJutsuToActive clicked!");
     if (inBattle) {
-        logBattle("Cannot move Jutsu during battle!");
+        logBattle(`Cannot move Jutsu during battle! inBattle: ${inBattle}`);
         return;
     }
     if (player.activeJutsu.length < 10 && index >= 0 && index < player.inventory.length) {
@@ -502,69 +582,246 @@ function moveJutsuToActive(index) {
     }
 }
 
+// Travel and Village
+function openTravelSelect() {
+    logBattle("openTravelSelect clicked!");
+    if (inBattle) {
+        logBattle(`Cannot travel during battle! inBattle: ${inBattle}`);
+        return;
+    }
+    const optionsDiv = document.getElementById("jutsu-options");
+    if (optionsDiv) {
+        optionsDiv.innerHTML = "";
+        const destinations = Object.keys(MapData).filter(loc => loc !== player.lastVillage);
+        destinations.forEach(dest => {
+            const card = document.createElement("div");
+            card.className = "jutsu-card";
+            card.innerHTML = `<h4>${dest}</h4>`;
+            card.onclick = () => startTravelFight(dest);
+            optionsDiv.appendChild(card);
+        });
+        document.querySelector(".jutsu-select").classList.remove("hidden");
+    }
+}
+
+function ArriveVillage(village) {
+    player.hp = player.maxHp;
+    player.statusEffects = [];
+    player.lastVillage = village;
+    game.player = player;
+    game.target = null;
+    inBattle = false;
+    const battleScreen = document.getElementById("battle-screen");
+    const fightControls = document.getElementById("fight-controls");
+    const travelControls = document.getElementById("travel-controls");
+    if (battleScreen && fightControls && travelControls) {
+        battleScreen.classList.add("hidden");
+        fightControls.classList.remove("hidden");
+        travelControls.classList.add("hidden");
+    }
+    updateBattleUI();
+    updateJutsuDisplay();
+    logBattle(`<span class="output-text-neutral">Arrived at ${village}! inBattle: ${inBattle}</span>`);
+    document.getElementById("village-name").textContent = village;
+}
+
 // Battle System
-let user, target;
+let player = new Mob(
+    "Shinobi",
+    10,
+    10,
+    "Student",
+    { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
+    [],
+    [],
+    [],
+    "https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/NINJA1.PNG"
+);
 
 async function awardReward(winner, loser) {
-    const eligibleJutsu = skills.skills.filter(jutsu => skills.canUseSkill(winner, jutsu));
-    const rewardJutsu = eligibleJutsu[Math.floor(Math.random() * eligibleJutsu.length)];
-    const totalCopies = winner.activeJutsu.concat(winner.inventory).filter(j => j.name === rewardJutsu.name).length;
-    if (totalCopies < 4) {
-        winner.inventory.push(rewardJutsu);
-        logBattle(`${winner.name} defeated ${loser.name}! Received ${rewardJutsu.name} as reward!`);
+    if (game.battleType === "training") {
+        winner.xp += 1;
+        logBattle(`<span class="output-text-${winner === player ? 'player' : 'enemy'}">${winner.name}</span> gained 1 EXP!`);
         await sleep(3000);
+        document.getElementById("player-xp").textContent = winner.xp;
+        if (winner.xp >= 10) {
+            winner.xp = 0;
+            logBattle(`<span class="output-text-neutral">${winner.name} has enough EXP to learn a new Jutsu!</span>`);
+            await sleep(3000);
+            openJutsuSelect();
+        }
     } else {
-        logBattle(`${winner.name} defeated ${loser.name}! No Jutsu added (max copies reached).`);
+        const eligibleJutsu = skills.skills.filter(jutsu => skills.canUseSkill(winner, jutsu));
+        const rewardJutsu = eligibleJutsu[Math.floor(Math.random() * eligibleJutsu.length)];
+        const totalCopies = winner.activeJutsu.concat(winner.inventory).filter(j => j.name === rewardJutsu.name).length;
+        if (totalCopies < 4) {
+            winner.inventory.push(rewardJutsu);
+            logBattle(`${winner.name} defeated ${loser.name}! Received ${rewardJutsu.name} as reward!`);
+            await sleep(3000);
+        } else {
+            logBattle(`${winner.name} defeated ${loser.name}! No Jutsu added (max copies reached).`);
+            await sleep(3000);
+        }
+        winner.xp += 50;
+        logBattle(`${winner.name} gained 50 XP!`);
         await sleep(3000);
+        document.getElementById("player-xp").textContent = winner.xp;
     }
-    winner.xp += 50;
-    logBattle(`${winner.name} gained 50 XP!`);
-    await sleep(3000);
     updateJutsuDisplay();
 }
 
 function checkForDeath() {
-    if (player.hp <= 0 || opponent.hp <= 0) {
-        const winner = player.hp <= 0 ? opponent : player;
-        const loser = player.hp <= 0 ? player : opponent;
+    if (player.hp <= 0 || (game.target && game.target.hp <= 0)) {
+        const winner = player.hp <= 0 ? game.target : player;
+        const loser = player.hp <= 0 ? player : game.target;
         logBattle(`${loser.name} is defeated! ${winner.name} wins!`);
-        awardReward(winner, loser);
-        inBattle = false;
+        if (game.battleType === "training") {
+            awardReward(player, game.target);
+        } else if (winner === player) {
+            awardReward(winner, loser);
+        }
+        endBattle();
         return true;
     }
     return false;
 }
 
-async function startBattle() {
+async function startBattle(user, target) {
     if (inBattle) {
         logBattle("Battle already in progress!");
         await sleep(3000);
         return;
     }
-    if (player.activeJutsu.length === 0) {
+    if (user.activeJutsu.length === 0) {
         logBattle("Cannot start battle: No active Jutsu equipped!");
         await sleep(3000);
         return;
     }
     inBattle = true;
-    user = player;
-    target = opponent;
+    game.player = user;
+    game.target = target;
+    document.getElementById("battle-screen").classList.remove("hidden");
+    document.getElementById("fight-controls").classList.add("hidden");
+    document.getElementById("travel-controls").classList.add("hidden");
+    updateJutsuDisplay();
     logBattle(`${user.name} vs ${target.name}!`);
     await sleep(3000);
-    updateJutsuDisplay();
     await setTurnOrder();
+}
+
+async function startTrainingFight() {
+    logBattle("startTrainingFight clicked!");
+    if (inBattle) {
+        logBattle(`Cannot start Training fights during battle! inBattle: ${inBattle}`);
+        return;
+    }
+    game.battleType = "training";
+    startBattle(player, generateTrainingEnemy());
+}
+
+async function startTravelFight(destination) {
+    logBattle("startTravelFight clicked!");
+    if (inBattle) {
+        logBattle(`Cannot start Travel fights during battle! inBattle: ${inBattle}`);
+        return;
+    }
+    game.battleType = "travel";
+    player.travelFightsCompleted = player.travelFightsCompleted || 0;
+    game.targetDestination = destination;
+    closeJutsuSelect();
+    startBattle(player, generateEnemy());
+}
+
+async function startEventFight() {
+    logBattle("startEventFight clicked!");
+    if (inBattle) {
+        logBattle(`Cannot start Event fights during battle! inBattle: ${inBattle}`);
+        return;
+    }
+    game.battleType = "event";
+    queueOutput("<span class='output-text-neutral'>Event fight started!</span>");
+    startBattle(player, generateEnemy());
+}
+
+async function startArenaFight() {
+    logBattle("startArenaFight clicked!");
+    if (inBattle) {
+        logBattle(`Cannot start Arena fights during battle! inBattle: ${inBattle}`);
+        return;
+    }
+    game.battleType = "arena";
+    queueOutput("<span class='output-text-neutral'>Arena fight started!</span>");
+    startBattle(player, generateEnemy());
+}
+
+async function talkToNPC() {
+    logBattle("talkToNPC clicked!");
+    if (inBattle) {
+        logBattle(`Cannot talk to NPCs during battle! inBattle: ${inBattle}`);
+        return;
+    }
+    queueOutput("<span class='output-text-neutral'>Talking to NPC! (Placeholder)</span>");
+}
+
+async function returnToVillage() {
+    logBattle("returnToVillage clicked!");
+    if (inBattle) {
+        logBattle(`Cannot return to village during battle! inBattle: ${inBattle}`);
+        return;
+    }
+    ArriveVillage(player.lastVillage);
+}
+
+async function endBattle() {
+    inBattle = false;
+    document.getElementById("battle-screen").classList.add("hidden");
+    queueOutput("<span class='battle-ready'>Battle ended!</span>");
+    await sleep(3000);
+    if (game.battleType === "training") {
+        ArriveVillage(player.lastVillage);
+    } else if (game.battleType === "travel" && game.target && game.target.hp <= 0) {
+        player.travelFightsCompleted = (player.travelFightsCompleted || 0) + 1;
+        queueOutput(`<span class='output-text-neutral'>Travel fight completed! ${player.travelFightsCompleted}/4 fights done.</span>`);
+        await sleep(3000);
+        if (player.travelFightsCompleted < 4) {
+            startTravelFight(game.targetDestination);
+        } else {
+            player.travelFightsCompleted = 0;
+            const targetIsVillage = MapData[game.targetDestination]?.isVillage;
+            if (targetIsVillage) {
+                ArriveVillage(game.targetDestination);
+            } else {
+                queueOutput(`<span class='output-text-neutral'>Arrived at ${game.targetDestination}!</span>`);
+                const eventControls = document.getElementById("travel-controls");
+                eventControls.classList.remove("hidden");
+                eventControls.innerHTML = `
+                    <button onclick="startEventFight()">Start Event Fight</button>
+                    <button onclick="talkToNPC()">Talk to NPC</button>
+                    <button onclick="returnToVillage()">Return to ${player.lastVillage}</button>
+                `;
+                document.getElementById("fight-controls").classList.add("hidden");
+                document.getElementById("village-name").textContent = game.targetDestination;
+            }
+        }
+    } else if (player.hp <= 0) {
+        player.travelFightsCompleted = 0;
+        ArriveVillage(player.lastVillage);
+    }
+    game.user = null;
+    game.target = null;
+    updateBattleUI();
 }
 
 async function setTurnOrder() {
     if (Math.random() < 0.5) {
-        user = player;
-        target = opponent;
+        game.user = player;
+        game.target = game.target;
         logBattle(`${player.name} goes first!`);
         await sleep(3000);
     } else {
-        user = opponent;
-        target = player;
-        logBattle(`${opponent.name} goes first!`);
+        game.user = game.target;
+        game.target = player;
+        logBattle(`${game.target.name} goes first!`);
         await sleep(3000);
     }
     await takeTurn();
@@ -578,26 +835,24 @@ async function takeTurn() {
     }
     try {
         updateBattleUI();
-        // Add empty line before turn message
         logBattle("");
-        logBattle(`✧✧ <strong><span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}'s Turn</span></strong> ✧✧`);
+        logBattle(`✧✧ <strong><span class="output-text-${game.user === player ? 'player' : 'enemy'}">${game.user.name}'s Turn</span></strong> ✧✧`);
         await sleep(3000);
-        // Add empty line after turn message
         logBattle("");
 
         let skipTurn = false;
-        for (let status of user.statusEffects) {
+        for (let status of game.user.statusEffects) {
             if (status.startOfTurn && status.startOfTurnFunction) {
-                if (await status.startOfTurnFunction(user, target)) {
+                if (await status.startOfTurnFunction(game.user, game.target)) {
                     skipTurn = true;
                 }
             }
             status.duration--;
         }
-        user.statusEffects = user.statusEffects.filter(status => status.duration > 0);
+        game.user.statusEffects = game.user.statusEffects.filter(status => status.duration > 0);
 
         if (skipTurn) {
-            logBattle(`${user.name}'s turn skipped due to status effect!`);
+            logBattle(`${game.user.name}'s turn skipped due to status effect!`);
             await sleep(3000);
             await endTurn();
             return;
@@ -612,36 +867,34 @@ async function takeTurn() {
 
 async function skillAction() {
     try {
-        if (!user.activeJutsu.length) {
-            logBattle(`${user.name} has no Active Jutsu!`);
+        if (!game.user.activeJutsu.length) {
+            logBattle(`${game.user.name} has no Active Jutsu!`);
             await sleep(3000);
             await endTurn();
             return;
         }
 
-        const jutsu = user.activeJutsu[Math.floor(Math.random() * user.activeJutsu.length)];
-        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses ${jutsu.name}!`);
+        const jutsu = game.user.activeJutsu[Math.floor(Math.random() * game.user.activeJutsu.length)];
+        logBattle(`<span class="output-text-${game.user === player ? 'player' : 'enemy'}">${game.user.name}</span> uses ${jutsu.name}!`);
         await sleep(3000);
 
         if (jutsu.support) {
-            await jutsu.skillFunction(user, target);
+            await jutsu.skillFunction(game.user, game.target);
             if (checkForDeath()) return;
             await endTurn();
             return;
         }
 
-        // Check active effects
-        for (let status of user.statusEffects) {
+        for (let status of game.user.statusEffects) {
             if (status.active && status.activeFunction) {
-                await status.activeFunction(user, target);
+                await status.activeFunction(game.user, game.target);
             }
         }
 
-        // Check target's triggered effects
         let endTurnFlag = false;
-        for (let status of target.statusEffects) {
+        for (let status of game.target.statusEffects) {
             if (status.triggered && status.triggeredFunction) {
-                if (await status.triggeredFunction(target, user, jutsu.style)) {
+                if (await status.triggeredFunction(game.target, game.user, jutsu.style)) {
                     endTurnFlag = true;
                 }
             }
@@ -653,8 +906,7 @@ async function skillAction() {
             return;
         }
 
-        // Execute non-support Jutsu
-        await jutsu.skillFunction(user, target);
+        await jutsu.skillFunction(game.user, game.target);
         if (checkForDeath()) return;
         await endTurn();
     } catch (e) {
@@ -670,7 +922,7 @@ async function endTurn() {
             await sleep(3000);
             return;
         }
-        [user, target] = [target, user];
+        [game.user, game.target] = [game.target, game.user];
         updateBattleUI();
         setTimeout(takeTurn, 1000);
     } catch (e) {
@@ -689,8 +941,10 @@ function updateBattleUI() {
         const opponentHp = document.getElementById("opponent-hp");
         const opponentStatus = document.getElementById("opponent-status");
         const opponentSprite = document.getElementById("opponent-sprite");
+        const playerRank = document.getElementById("player-rank");
+        const playerXp = document.getElementById("player-xp");
 
-        if (!userName || !userHp || !userStatus || !userSprite || !opponentName || !opponentHp || !opponentStatus || !opponentSprite) {
+        if (!userName || !userHp || !userStatus || !userSprite || !opponentName || !opponentHp || !opponentStatus || !opponentSprite || !playerRank || !playerXp) {
             logBattle("Error: One or more UI elements missing!");
             return;
         }
@@ -698,50 +952,45 @@ function updateBattleUI() {
         userName.textContent = player.name;
         userHp.textContent = `${player.hp}/${player.maxHp}`;
         userStatus.textContent = player.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None";
-        userSprite.src = player.sprite || "https://via.placeholder.com/120x160";
-        opponentName.textContent = opponent.name;
-        opponentHp.textContent = `${opponent.hp}/${opponent.maxHp}`;
-        opponentStatus.textContent = opponent.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None";
-        opponentSprite.src = opponent.sprite || "https://via.placeholder.com/120x160";
+        userSprite.src = player.sprite;
+        opponentName.textContent = game.target ? game.target.name : "None";
+        opponentHp.textContent = game.target ? `${game.target.hp}/${game.target.maxHp}` : "0/0";
+        opponentStatus.textContent = game.target ? game.target.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None" : "None";
+        opponentSprite.src = game.target ? game.target.sprite : "https://via.placeholder.com/120x160";
+        playerRank.textContent = player.rank;
+        playerXp.textContent = player.xp;
     } catch (e) {
         logBattle(`Error in updateBattleUI: ${e.message}`);
     }
 }
 
-// Assign Random Jutsu
+// Initialize Game
+function initializeGame() {
+    player = new Mob(
+        "Shinobi",
+        10,
+        10,
+        "Student",
+        { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
+        [],
+        [],
+        [],
+        "https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/NINJA1.PNG"
+    );
+    game.player = player;
+    inBattle = false;
+    assignRandomJutsu(player, 4);
+    updateJutsuDisplay();
+    updateBattleUI();
+    ArriveVillage("Newb Village");
+    logBattle("Game initialized!");
+}
+
 function assignRandomJutsu(mob, count) {
     const eligibleJutsu = skills.skills.filter(jutsu => skills.canUseSkill(mob, jutsu));
     const shuffled = eligibleJutsu.sort(() => 0.5 - Math.random()).slice(0, count);
     mob.activeJutsu = shuffled;
 }
 
-// Initialize Characters
-const player = new Mob(
-    "Shinobi",
-    10,
-    10,
-    "Student",
-    { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
-    [],
-    [],
-    [],
-    "https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/NINJA1.PNG"
-);
-
-const opponent = new Mob(
-    "Training Dummy",
-    6,
-    6,
-    "Student",
-    { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
-    [],
-    [],
-    [],
-    "https://raw.githubusercontent.com/Mikiiill/ShinobiWay/refs/heads/main/Assets/NINJA2.PNG"
-);
-
-// Initialize Game
-assignRandomJutsu(player, 4);
-assignRandomJutsu(opponent, 4);
-updateJutsuDisplay();
-updateBattleUI();
+// Run initialization
+initializeGame();
