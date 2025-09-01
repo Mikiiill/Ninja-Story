@@ -86,7 +86,7 @@ class Skills {
             new BattleSkill("Rock Smash Jutsu", ["Earth", "Taijutsu"], { Earth: "B-Rank" }, this.rockSmashJutsu.bind(this), "earth", false, "B-Rank"),
             new BattleSkill("Genjutsu Release", ["Genjutsu"], { Genjutsu: "B-Rank" }, this.genjutsuRelease.bind(this), "genjutsu", true, "B-Rank"),
             new BattleSkill("Lightning Edge", ["Lightning", "Ninjutsu"], { Lightning: "C-Rank", Ninjutsu: "C-Rank" }, this.lightningEdge.bind(this), "lightning", false, "B-Rank"),
-            new BattleSkill("Bite", ["Feral"], { Feral: "C-Rank" }, this.bite.bind(this), "feral", false, "C-Rank")
+            new BattleSkill("Bite", ["Beast"], { Beast: "C-Rank" }, this.bite.bind(this), "beast", false, "C-Rank")
         ];
     }
 
@@ -114,10 +114,10 @@ class Skills {
 
     async substitutionJutsu(user, target) {
         user.statusEffects.push(new StatusEffect("Swap", 1, 0, false, false, true, null, null, 
-            async (user, target, skillStyle) => {
-                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses Substitution to dodge the attack with a log!`);
+            async (target, user, skillStyle) => {
+                logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> uses Substitution to dodge the attack with a log!`);
                 await sleep(3000);
-                user.statusEffects = user.statusEffects.filter(e => e.name !== "Swap");
+                target.statusEffects = target.statusEffects.filter(e => e.name !== "Swap");
                 return true; // End the turn
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> prepares <span class="output-text-neutral">Substitution Jutsu</span> <span class="status-substitution">🪵</span>!`);
@@ -149,12 +149,12 @@ class Skills {
                 user.statusEffects = user.statusEffects.filter(e => e.name !== "ShadowCloneEffect");
                 return false;
             }, 
-            async (user, target, skillStyle) => {
-                let cloneCount = user.statusEffects.filter(e => e.name === "ShadowCloneEffect").length;
+            async (target, user, skillStyle) => {
+                let cloneCount = target.statusEffects.filter(e => e.name === "ShadowCloneEffect").length;
                 if (cloneCount > 0) {
-                    logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span>'s Shadow Clone absorbs the attack!`);
+                    logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span>'s Shadow Clone absorbs the attack!`);
                     await sleep(3000);
-                    user.statusEffects.splice(user.statusEffects.findIndex(e => e.name === "ShadowCloneEffect"), 1);
+                    target.statusEffects.splice(target.statusEffects.findIndex(e => e.name === "ShadowCloneEffect"), 1);
                     return true; // End the turn
                 }
                 return false;
@@ -199,11 +199,11 @@ class Skills {
 
     async earthDomeJutsu(user, target) {
         user.statusEffects.push(new StatusEffect("Dome", 2, 0, false, false, true, null, null, 
-            async (user, target, skillStyle) => {
+            async (target, user, skillStyle) => {
                 if (skillStyle !== "genjutsu") {
-                    logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses Earth Dome to mitigate the attack!`);
+                    logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> uses Earth Dome to mitigate the attack!`);
                     await sleep(3000);
-                    user.statusEffects = user.statusEffects.filter(e => e.name !== "Dome");
+                    target.statusEffects = target.statusEffects.filter(e => e.name !== "Dome");
                     return true; // End the turn
                 }
                 return false; // Allow skill to proceed
@@ -279,7 +279,7 @@ class Skills {
                 await sleep(3000);
                 await nextSkill.skillFunction(user, target);
             }
-            user.statusEffects = user.statusEffects.filter(e => e.name !== "DynamicEntryProc");
+            user.getElementByIdstatusEffects = user.statusEffects.filter(e => e.name !== "DynamicEntryProc");
         }
         return target.hp <= 0;
     }
@@ -318,16 +318,16 @@ class Skills {
     async genjutsuRelease(user, target) {
         user.statusEffects = user.statusEffects.filter(e => e.name !== "Doom");
         user.statusEffects.push(new StatusEffect("Release", 1, 0, false, false, true, null, null, 
-            async (user, target, skillStyle) => {
+            async (target, user, skillStyle) => {
                 if (skillStyle === "genjutsu") {
-                    logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses Release to resist the Genjutsu attack!`);
+                    logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> uses Release to resist the Genjutsu attack!`);
                     await sleep(3000);
-                    user.statusEffects = user.statusEffects.filter(e => e.name !== "Release");
+                    target.statusEffects = target.statusEffects.filter(e => e.name !== "Release");
                     return true; // End the turn
                 }
                 return false; // Allow skill to proceed
             }));
-        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-genjutsu">Genjutsu Release</span>, dispelling Doom and gaining <span class="status-substitution">Release 🌀</span>!`);
+        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-genjutsu">Genjutsu Release</span>, dispelling Doom and gaining <span class="status-release">Release 🌀</span>!`);
         await sleep(3000);
         return true;
     }
@@ -353,7 +353,7 @@ class Skills {
                 await sleep(3000);
                 return false;
             }));
-        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-feral">Bite</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage${heal > 0 ? `, healing ${heal} HP` : ""}, inflicting <span class="status-bleed">Bleed 🩸</span>!`);
+        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-beast">Bite</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage${heal > 0 ? `, healing ${heal} HP` : ""}, inflicting <span class="status-bleed">Bleed 🩸</span>!`);
         await sleep(3000);
         return target.hp <= 0;
     }
@@ -641,7 +641,7 @@ async function skillAction() {
         let endTurnFlag = false;
         for (let status of target.statusEffects) {
             if (status.triggered && status.triggeredFunction) {
-                if (await status.triggeredFunction(user, target, jutsu.style)) {
+                if (await status.triggeredFunction(target, user, jutsu.style)) {
                     endTurnFlag = true;
                 }
             }
@@ -721,7 +721,7 @@ const player = new Mob(
     10,
     10,
     "Student",
-    { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
+    { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank", Beast: "C-Rank" },
     [],
     [],
     [],
@@ -733,7 +733,7 @@ const opponent = new Mob(
     6,
     6,
     "Student",
-    { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
+    { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank", Beast: "C-Rank" },
     [],
     [],
     [],
