@@ -708,7 +708,7 @@ function checkForDeath() {
     return false;
 }
 
-async function startBattle(player, enemy) {
+async function startBattle(player, opponent) {
     logBattle(`startBattle called! inBattle: ${inBattle}, activeJutsu: ${player.activeJutsu.length}`);
     if (inBattle) {
         logBattle("Battle already in progress!");
@@ -721,8 +721,8 @@ async function startBattle(player, enemy) {
         return;
     }
     inBattle = true;
-    game.player = player;
-    game.enemy = enemy;
+    user = player;
+    target = opponent;
     const battleScreen = document.getElementById("battle-screen");
     const fightControls = document.getElementById("fight-controls");
     const travelControls = document.getElementById("travel-controls");
@@ -749,9 +749,9 @@ async function startTrainingFight() {
         return;
     }
     game.battleType = "training";
-    const enemy = generateTrainingEnemy();
-    logBattle(`Generated enemy: ${enemy.name}, Jutsu: ${enemy.activeJutsu.map(j => j.name).join(", ")}`);
-    await startBattle(player, enemy);
+    const opponent = generateTrainingEnemy();
+    logBattle(`Generated enemy: ${opponent.name}, Jutsu: ${opponent.activeJutsu.map(j => j.name).join(", ")}`);
+    await startBattle(player, opponent);
 }
 
 async function startTravelFight(destination) {
@@ -764,7 +764,7 @@ async function startTravelFight(destination) {
     player.travelFightsCompleted = player.travelFightsCompleted || 0;
     game.targetDestination = destination;
     closeJutsuSelect();
-    const enemy = generateEnemy();
+    const opponent = generateEnemy();
     logBattle(`Generated enemy: ${enemy.name}, Jutsu: ${enemy.activeJutsu.map(j => j.name).join(", ")}`);
     await startBattle(player, enemy);
 }
@@ -777,9 +777,9 @@ async function startEventFight() {
     }
     game.battleType = "event";
     queueOutput("<span class='output-text-neutral'>Event fight started!</span>");
-    const enemy = generateEnemy();
-    logBattle(`Generated enemy: ${enemy.name}, Jutsu: ${enemy.activeJutsu.map(j => j.name).join(", ")}`);
-    await startBattle(player, enemy);
+    const opponent = generateEnemy();
+    logBattle(`Generated enemy: ${opponent.name}, Jutsu: ${opponent.activeJutsu.map(j => j.name).join(", ")}`);
+    await startBattle(player, opponent);
 }
 
 async function startArenaFight() {
@@ -790,9 +790,9 @@ async function startArenaFight() {
     }
     game.battleType = "arena";
     queueOutput("<span class='output-text-neutral'>Arena fight started!</span>");
-    const enemy = generateEnemy();
-    logBattle(`Generated enemy: ${enemy.name}, Jutsu: ${enemy.activeJutsu.map(j => j.name).join(", ")}`);
-    await startBattle(player, enemy);
+    const opponent = generateEnemy();
+    logBattle(`Generated enemy: ${opponent.name}, Jutsu: ${opponent.activeJutsu.map(j => j.name).join(", ")}`);
+    await startBattle(player, opponent);
 }
 
 async function talkToNPC() {
@@ -822,7 +822,7 @@ async function endBattle() {
     const travelControls = document.getElementById("travel-controls");
     if (battleScreen && fightControls && travelControls) {
         battleScreen.classList.add("hidden");
-        if (game.battleType === "travel" && game.enemy && game.enemy.hp <= 0) {
+        if (game.battleType === "travel" && game.opponent && game.opponent.hp <= 0) {
             player.travelFightsCompleted = (player.travelFightsCompleted || 0) + 1;
             queueOutput(`<span class='output-text-neutral'>Travel fight completed! ${player.travelFightsCompleted}/4 fights done.</span>`);
             await sleep(3000);
@@ -869,20 +869,18 @@ async function endBattle() {
 }
 
 async function setTurnOrder() {
-    logBattle(`setTurnOrder called!`);
     if (Math.random() < 0.5) {
-        game.user = game.enemy;
-        game.target = game.player;
-        logBattle(`<span class="output-text-player">${player.name}</span> goes first!`);
+        user = player;
+        target = opponent;
+        logBattle(`${player.name} goes first!`);
         await sleep(3000);
     } else {
-        game.target = game.enemy;
-        game.user = game.player;
-        logBattle(`<span class="output-text-enemy">${game.target.name}</span> goes first!`);
+        user = opponent;
+        target = player;
+        logBattle(`${opponent.name} goes first!`);
         await sleep(3000);
-        
     }
-    await taketurn()
+    await takeTurn();
 }
 
 async function takeTurn() {
@@ -1014,16 +1012,13 @@ function updateBattleUI() {
         userName.textContent = player.name;
         userHp.textContent = `${player.hp}/${player.maxHp}`;
         userStatus.textContent = player.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None";
-        userSprite.src = player.sprite;
-        opponentName.textContent = game.enemy ? game.enemy.name : "None";
-        opponentHp.textContent = game.enemy ? `${game.enemy.hp}/${game.enemy.maxHp}` : "0/0";
-        opponentStatus.textContent = game.target ? game.enemy.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None" : "None";
-        opponentSprite.src = game.enemy ? game.enemy.sprite : "https://via.placeholder.com/120x160";
-        playerRank.textContent = player.rank;
-        playerXp.textContent = player.xp;
+        userSprite.src = player.sprite || "https://via.placeholder.com/120x160";
+        opponentName.textContent = opponent.name;
+        opponentHp.textContent = `${opponent.hp}/${opponent.maxHp}`;
+        opponentStatus.textContent = opponent.statusEffects.map(s => statusEmojis[s.name] || s.name).join(" ") || "None";
+        opponentSprite.src = opponent.sprite || "https://via.placeholder.com/120x160";
     } catch (e) {
         logBattle(`Error in updateBattleUI: ${e.message}`);
-        inBattle = false;
     }
 }
 
