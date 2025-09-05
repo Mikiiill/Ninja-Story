@@ -191,7 +191,7 @@ class Skills {
 
     async healingStance(user, target) {
         let heal = user.hp < user.maxHp ? 1 : 0;
-        user.hp = Math.max(0, Math.min(user.maxHp, user.hp + heal));
+        user.hp = Math.max(0, Math.min(user.maxHp, user.hp + 0));
         user.statusEffects.push(new StatusEffect("Regen", 3, 1, true, false, false, 
             async (user, target) => {
                 let heal = user.hp < user.maxHp ? user.statusEffects.find(e => e.name === "Regen").damage : 0;
