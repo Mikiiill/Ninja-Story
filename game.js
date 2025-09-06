@@ -454,7 +454,7 @@ function queueOutput(message) {
     logBattle(message);
 }
 
-// New function to close all menus
+// Close All Menus
 function closeAllMenus() {
     const jutsuManagement = document.getElementById("jutsu-management-content");
     const jutsuSelect = document.querySelector(".jutsu-select");
@@ -559,6 +559,17 @@ function addJutsuToInventory(jutsu) {
     player.inventory.push(jutsu);
     updateJutsuDisplay();
     closeJutsuSelect();
+    if (game.tutorialState && game.tutorialState.jutsuSelectionsRemaining > 0) {
+        game.tutorialState.jutsuSelectionsRemaining -= 1;
+        logBattle(`Jutsu selected! ${game.tutorialState.jutsuSelectionsRemaining} more to select.`);
+        if (game.tutorialState.jutsuSelectionsRemaining > 0) {
+            setTimeout(openJutsuSelect, 1000); // Open again for next jutsu
+        } else {
+            game.tutorialState = null;
+            ArriveVillage("Newb Village");
+            logBattle("Tutorial completed! Welcome to Newb Village!");
+        }
+    }
 }
 
 // Rank Up Selection
@@ -590,7 +601,9 @@ function openRankUpSelect() {
             jutsuSelect.classList.remove("hidden");
             fightControls.classList.add("hidden"); // Hide fight controls
             optionsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
-            game.rankUpPoints = 2; // Initialize 2 points for rank up
+            if (!game.tutorialState) {
+                game.rankUpPoints = 2;
+            }
         } else {
             logBattle("Error: jutsu-select not found");
         }
@@ -626,13 +639,16 @@ function upgradeFightingStyle(style) {
     logBattle(`Upgraded ${style} to ${newRank}! ${game.rankUpPoints} RANKUP point(s) remaining.`);
     if (game.rankUpPoints === 0) {
         closeJutsuSelect();
+        if (game.tutorialState && game.tutorialState.phase === "rankUp") {
+            game.tutorialState.phase = "jutsuSelection";
+            game.tutorialState.jutsuSelectionsRemaining = 2;
+            logBattle("Rank Up complete! Now select two starting Jutsu.");
+            setTimeout(openJutsuSelect, 1000);
+        }
     } else {
         openRankUpSelect(); // Refresh menu to show updated ranks
     }
-    updateJutsuDisplay(); // Update in case new jutsu are available
-}
-
-// Jutsu Management
+    updateJutsuDisplay();K
 function updateJutsuDisplay() {
     const activeDiv = document.getElementById("active-jutsu");
     const inventoryDiv = document.getElementById("inventory-jutsu");
@@ -664,10 +680,8 @@ function updateJutsuDisplay() {
             inventoryDiv.appendChild(card);
         });
 
-        const selectJutsuBtn = document.getElementById("select-jutsu-btn");
         const toggleJutsuBtn = document.getElementById("toggle-jutsu-btn");
         const rankUpBtn = document.querySelector("button[onclick='openRankUpSelect()']");
-        if (selectJutsuBtn) selectJutsuBtn.disabled = inBattle;
         if (toggleJutsuBtn) toggleJutsuBtn.disabled = inBattle;
         if (rankUpBtn) rankUpBtn.disabled = inBattle;
     } else {
@@ -742,6 +756,12 @@ function ArriveVillage(village) {
     logBattle(`ArriveVillage called for ${village}`);
     player.hp = player.maxHp;
     player.statusEffects = [];
+    // MODIFIED: Heal enemy and remove their status effects if present
+    if (game.opponent) {
+        game.opponent.hp = game.opponent.maxHp;
+        game.opponent.statusEffects = [];
+        logBattle(`<span class="output-text-enemy">${game.opponent.name}</span> has been fully healed and status effects removed.`);
+    }
     player.lastVillage = village;
     inBattle = false;
     const battleScreen = document.getElementById("battle-screen");
@@ -774,7 +794,8 @@ const game = {
     user: null,
     target: null,
     targetDestination: null,
-    rankUpPoints: 0
+    rankUpPoints: 0,
+    tutorialState: null
 };
 
 async function awardReward(winner, enemy) {
@@ -922,6 +943,7 @@ async function endBattle() {
     logBattle("endBattle called!");
     inBattle = false;
     game.player = player;
+    const previousOpponent = game.opponent; // MODIFIED: Store opponent for potential healing
     game.opponent = null;
     const battleScreen = document.getElementById("battle-screen");
     const fightControls = document.getElementById("fight-controls");
@@ -929,40 +951,18 @@ async function endBattle() {
     if (battleScreen && fightControls && travelControls) {
         closeAllMenus(); // Close all menus
         battleScreen.classList.add("hidden");
-        if (game.battleType === "travel" && game.opponent && game.opponent.hp <= 0) {
+        if (game.battleType === "travel" && previousOpponent && previousOpponent.hp <= 0) {
             player.travelFightsCompleted = (player.travelFightsCompleted || 0) + 1;
             queueOutput(`<span class='output-text-neutral'>Travel fight completed! ${player.travelFightsCompleted}/4 fights done.</span>`);
             await sleep(3000);
             if (player.travelFightsCompleted < 4) {
-                await startTravelFight(game.targetDestination);
+                await startTravelFight(game.targetDestination); // Continue travel fights
             } else {
                 player.travelFightsCompleted = 0;
-                const targetIsVillage = MapData[game.targetDestination]?.isVillage;
-                if (targetIsVillage) {
-                    ArriveVillage(game.targetDestination);
-                } else {
-                    queueOutput(`<span class='output-text-neutral'>Arrived at ${game.targetDestination}!</span>`);
-                    travelControls.classList.remove("hidden");
-                    travelControls.innerHTML = `
-                        <button onclick="startEventFight()">Start Event Fight</button>
-                        <button onclick="talkToNPC()">Talk to NPC</button>
-                        <button onclick="returnToVillage()">Return to ${player.lastVillage}</button>
-                    `;
-                    fightControls.classList.add("hidden");
-                    const villageName = document.getElementById("village-name");
-                    if (villageName) {
-                        villageName.textContent = game.targetDestination;
-                    } else {
-                        logBattle("Error: village-name not found");
-                    }
-                }
+                ArriveVillage(game.targetDestination); // MODIFIED: Arrive at destination after 4 fights
             }
         } else {
-            if (player.hp <= 0) {
-                ArriveVillage(player.lastVillage);
-            } else {
-                fightControls.classList.remove("hidden"); // Show fight controls
-            }
+            ArriveVillage(player.lastVillage); // MODIFIED: Arrive at last village for all other cases (training fights, travel loss)
         }
     } else {
         logBattle("Error: battle-screen, fight-controls, or travel-controls not found");
@@ -1134,6 +1134,20 @@ function updateBattleUI() {
     }
 }
 
+// Tutorial Function
+async function startTutorial() {
+    logBattle("Welcome to Ninja Story! Let's begin your training.");
+    await sleep(3000);
+    logBattle("First, select two fighting styles to rank up!");
+    await sleep(3000);
+    game.tutorialState = {
+        phase: "rankUp",
+        jutsuSelectionsRemaining: 0
+    };
+    game.rankUpPoints = 2;
+    openRankUpSelect();
+}
+
 // Initialize Game
 function initializeGame() {
     player = new Mob(
@@ -1141,7 +1155,7 @@ function initializeGame() {
         10,
         10,
         "Student",
-        { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
+        { Ninjutsu: "D-Rank", Taijutsu: "T-Rank", Genjutsu: "D-Rank" },
         [],
         [],
         [],
@@ -1149,12 +1163,9 @@ function initializeGame() {
     );
     game.player = player;
     inBattle = false;
-    assignRandomJutsu(player, 3);
     updateJutsuDisplay();
     updateBattleUI();
-    ArriveVillage("Newb Village");
-    logBattle("Game initialized!");
-    logBattle(`Initial activeJutsu: ${player.activeJutsu.map(j => j.name).join(", ") || "None"}`);
+    startTutorial();
 }
 
 function assignRandomJutsu(mob, count) {
