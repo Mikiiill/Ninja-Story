@@ -1,3 +1,4 @@
+// game.js
 // Utility Function for Delay
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -453,6 +454,16 @@ function queueOutput(message) {
     logBattle(message);
 }
 
+// New function to close all menus
+function closeAllMenus() {
+    const jutsuManagement = document.getElementById("jutsu-management-content");
+    const jutsuSelect = document.querySelector(".jutsu-select");
+    const travelControls = document.getElementById("travel-controls");
+    if (jutsuManagement) jutsuManagement.classList.add("hidden");
+    if (jutsuSelect) jutsuSelect.classList.add("hidden");
+    if (travelControls) travelControls.classList.add("hidden");
+}
+
 // Jutsu Menu Toggle
 let inBattle = false;
 let player = new Mob(
@@ -474,10 +485,17 @@ function toggleJutsuMenu() {
         return;
     }
     const content = document.getElementById("jutsu-management-content");
-    if (content) {
-        content.classList.toggle("hidden");
+    const fightControls = document.getElementById("fight-controls");
+    if (content && fightControls) {
+        closeAllMenus(); // Close all other menus
+        content.classList.toggle("hidden"); // Toggle jutsu management
+        if (!content.classList.contains("hidden")) {
+            fightControls.classList.add("hidden"); // Hide fight controls when jutsu management is open
+        } else {
+            fightControls.classList.remove("hidden"); // Show fight controls when closing
+        }
     } else {
-        logBattle("Error: jutsu-management-content not found");
+        logBattle("Error: jutsu-management-content or fight-controls not found");
     }
 }
 
@@ -491,7 +509,9 @@ function openJutsuSelect() {
         return;
     }
     const optionsDiv = document.getElementById("jutsu-options");
-    if (optionsDiv) {
+    const fightControls = document.getElementById("fight-controls");
+    if (optionsDiv && fightControls) {
+        closeAllMenus(); // Close all other menus
         optionsDiv.innerHTML = "";
         const eligibleJutsu = skills.skills.filter(jutsu => skills.canUseSkill(player, jutsu));
         const shuffled = eligibleJutsu.sort(() => 0.5 - Math.random()).slice(0, 3);
@@ -509,21 +529,24 @@ function openJutsuSelect() {
         const jutsuSelect = document.querySelector(".jutsu-select");
         if (jutsuSelect) {
             jutsuSelect.classList.remove("hidden");
+            fightControls.classList.add("hidden"); // Hide fight controls
             optionsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
         } else {
             logBattle("Error: jutsu-select not found");
         }
     } else {
-        logBattle("Error: jutsu-options not found");
+        logBattle("Error: jutsu-options or fight-controls not found");
     }
 }
 
 function closeJutsuSelect() {
     const jutsuSelect = document.querySelector(".jutsu-select");
-    if (jutsuSelect) {
-        jutsuSelect.classList.add("hidden");
+    const fightControls = document.getElementById("fight-controls");
+    if (jutsuSelect && fightControls) {
+        closeAllMenus(); // Close all menus
+        fightControls.classList.remove("hidden"); // Show fight controls
     } else {
-        logBattle("Error: jutsu-select not found");
+        logBattle("Error: jutsu-select or fight-controls not found");
     }
 }
 
@@ -546,7 +569,9 @@ function openRankUpSelect() {
         return;
     }
     const optionsDiv = document.getElementById("jutsu-options");
-    if (optionsDiv) {
+    const fightControls = document.getElementById("fight-controls");
+    if (optionsDiv && fightControls) {
+        closeAllMenus(); // Close all other menus
         optionsDiv.innerHTML = "";
         const availableStyles = ["Ninjutsu", "Genjutsu", "Taijutsu", "Fire", "Lightning", "Earth"];
         availableStyles.forEach(style => {
@@ -563,13 +588,14 @@ function openRankUpSelect() {
         const jutsuSelect = document.querySelector(".jutsu-select");
         if (jutsuSelect) {
             jutsuSelect.classList.remove("hidden");
+            fightControls.classList.add("hidden"); // Hide fight controls
             optionsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
             game.rankUpPoints = 2; // Initialize 2 points for rank up
         } else {
             logBattle("Error: jutsu-select not found");
         }
     } else {
-        logBattle("Error: jutsu-options not found");
+        logBattle("Error: jutsu-options or fight-controls not found");
     }
 }
 
@@ -687,7 +713,9 @@ function openTravelSelect() {
         return;
     }
     const optionsDiv = document.getElementById("jutsu-options");
-    if (optionsDiv) {
+    const fightControls = document.getElementById("fight-controls");
+    if (optionsDiv && fightControls) {
+        closeAllMenus(); // Close all other menus
         optionsDiv.innerHTML = "";
         const destinations = Object.keys(MapData).filter(loc => loc !== player.lastVillage);
         destinations.forEach(dest => {
@@ -700,12 +728,13 @@ function openTravelSelect() {
         const jutsuSelect = document.querySelector(".jutsu-select");
         if (jutsuSelect) {
             jutsuSelect.classList.remove("hidden");
+            fightControls.classList.add("hidden"); // Hide fight controls
             optionsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
         } else {
             logBattle("Error: jutsu-select not found");
         }
     } else {
-        logBattle("Error: jutsu-options not found");
+        logBattle("Error: jutsu-options or fight-controls not found");
     }
 }
 
@@ -719,8 +748,9 @@ function ArriveVillage(village) {
     const fightControls = document.getElementById("fight-controls");
     const travelControls = document.getElementById("travel-controls");
     if (battleScreen && fightControls && travelControls) {
+        closeAllMenus(); // Close all menus
         battleScreen.classList.add("hidden");
-        fightControls.classList.remove("hidden");
+        fightControls.classList.remove("hidden"); // Show fight controls
         travelControls.classList.add("hidden");
     } else {
         logBattle("Error: battle-screen, fight-controls, or travel-controls not found");
@@ -801,6 +831,7 @@ async function startBattle(player, opponent) {
     const fightControls = document.getElementById("fight-controls");
     const travelControls = document.getElementById("travel-controls");
     if (battleScreen && fightControls && travelControls) {
+        closeAllMenus(); // Close all menus
         battleScreen.classList.remove("hidden");
         fightControls.classList.add("hidden");
         travelControls.classList.add("hidden");
@@ -896,6 +927,7 @@ async function endBattle() {
     const fightControls = document.getElementById("fight-controls");
     const travelControls = document.getElementById("travel-controls");
     if (battleScreen && fightControls && travelControls) {
+        closeAllMenus(); // Close all menus
         battleScreen.classList.add("hidden");
         if (game.battleType === "travel" && game.opponent && game.opponent.hp <= 0) {
             player.travelFightsCompleted = (player.travelFightsCompleted || 0) + 1;
@@ -929,8 +961,7 @@ async function endBattle() {
             if (player.hp <= 0) {
                 ArriveVillage(player.lastVillage);
             } else {
-                fightControls.classList.remove("hidden");
-                travelControls.classList.add("hidden");
+                fightControls.classList.remove("hidden"); // Show fight controls
             }
         }
     } else {
