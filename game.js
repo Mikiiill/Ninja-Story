@@ -498,6 +498,21 @@ function toggleJutsuMenu() {
     }
 }
 
+function closeJutsuMenu() {
+    if (inBattle) {
+        logBattle(`Cannot close Jutsu menu during battle! inBattle: ${inBattle}`);
+        return;
+    }
+    const content = document.getElementById("jutsu-management-content");
+    const fightControls = document.getElementById("fight-controls");
+    if (content && fightControls) {
+        content.classList.add("hidden");
+        fightControls.classList.remove("hidden");
+    } else {
+        logBattle("Error: jutsu-management-content or fight-controls not found");
+    }
+}
+
 // Jutsu Selection
 const skills = new Skills();
 
@@ -584,7 +599,7 @@ function addJutsuToInventory(jutsu) {
             logBattle(`<strong class="tutorial-message">Train 10 times to obtain a new Jutsu. Jutsu appear based on your Fighting Style Ranks.</strong>`, true);
             logBattle(`<strong class="tutorial-message">Reach 10 jutsu to become a Genin.</strong>`, true);
             ArriveVillage("Newb Village");
-            toggleJutsuMenu(); // Open jutsu management menu
+            // Removed toggleJutsuMenu() to prevent auto-opening
         }
     }
 }
@@ -921,22 +936,6 @@ async function startArenaFight() {
     const opponent = generateEnemy();
     logBattle(`Generated enemy: ${opponent.name}, Jutsu: ${opponent.activeJutsu.map(j => j.name).join(", ")}`);
     await startBattle(player, opponent);
-}
-
-async function talkToNPC() {
-    if (inBattle) {
-        logBattle(`Cannot talk to NPCs during battle! inBattle: ${inBattle}`);
-        return;
-    }
-    queueOutput("<span class='output-text-neutral'>Talking to NPC! (Placeholder)</span>");
-}
-
-async function returnToVillage() {
-    if (inBattle) {
-        logBattle(`Cannot return to village during battle! inBattle: ${inBattle}`);
-        return;
-    }
-    ArriveVillage(player.lastVillage);
 }
 
 async function endBattle() {
