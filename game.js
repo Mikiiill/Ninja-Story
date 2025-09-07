@@ -437,11 +437,11 @@ function generateTrainingEnemy() {
 }
 
 // Utility Functions
-function logBattle(message) {
+function logBattle(message, isTutorial = false) {
     const log = document.getElementById("battle-log-content");
     if (log) {
         const newMessage = document.createElement("p");
-        newMessage.innerHTML = message;
+        newMessage.innerHTML = isTutorial ? `<strong class="tutorial-message">${message}</strong>` : message;
         log.appendChild(newMessage);
         log.scrollTop = log.scrollHeight;
         newMessage.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -471,7 +471,7 @@ let player = new Mob(
     10,
     10,
     "Student",
-    { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" }, // FIXED: Changed Taijutsu from "T-Rank" to "D-Rank"
+    { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
     [],
     [],
     [],
@@ -479,7 +479,6 @@ let player = new Mob(
 );
 
 function toggleJutsuMenu() {
-    logBattle("Jutsu clicked!");
     if (inBattle) {
         logBattle(`Cannot toggle Jutsu menu during battle! inBattle: ${inBattle}`);
         return;
@@ -487,12 +486,12 @@ function toggleJutsuMenu() {
     const content = document.getElementById("jutsu-management-content");
     const fightControls = document.getElementById("fight-controls");
     if (content && fightControls) {
-        closeAllMenus(); // Close all other menus
-        content.classList.toggle("hidden"); // Toggle jutsu management
+        closeAllMenus();
+        content.classList.toggle("hidden");
         if (!content.classList.contains("hidden")) {
-            fightControls.classList.add("hidden"); // Hide fight controls when jutsu management is open
+            fightControls.classList.add("hidden");
         } else {
-            fightControls.classList.remove("hidden"); // Show fight controls when closing
+            fightControls.classList.remove("hidden");
         }
     } else {
         logBattle("Error: jutsu-management-content or fight-controls not found");
@@ -503,7 +502,6 @@ function toggleJutsuMenu() {
 const skills = new Skills();
 
 function openJutsuSelect() {
-    logBattle("openJutsuSelect clicked!");
     if (inBattle) {
         logBattle(`Cannot select Jutsu during battle! inBattle: ${inBattle}`);
         return;
@@ -511,7 +509,7 @@ function openJutsuSelect() {
     const optionsDiv = document.getElementById("jutsu-options");
     const fightControls = document.getElementById("fight-controls");
     if (optionsDiv && fightControls) {
-        closeAllMenus(); // Close all other menus
+        closeAllMenus();
         optionsDiv.innerHTML = "";
         const eligibleJutsu = skills.skills.filter(jutsu => skills.canUseSkill(player, jutsu));
         const shuffled = eligibleJutsu.sort(() => 0.5 - Math.random()).slice(0, 3);
@@ -529,7 +527,7 @@ function openJutsuSelect() {
         const jutsuSelect = document.querySelector(".jutsu-select");
         if (jutsuSelect) {
             jutsuSelect.classList.remove("hidden");
-            fightControls.classList.add("hidden"); // Hide fight controls
+            fightControls.classList.add("hidden");
             optionsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
         } else {
             logBattle("Error: jutsu-select not found");
@@ -543,8 +541,8 @@ function closeJutsuSelect() {
     const jutsuSelect = document.querySelector(".jutsu-select");
     const fightControls = document.getElementById("fight-controls");
     if (jutsuSelect && fightControls) {
-        closeAllMenus(); // Close all menus
-        fightControls.classList.remove("hidden"); // Show fight controls
+        closeAllMenus();
+        fightControls.classList.remove("hidden");
     } else {
         logBattle("Error: jutsu-select or fight-controls not found");
     }
@@ -557,24 +555,42 @@ function addJutsuToInventory(jutsu) {
         return;
     }
     player.inventory.push(jutsu);
+    player.activeJutsu.push(player.inventory.pop()); // Move directly to activeJutsu
     updateJutsuDisplay();
     closeJutsuSelect();
     if (game.tutorialState && game.tutorialState.jutsuSelectionsRemaining > 0) {
         game.tutorialState.jutsuSelectionsRemaining -= 1;
-        logBattle(`Jutsu selected! ${game.tutorialState.jutsuSelectionsRemaining} more to select.`);
+        logBattle(`<strong class="tutorial-message">Jutsu selected! ${game.tutorialState.jutsuSelectionsRemaining} more to select.</strong>`, true);
         if (game.tutorialState.jutsuSelectionsRemaining > 0) {
-            setTimeout(openJutsuSelect, 1000); // Open again for next jutsu
+            setTimeout(openJutsuSelect, 1000);
         } else {
+            // Add specific jutsus: Substitution Jutsu, 2x Barrage, Healing Stance
+            const specificJutsus = [
+                skills.findSkill("Substitution Jutsu"),
+                skills.findSkill("Barrage"),
+                skills.findSkill("Barrage"),
+                skills.findSkill("Healing Stance")
+            ];
+            specificJutsus.forEach(jutsu => {
+                if (jutsu && player.activeJutsu.concat(player.inventory).filter(j => j.name === jutsu.name).length < 4) {
+                    player.inventory.push(jutsu);
+                    player.activeJutsu.push(player.inventory.pop());
+                }
+            });
+            // Log the six active jutsus
+            logBattle(`<strong class="tutorial-message">Equipped 6 Jutsus: ${player.activeJutsu.map(j => j.name).join(", ")}</strong>`, true);
             game.tutorialState = null;
+            logBattle(`<strong class="tutorial-message">Tutorial completed! Welcome to Newb Village!</strong>`, true);
+            logBattle(`<strong class="tutorial-message">Train 10 times to obtain a new Jutsu. Jutsu appear based on your Fighting Style Ranks.</strong>`, true);
+            logBattle(`<strong class="tutorial-message">Reach 10 jutsu to become a Genin.</strong>`, true);
             ArriveVillage("Newb Village");
-            logBattle("Tutorial completed! Welcome to Newb Village!");
+            toggleJutsuMenu(); // Open jutsu management menu
         }
     }
 }
 
 // Rank Up Selection
 function openRankUpSelect() {
-    logBattle("RANKUP clicked!");
     if (inBattle) {
         logBattle(`Cannot rank up during battle! inBattle: ${inBattle}`);
         return;
@@ -582,7 +598,7 @@ function openRankUpSelect() {
     const optionsDiv = document.getElementById("jutsu-options");
     const fightControls = document.getElementById("fight-controls");
     if (optionsDiv && fightControls) {
-        closeAllMenus(); // Close all other menus
+        closeAllMenus();
         optionsDiv.innerHTML = "";
         const availableStyles = ["Ninjutsu", "Genjutsu", "Taijutsu", "Fire", "Lightning", "Earth"];
         availableStyles.forEach(style => {
@@ -599,7 +615,7 @@ function openRankUpSelect() {
         const jutsuSelect = document.querySelector(".jutsu-select");
         if (jutsuSelect) {
             jutsuSelect.classList.remove("hidden");
-            fightControls.classList.add("hidden"); // Hide fight controls
+            fightControls.classList.add("hidden");
             optionsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
             if (!game.tutorialState) {
                 game.rankUpPoints = 2;
@@ -626,29 +642,29 @@ function upgradeFightingStyle(style) {
     const currentRank = player.fightingStyles[style] || "None";
     let newRank;
     if (currentRank === "None") {
-        newRank = "C-Rank"; // Unlearned styles start at C-Rank
+        newRank = "C-Rank";
     } else if (currentRank === "S-Rank") {
         logBattle(`${style} is already at maximum rank (S-Rank)!`);
         return;
     } else {
         const currentIndex = ranks.indexOf(currentRank);
-        newRank = ranks[currentIndex + 1]; // Upgrade by one rank
+        newRank = ranks[currentIndex + 1];
     }
     player.fightingStyles[style] = newRank;
     game.rankUpPoints -= 1;
-    logBattle(`Upgraded ${style} to ${newRank}! ${game.rankUpPoints} RANKUP point(s) remaining.`);
+    logBattle(`<strong class="tutorial-message">Upgraded ${style} to ${newRank}! ${game.rankUpPoints} RANKUP point(s) remaining.</strong>`, game.tutorialState !== null);
     if (game.rankUpPoints === 0) {
         closeJutsuSelect();
         if (game.tutorialState && game.tutorialState.phase === "rankUp") {
             game.tutorialState.phase = "jutsuSelection";
             game.tutorialState.jutsuSelectionsRemaining = 2;
-            logBattle("Rank Up complete! Now select two starting Jutsu.");
+            logBattle(`<strong class="tutorial-message">Rank Up complete! Now select two starting Jutsu.</strong>`, true);
             setTimeout(openJutsuSelect, 1000);
         }
     } else {
-        openRankUpSelect(); // Refresh menu to show updated ranks
+        openRankUpSelect();
     }
-    updateJutsuDisplay(); // FIXED: Removed erroneous 'K'
+    updateJutsuDisplay();
 }
 
 // Jutsu Management
@@ -684,16 +700,13 @@ function updateJutsuDisplay() {
         });
 
         const toggleJutsuBtn = document.getElementById("toggle-jutsu-btn");
-        const rankUpBtn = document.querySelector("button[onclick='openRankUpSelect()']");
         if (toggleJutsuBtn) toggleJutsuBtn.disabled = inBattle;
-        if (rankUpBtn) rankUpBtn.disabled = inBattle;
     } else {
         logBattle("Error: active-jutsu or inventory-jutsu not found");
     }
 }
 
 function moveJutsuToInventory(index) {
-    logBattle("moveJutsuToInventory clicked!");
     if (inBattle) {
         logBattle(`Cannot move Jutsu during battle! inBattle: ${inBattle}`);
         return;
@@ -705,7 +718,6 @@ function moveJutsuToInventory(index) {
 }
 
 function moveJutsuToActive(index) {
-    logBattle("moveJutsuToActive clicked!");
     if (inBattle) {
         logBattle(`Cannot move Jutsu during battle! inBattle: ${inBattle}`);
         return;
@@ -724,7 +736,6 @@ function moveJutsuToActive(index) {
 
 // Travel and Village
 function openTravelSelect() {
-    logBattle("openTravelSelect clicked!");
     if (inBattle) {
         logBattle(`Cannot travel during battle! inBattle: ${inBattle}`);
         return;
@@ -732,7 +743,7 @@ function openTravelSelect() {
     const optionsDiv = document.getElementById("jutsu-options");
     const fightControls = document.getElementById("fight-controls");
     if (optionsDiv && fightControls) {
-        closeAllMenus(); // Close all other menus
+        closeAllMenus();
         optionsDiv.innerHTML = "";
         const destinations = Object.keys(MapData).filter(loc => loc !== player.lastVillage);
         destinations.forEach(dest => {
@@ -745,7 +756,7 @@ function openTravelSelect() {
         const jutsuSelect = document.querySelector(".jutsu-select");
         if (jutsuSelect) {
             jutsuSelect.classList.remove("hidden");
-            fightControls.classList.add("hidden"); // Hide fight controls
+            fightControls.classList.add("hidden");
             optionsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
         } else {
             logBattle("Error: jutsu-select not found");
@@ -756,24 +767,17 @@ function openTravelSelect() {
 }
 
 function ArriveVillage(village) {
-    logBattle(`ArriveVillage called for ${village}`);
     player.hp = player.maxHp;
     player.statusEffects = [];
-    // MODIFIED: Heal enemy and remove their status effects if present
-    if (game.opponent) {
-        game.opponent.hp = game.opponent.maxHp;
-        game.opponent.statusEffects = [];
-        logBattle(`<span class="output-text-enemy">${game.opponent.name}</span> has been fully healed and status effects removed.`);
-    }
     player.lastVillage = village;
     inBattle = false;
     const battleScreen = document.getElementById("battle-screen");
     const fightControls = document.getElementById("fight-controls");
     const travelControls = document.getElementById("travel-controls");
     if (battleScreen && fightControls && travelControls) {
-        closeAllMenus(); // Close all menus
+        closeAllMenus();
         battleScreen.classList.add("hidden");
-        fightControls.classList.remove("hidden"); // Show fight controls
+        fightControls.classList.remove("hidden");
         travelControls.classList.add("hidden");
     } else {
         logBattle("Error: battle-screen, fight-controls, or travel-controls not found");
@@ -835,7 +839,6 @@ function checkForDeath() {
 }
 
 async function startBattle(player, opponent) {
-    logBattle(`startBattle called! inBattle: ${inBattle}, activeJutsu: ${player.activeJutsu.length}`);
     if (inBattle) {
         logBattle("Battle already in progress!");
         await sleep(3000);
@@ -855,7 +858,7 @@ async function startBattle(player, opponent) {
     const fightControls = document.getElementById("fight-controls");
     const travelControls = document.getElementById("travel-controls");
     if (battleScreen && fightControls && travelControls) {
-        closeAllMenus(); // Close all menus
+        closeAllMenus();
         battleScreen.classList.remove("hidden");
         fightControls.classList.add("hidden");
         travelControls.classList.add("hidden");
@@ -872,7 +875,6 @@ async function startBattle(player, opponent) {
 }
 
 async function startTrainingFight() {
-    logBattle("startTrainingFight clicked!");
     if (inBattle) {
         logBattle(`Cannot start Training fights during battle! inBattle: ${inBattle}`);
         return;
@@ -884,7 +886,6 @@ async function startTrainingFight() {
 }
 
 async function startTravelFight(destination) {
-    logBattle("startTravelFight clicked!");
     if (inBattle) {
         logBattle(`Cannot start Travel fights during battle! inBattle: ${inBattle}`);
         return;
@@ -899,7 +900,6 @@ async function startTravelFight(destination) {
 }
 
 async function startEventFight() {
-    logBattle("startEventFight clicked!");
     if (inBattle) {
         logBattle(`Cannot start Event fights during battle! inBattle: ${inBattle}`);
         return;
@@ -912,7 +912,6 @@ async function startEventFight() {
 }
 
 async function startArenaFight() {
-    logBattle("startArenaFight clicked!");
     if (inBattle) {
         logBattle(`Cannot start Arena fights during battle! inBattle: ${inBattle}`);
         return;
@@ -925,7 +924,6 @@ async function startArenaFight() {
 }
 
 async function talkToNPC() {
-    logBattle("talkToNPC clicked!");
     if (inBattle) {
         logBattle(`Cannot talk to NPCs during battle! inBattle: ${inBattle}`);
         return;
@@ -934,7 +932,6 @@ async function talkToNPC() {
 }
 
 async function returnToVillage() {
-    logBattle("returnToVillage clicked!");
     if (inBattle) {
         logBattle(`Cannot return to village during battle! inBattle: ${inBattle}`);
         return;
@@ -943,29 +940,27 @@ async function returnToVillage() {
 }
 
 async function endBattle() {
-    logBattle("endBattle called!");
     inBattle = false;
     game.player = player;
-    const previousOpponent = game.opponent; // MODIFIED: Store opponent for potential healing
     game.opponent = null;
     const battleScreen = document.getElementById("battle-screen");
     const fightControls = document.getElementById("fight-controls");
     const travelControls = document.getElementById("travel-controls");
     if (battleScreen && fightControls && travelControls) {
-        closeAllMenus(); // Close all menus
+        closeAllMenus();
         battleScreen.classList.add("hidden");
-        if (game.battleType === "travel" && previousOpponent && previousOpponent.hp <= 0) {
+        if (game.battleType === "travel" && player.travelFightsCompleted < 4) {
             player.travelFightsCompleted = (player.travelFightsCompleted || 0) + 1;
             queueOutput(`<span class='output-text-neutral'>Travel fight completed! ${player.travelFightsCompleted}/4 fights done.</span>`);
             await sleep(3000);
             if (player.travelFightsCompleted < 4) {
-                await startTravelFight(game.targetDestination); // Continue travel fights
+                await startTravelFight(game.targetDestination);
             } else {
                 player.travelFightsCompleted = 0;
-                ArriveVillage(game.targetDestination); // MODIFIED: Arrive at destination after 4 fights
+                ArriveVillage(game.targetDestination);
             }
         } else {
-            ArriveVillage(player.lastVillage); // MODIFIED: Arrive at last village for all other cases (training fights, travel loss)
+            ArriveVillage(player.lastVillage);
         }
     } else {
         logBattle("Error: battle-screen, fight-controls, or travel-controls not found");
@@ -973,11 +968,9 @@ async function endBattle() {
     queueOutput("<span class='battle-ready'>Battle ended!</span>");
     updateJutsuDisplay();
     updateBattleUI();
-    logBattle(`endBattle finished! inBattle: ${inBattle}`);
 }
 
 async function setTurnOrder() {
-    logBattle(`setTurnOrder called!`);
     if (Math.random() < 0.5) {
         game.user = game.player;
         game.target = game.opponent;
@@ -1111,7 +1104,6 @@ function updateBattleUI() {
         const playerRank = document.getElementById("player-rank");
         const playerXp = document.getElementById("player-xp");
         const villageInfo = document.getElementById("village-info");
-        const rankUpBtn = document.querySelector("button[onclick='openRankUpSelect()']");
 
         if (!userName || !userHp || !userStatus || !userSprite || !opponentName || !opponentHp || !opponentStatus || !opponentSprite || !playerRank || !playerXp || !villageInfo) {
             logBattle("Error: One or more UI elements missing in updateBattleUI!");
@@ -1130,7 +1122,6 @@ function updateBattleUI() {
         playerRank.textContent = game.player ? game.player.rank : "None";
         playerXp.textContent = game.player ? game.player.xp : 0;
         villageInfo.classList.toggle("battle-mode", inBattle);
-        if (rankUpBtn) rankUpBtn.disabled = inBattle;
     } catch (e) {
         logBattle(`Error in updateBattleUI: ${e.message}`);
         inBattle = false;
@@ -1139,9 +1130,9 @@ function updateBattleUI() {
 
 // Tutorial Function
 async function startTutorial() {
-    logBattle("Welcome to Ninja Story! Let's begin your training.");
+    logBattle("Welcome to Ninja Story! Let's begin your training.", true);
     await sleep(3000);
-    logBattle("First, select two fighting styles to rank up!");
+    logBattle("First, select two fighting styles to rank up!", true);
     await sleep(3000);
     game.tutorialState = {
         phase: "rankUp",
@@ -1158,7 +1149,7 @@ function initializeGame() {
         10,
         10,
         "Student",
-        { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" }, // FIXED: Changed Taijutsu from "T-Rank" to "D-Rank"
+        { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
         [],
         [],
         [],
