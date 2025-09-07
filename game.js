@@ -471,7 +471,7 @@ let player = new Mob(
     10,
     10,
     "Student",
-    { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" },
+    { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" }, // FIXED: Changed Taijutsu from "T-Rank" to "D-Rank"
     [],
     [],
     [],
@@ -648,7 +648,10 @@ function upgradeFightingStyle(style) {
     } else {
         openRankUpSelect(); // Refresh menu to show updated ranks
     }
-    updateJutsuDisplay();K
+    updateJutsuDisplay(); // FIXED: Removed erroneous 'K'
+}
+
+// Jutsu Management
 function updateJutsuDisplay() {
     const activeDiv = document.getElementById("active-jutsu");
     const inventoryDiv = document.getElementById("inventory-jutsu");
@@ -1155,7 +1158,7 @@ function initializeGame() {
         10,
         10,
         "Student",
-        { Ninjutsu: "D-Rank", Taijutsu: "T-Rank", Genjutsu: "D-Rank" },
+        { Ninjutsu: "D-Rank", Taijutsu: "D-Rank", Genjutsu: "D-Rank" }, // FIXED: Changed Taijutsu from "T-Rank" to "D-Rank"
         [],
         [],
         [],
