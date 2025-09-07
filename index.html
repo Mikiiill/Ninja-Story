@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Ninja Story: Ninja Card Battler</title>
     <style>
         body {
@@ -116,9 +119,24 @@
 
         .jutsu-list, .fight-controls, .travel-controls {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            overflow-x: auto;
             gap: 10px;
-            justify-content: center;
+            justify-content: flex-start;
+            padding: 10px;
+        }
+
+        .jutsu-list::-webkit-scrollbar, .fight-controls::-webkit-scrollbar, .travel-controls::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .jutsu-list::-webkit-scrollbar-thumb, .fight-controls::-webkit-scrollbar-thumb, .travel-controls::-webkit-scrollbar-thumb {
+            background-color: #8b4513;
+            border-radius: 4px;
+        }
+
+        .jutsu-list::-webkit-scrollbar-track, .fight-controls::-webkit-scrollbar-track, .travel-controls::-webkit-scrollbar-track {
+            background-color: #e6d7b8;
         }
 
         .jutsu-card {
@@ -127,6 +145,7 @@
             border-radius: 8px;
             padding: 10px;
             width: 150px;
+            min-width: 150px;
             text-align: center;
             cursor: pointer;
             transition: transform 0.2s;
@@ -172,6 +191,12 @@
             cursor: not-allowed;
         }
 
+        .tutorial-message {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+
         .output-text-player { color: #006400; }
         .output-text-enemy { color: #8b0000; }
         .output-text-neutral { color: #000000; }
@@ -206,10 +231,11 @@
             <button onclick="startTrainingFight()">Start Training Fight</button>
             <button id="toggle-jutsu-btn" onclick="toggleJutsuMenu()">Jutsu</button>
             <button onclick="openTravelSelect()">Travel</button>
-            <button onclick="openRankUpSelect()">RANKUP</button>
+            <button onclick="talkToNPC()">Talk to NPC</button>
+            <button onclick="returnToVillage()">Return to Village</button>
         </div>
 
-        <!-- Travel Controls (for non-village areas) -->
+        <!-- Travel Controls -->
         <div class="travel-controls hidden" id="travel-controls"></div>
 
         <!-- Battle Screen -->
@@ -250,7 +276,7 @@
                 <div id="active-jutsu" class="jutsu-list"></div>
                 <h3>Inventory</h3>
                 <div id="inventory-jutsu" class="jutsu-list"></div>
-                <button id="close-jutsu-btn" onclick="toggleJutsuMenu()">Close</button>
+                <button id="close-jutsu-btn" onclick="closeJutsuMenu()">Close</button>
             </div>
         </div>
     </div>
