@@ -89,7 +89,8 @@ class Skills {
             new BattleSkill("Rock Smash Jutsu", ["Earth", "Taijutsu"], { Earth: "B-Rank" }, this.rockSmashJutsu.bind(this), "earth", false, "B-Rank"),
             new BattleSkill("Genjutsu Release", ["Genjutsu"], { Genjutsu: "B-Rank" }, this.genjutsuRelease.bind(this), "genjutsu", true, "B-Rank"),
             new BattleSkill("Lightning Edge", ["Lightning", "Ninjutsu"], { Lightning: "C-Rank", Ninjutsu: "C-Rank" }, this.lightningEdge.bind(this), "lightning", false, "B-Rank"),
-            new BattleSkill("Bite", ["Beast"], { Beast: "C-Rank" }, this.bite.bind(this), "beast", false, "C-Rank")
+            new BattleSkill("Bite", ["Beast"], { Beast: "C-Rank" }, this.bite.bind(this), "beast", false, "C-Rank"),
+            new BattleSkill("Night Terror Jutsu", ["Genjutsu"], { Genjutsu: "B-Rank" }, this.nightTerrorJutsu.bind(this), "genjutsu", false, "B-Rank")
         ];
         if (this.skills.length === 0) {
             console.error("Skills initialization failed!");
@@ -243,16 +244,16 @@ class Skills {
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         user.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
             async (user, target) => {
-                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> is stunned by Numb and skips their turn!`);
+                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> is stunned by <span class="status-numb">Numb ⚡️</span> and skips their turn!`);
                 await sleep(3000);
                 user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
                 return true;
             }));
         target.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
             async (user, target) => {
-                logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> is stunned by Numb and skips their turn!`);
+                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> is stunned by <span class="status-numb">Numb ⚡️</span> and skips their turn!`);
                 await sleep(3000);
-                target.statusEffects = target.statusEffects.filter(e => e.name !== "Numb");
+                user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
                 return true;
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-lightning">Static Field Jutsu</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-numb">Numb ⚡️</span> on both!`);
@@ -300,19 +301,23 @@ class Skills {
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         target.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
             async (user, target) => {
-                logBattle(`<span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> is stunned by Numb and skips their turn!`);
+                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> is stunned by <span class="status-numb">Numb ⚡️</span> and skips their turn!`);
                 await sleep(3000);
-                target.statusEffects = target.statusEffects.filter(e => e.name !== "Numb");
+                user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
                 return true;
             }));
         user.statusEffects.push(new StatusEffect("READY", 1, 0, false, true, false, null, 
             async (user, target) => {
                 let barrageSkill = this.findSkill("Barrage");
-                if (barrageSkill) await barrageSkill.skillFunction(user, target);
+                if (barrageSkill) {
+                    logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> unleashes a Barrage due to <span class="status-ready">READY 💪</span>!`);
+                    await sleep(3000);
+                    await barrageSkill.skillFunction(user, target);
+                }
                 user.statusEffects = user.statusEffects.filter(e => e.name !== "READY");
                 return false;
             }));
-        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-neutral">Falcon Drop</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, stunning target and taking 2 damage!`);
+        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-neutral">Falcon Drop</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, stunning target and taking 2 damage! <span class="status-ready">READY 💪</span> applied!`);
         await sleep(3000);
         return target.hp <= 0;
     }
@@ -364,6 +369,26 @@ class Skills {
                 return false;
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-beast">Bite</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage${heal > 0 ? `, healing ${heal} HP` : ""}, inflicting <span class="status-bleed">Bleed 🩸</span>!`);
+        await sleep(3000);
+        return target.hp <= 0;
+    }
+
+    async nightTerrorJutsu(user, target) {
+        target.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
+            async (user, target) => {
+                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> is stunned by <span class="status-numb">Numb ⚡️</span> and skips their turn!`);
+                await sleep(3000);
+                user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
+                return true;
+            }));
+        target.statusEffects.push(new StatusEffect("Doom", 5, 1, true, false, false, 
+            async (user, target) => {
+                user.hp = Math.max(0, user.hp - user.statusEffects.find(e => e.name === "Doom").damage);
+                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> takes ${user.statusEffects.find(e => e.name === "Doom").damage} from <span class="status-doom">Doom 💀</span>!`);
+                await sleep(3000);
+                return false;
+            }));
+        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-genjutsu">Night Terror Jutsu</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span>, inflicting <span class="status-numb">Numb ⚡️</span> and <span class="status-doom">Doom 💀</span>!`);
         await sleep(3000);
         return target.hp <= 0;
     }
