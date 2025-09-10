@@ -899,7 +899,7 @@ const game = {
     targetDestination: null,
     rankUpPoints: 0,
     tutorialState: null,
-    battleEnded: false // New flag to prevent duplicate endBattle calls
+    battleEnded: false
 };
 
 async function awardReward(winner, loser) {
@@ -944,7 +944,7 @@ function checkForDeath() {
     }
 
     if (winner) {
-        endBattle(winner, loser); // Call endBattle directly
+        endBattle(winner, loser);
         return true;
     }
     return false;
@@ -962,7 +962,7 @@ async function startBattle(player, opponent) {
         return;
     }
     inBattle = true;
-    game.battleEnded = false; // Reset battleEnded flag
+    game.battleEnded = false;
     game.player = player;
     game.opponent = opponent;
     game.user = null;
@@ -1037,13 +1037,13 @@ async function startArenaFight() {
 }
 
 async function endBattle(winner, loser) {
-    if (game.battleEnded) return; // Prevent duplicate endBattle calls
+    if (game.battleEnded) return;
     game.battleEnded = true;
     inBattle = false;
     game.user = null;
     game.target = null;
-    await sleep(3000); // Delay for victory message to be read
-    await awardReward(winner, loser); // Award rewards after victory message
+    await sleep(3000);
+    await awardReward(winner, loser);
     game.player = player;
     game.opponent = null;
     const battleScreen = document.getElementById("battle-screen");
@@ -1104,9 +1104,13 @@ async function takeTurn() {
                 if (await status.startOfTurnFunction(game.user, game.target, status)) {
                     skipTurn = true;
                 }
-                if (checkForDeath()) return;
+                if (checkForDeath()) {
+                    return;
+                }
+                if (!inBattle) return;
             }
             status.duration--;
+            if (!inBattle) return;
         }
         game.user.statusEffects = game.user.statusEffects.filter(status => status.duration > 0);
         updateBattleUI();
@@ -1175,7 +1179,6 @@ async function skillAction() {
 async function endTurn() {
     try {
         if (!inBattle) {
-            logBattle("Cannot end turn: Battle is not active!");
             await sleep(3000);
             return;
         }
