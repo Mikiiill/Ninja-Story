@@ -246,14 +246,14 @@ class Skills {
             async (user, target) => {
                 logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> is stunned by <span class="status-numb">Numb ⚡️</span> and skips their turn!`);
                 await sleep(3000);
-                user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
+                user.statusEffects = user.statusEffects.filter(e => e.name === "Numb");
                 return true;
             }));
         target.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
             async (user, target) => {
                 logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> is stunned by <span class="status-numb">Numb ⚡️</span> and skips their turn!`);
                 await sleep(3000);
-                user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
+                user.statusEffects = user.statusEffects.filter(e => e.name === "Numb");
                 return true;
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-lightning">Static Field Jutsu</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-numb">Numb ⚡️</span> on both!`);
@@ -295,36 +295,35 @@ class Skills {
         return target.hp <= 0;
     }
 
-// Inside Skills class (replace only the falconDrop method)
-async falconDrop(user, target) {
-    let damage = 2;
-    user.hp = Math.max(0, Math.min(user.maxHp, user.hp - 2));
-    target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-    // Apply Numb to target
-    target.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
-        async (user, target) => {
-            logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> is stunned by <span class="status-numb">Numb ⚡️</span> and skips their turn!`);
-            await sleep(3000);
-            user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
-            return true;
-        }));
-    // Apply READY to user, but only if not already present
-    if (!user.statusEffects.some(e => e.name === "READY")) {
-        user.statusEffects.push(new StatusEffect("READY", 1, 0, false, true, false, null, 
+    async falconDrop(user, target) {
+        let damage = 2;
+        user.hp = Math.max(0, Math.min(user.maxHp, user.hp - 2));
+        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+        // Apply Numb to target
+        target.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
             async (user, target) => {
-                if (target.hp > 0) {
-                    logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> unleashes a Barrage due to <span class="status-ready">READY 💪</span>!`);
-                    await sleep(3000);
-                    await this.barrage(user, target);
-                }
-                user.statusEffects = user.statusEffects.filter(e => e.name !== "READY");
-                return false;
+                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> is stunned by <span class="status-numb">Numb ⚡️</span> and skips their turn!`);
+                await sleep(3000);
+                user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
+                return true;
             }));
+        // Apply READY to user, but only if not already present
+        if (!user.statusEffects.some(e => e.name === "READY")) {
+            user.statusEffects.push(new StatusEffect("READY", 1, 0, false, true, false, null, 
+                async (user, target) => {
+                    if (target.hp > 0) {
+                        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> unleashes a Barrage due to <span class="status-ready">READY 💪</span>!`);
+                        await sleep(3000);
+                        await this.barrage(user, target);
+                    }
+                    user.statusEffects = user.statusEffects.filter(e => e.name !== "READY");
+                    return false;
+                }));
+        }
+        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-neutral">Falcon Drop</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, stunning target and taking 2 damage! <span class="status-ready">READY 💪</span> applied!`);
+        await sleep(3000);
+        return target.hp <= 0;
     }
-    logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-neutral">Falcon Drop</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, stunning target and taking 2 damage! <span class="status-ready">READY 💪</span> applied!`);
-    await sleep(3000);
-    return target.hp <= 0;
-}
 
     async rockSmashJutsu(user, target) {
         let damage = 6;
@@ -382,7 +381,7 @@ async falconDrop(user, target) {
             async (user, target) => {
                 logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> is stunned by <span class="status-numb">Numb ⚡️</span> and skips their turn!`);
                 await sleep(3000);
-                user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
+                user.statusEffects = user.statusEffects.filter(e => e.name === "Numb");
                 return true;
             }));
         target.statusEffects.push(new StatusEffect("Doom", 5, 1, true, false, false, 
@@ -1066,11 +1065,11 @@ async function skillAction() {
 
         // Process active status effects (e.g., READY, ShadowCloneEffect) before the chosen jutsu
         for (let status of game.user.statusEffects) {
-            if (status.active && status.activeFunction && !status.new) {
+            if (status.active && status.activeFunction) {
                 await status.activeFunction(game.user, game.target);
+                status.new = false; // Mark status as processed after running
                 if (checkForDeath()) return;
             }
-            status.new = false; // Mark status as processed for this turn
         }
 
         if (jutsu.support) {
