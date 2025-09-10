@@ -116,12 +116,16 @@ class Skills {
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - baseDamage));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> attacks <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> with <span class="output-text-neutral">Barrage</span> for ${baseDamage} damage!`);
         await sleep(3000);
+        updateBattleUI();
+        if (checkForDeath()) return true;
         if (target.hp > 0) {
             target.hp = Math.max(0, Math.min(target.maxHp, target.hp - comboDamage));
             logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> combos ${target.name} for ${comboDamage} damage!`);
             await sleep(3000);
+            updateBattleUI();
+            if (checkForDeath()) return true;
         }
-        return target.hp <= 0;
+        return false;
     }
 
     async substitutionJutsu(user, target) {
@@ -134,6 +138,7 @@ class Skills {
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> prepares <span class="output-text-neutral">Substitution Jutsu</span> <span class="status-substitution">🪵</span>!`);
         await sleep(3000);
+        updateBattleUI();
         return true;
     }
 
@@ -150,6 +155,10 @@ class Skills {
             return false;
         }
         user.hp = Math.max(0, Math.min(user.maxHp, user.hp - 2));
+        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-neutral">Shadow Clone Jutsu</span>, adding a clone <span class="status-shadowcloneeffect">👥</span>!`);
+        await sleep(3000);
+        updateBattleUI();
+        if (checkForDeath()) return true;
         user.statusEffects.push(new StatusEffect("ShadowCloneEffect", 3, 0, false, true, true, null, 
             async (user, target) => {
                 let cloneCount = user.statusEffects.filter(e => e.name === "ShadowCloneEffect").length;
@@ -157,6 +166,7 @@ class Skills {
                     logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">Shadow Clone ${i + 1} uses Barrage on ${target.name}!</span>`);
                     await sleep(3000);
                     await this.barrage(user, target);
+                    if (checkForDeath()) return true;
                 }
                 user.statusEffects = user.statusEffects.filter(e => e.name !== "ShadowCloneEffect");
                 return false;
@@ -171,40 +181,48 @@ class Skills {
                 }
                 return false;
             }));
-        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-neutral">Shadow Clone Jutsu</span>, adding a clone <span class="status-shadowcloneeffect">👥</span>!`);
-        await sleep(3000);
-        return true;
+        updateBattleUI();
+        return false;
     }
 
     async demonicVision(user, target) {
         let damage = 1;
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         target.statusEffects.push(new StatusEffect("Doom", 5, 1, true, false, false, 
-            async (user, target) => {
-                user.hp = Math.max(0, user.hp - user.statusEffects.find(e => e.name === "Doom").damage);
-                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> takes ${user.statusEffects.find(e => e.name === "Doom").damage} from <span class="status-doom">Doom 💀</span>!`);
+            async (user, target, status) => {
+                user.hp = Math.max(0, user.hp - status.damage);
+                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> takes ${status.damage} from <span class="status-doom">Doom 💀</span>!`);
                 await sleep(3000);
+                updateBattleUI();
+                if (checkForDeath()) return true;
                 return false;
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-genjutsu">Demonic Vision</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-doom">Doom 💀</span>!`);
         await sleep(3000);
-        return target.hp <= 0;
+        updateBattleUI();
+        if (checkForDeath()) return true;
+        return false;
     }
 
     async healingStance(user, target) {
         let heal = user.hp < user.maxHp ? 1 : 0;
+        user.hp = Math.min(user.maxHp, user.hp + heal);
         user.statusEffects.push(new StatusEffect("Regen", 3, 1, true, false, false, 
-            async (user, target) => {
-                let heal = user.hp < user.maxHp ? user.statusEffects.find(e => e.name === "Regen").damage : 0;
+            async (user, target, status) => {
+                let heal = user.hp < user.maxHp ? status.damage : 0;
                 user.hp = Math.min(user.maxHp, user.hp + heal);
                 if (heal > 0) {
                     logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> heals ${heal} HP from <span class="status-regen">Regen 🌿</span>!`);
                     await sleep(3000);
+                    updateBattleUI();
+                    if (checkForDeath()) return true;
                 }
                 return false;
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> enters <span class="output-text-neutral">Healing Stance</span>${heal > 0 ? `, healing ${heal} HP` : ""} <span class="status-regen">🌿</span>!`);
         await sleep(3000);
+        updateBattleUI();
+        if (checkForDeath()) return true;
         return true;
     }
 
@@ -221,6 +239,7 @@ class Skills {
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> raises <span class="output-text-earth">Earth Dome Jutsu</span> <span class="status-dome">🪨</span>!`);
         await sleep(3000);
+        updateBattleUI();
         return true;
     }
 
@@ -228,15 +247,19 @@ class Skills {
         let damage = Math.floor(Math.random() * 2) + 4;
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         target.statusEffects.push(new StatusEffect("Burn", 1, 2, true, false, false, 
-            async (user, target) => {
-                user.hp = Math.max(0, user.hp - user.statusEffects.find(e => e.name === "Burn").damage);
-                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> takes ${user.statusEffects.find(e => e.name === "Burn").damage} from <span class="status-burn">Burn 🔥</span>!`);
+            async (user, target, status) => {
+                user.hp = Math.max(0, user.hp - status.damage);
+                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> takes ${status.damage} from <span class="status-burn">Burn 🔥</span>!`);
                 await sleep(3000);
+                updateBattleUI();
+                if (checkForDeath()) return true;
                 return false;
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Flame Throw Jutsu</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burn">Burn 🔥</span>!`);
         await sleep(3000);
-        return target.hp <= 0;
+        updateBattleUI();
+        if (checkForDeath()) return true;
+        return false;
     }
 
     async staticFieldJutsu(user, target) {
@@ -258,22 +281,28 @@ class Skills {
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-lightning">Static Field Jutsu</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-numb">Numb ⚡️</span> on both!`);
         await sleep(3000);
-        return target.hp <= 0;
+        updateBattleUI();
+        if (checkForDeath()) return true;
+        return false;
     }
 
     async fireballJutsu(user, target) {
         let damage = Math.floor(Math.random() * 2) + 3;
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         target.statusEffects.push(new StatusEffect("Burn", 1, 1, true, false, false, 
-            async (user, target) => {
-                user.hp = Math.max(0, user.hp - user.statusEffects.find(e => e.name === "Burn").damage);
-                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> takes ${user.statusEffects.find(e => e.name === "Burn").damage} from <span class="status-burn">Burn 🔥</span>!`);
+            async (user, target, status) => {
+                user.hp = Math.max(0, user.hp - status.damage);
+                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> takes ${status.damage} from <span class="status-burn">Burn 🔥</span>!`);
                 await sleep(3000);
+                updateBattleUI();
+                if (checkForDeath()) return true;
                 return false;
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-fire">Fireball Jutsu</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, inflicting <span class="status-burn">Burn 🔥</span>!`);
         await sleep(3000);
-        return target.hp <= 0;
+        updateBattleUI();
+        if (checkForDeath()) return true;
+        return false;
     }
 
     async dynamicEntry(user, target) {
@@ -281,6 +310,8 @@ class Skills {
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-neutral">Dynamic Entry</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage!`);
         await sleep(3000);
+        updateBattleUI();
+        if (checkForDeath()) return true;
         if (!user.statusEffects.some(e => e.name === "DynamicEntryProc")) {
             user.statusEffects.push(new StatusEffect("DynamicEntryProc", 1, 0, false, false, false, null, null, null));
             let usableSkills = user.activeJutsu.filter(skill => !skill.support && skill.name !== "Dynamic Entry");
@@ -289,17 +320,17 @@ class Skills {
                 logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> chains with ${nextSkill.name}!`);
                 await sleep(3000);
                 await nextSkill.skillFunction(user, target);
+                if (checkForDeath()) return true;
             }
-            user.statusEffects = user.statusEffects.filter(e => e.name === "DynamicEntryProc");
+            user.statusEffects = user.statusEffects.filter(e => e.name !== "DynamicEntryProc");
         }
-        return target.hp <= 0;
+        return false;
     }
 
     async falconDrop(user, target) {
         let damage = 2;
         user.hp = Math.max(0, Math.min(user.maxHp, user.hp - 2));
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-        // Apply Numb to target
         target.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
             async (user, target) => {
                 logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> is stunned by <span class="status-numb">Numb ⚡️</span> and skips their turn!`);
@@ -307,7 +338,6 @@ class Skills {
                 user.statusEffects = user.statusEffects.filter(e => e.name === "Numb");
                 return true;
             }));
-        // Apply READY to user, but only if not already present
         if (!user.statusEffects.some(e => e.name === "READY")) {
             user.statusEffects.push(new StatusEffect("READY", 2, 0, false, true, false, null, 
                 async (user, target) => {
@@ -315,14 +345,17 @@ class Skills {
                         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> unleashes a Barrage due to <span class="status-ready">READY 💪</span>!`);
                         await sleep(3000);
                         await this.barrage(user, target);
+                        if (checkForDeath()) return true;
                     }
-                    user.statusEffects = user.statusEffects.filter(e => e.name !== "READY");
+                    user.statusEffects = user.statusEffects.filter(e => e.name === "READY");
                     return false;
                 }));
         }
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-neutral">Falcon Drop</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, stunning target and taking 2 damage! <span class="status-ready">READY 💪</span> applied!`);
         await sleep(3000);
-        return target.hp <= 0;
+        updateBattleUI();
+        if (checkForDeath()) return true;
+        return false;
     }
 
     async rockSmashJutsu(user, target) {
@@ -330,7 +363,9 @@ class Skills {
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-earth">Rock Smash Jutsu</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage!`);
         await sleep(3000);
-        return target.hp <= 0;
+        updateBattleUI();
+        if (checkForDeath()) return true;
+        return false;
     }
 
     async genjutsuRelease(user, target) {
@@ -347,6 +382,7 @@ class Skills {
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-genjutsu">Genjutsu Release</span>, dispelling Doom and gaining <span class="status-release">Release 🌀</span>!`);
         await sleep(3000);
+        updateBattleUI();
         return true;
     }
 
@@ -356,24 +392,30 @@ class Skills {
         target.statusEffects = target.statusEffects.filter(effect => !effect.triggered);
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> strikes with <span class="output-text-lightning">Lightning Edge</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, breaking all triggered status effects!`);
         await sleep(3000);
-        return target.hp <= 0;
+        updateBattleUI();
+        if (checkForDeath()) return true;
+        return false;
     }
 
     async bite(user, target) {
         let damage = 1;
         let heal = user.hp < user.maxHp ? 1 : 0;
-        user.hp = Math.max(0, Math.min(user.maxHp, user.hp + heal));
+        user.hp = Math.min(user.maxHp, user.hp + heal);
         target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
         target.statusEffects.push(new StatusEffect("Bleed", 2, 1, true, false, false, 
-            async (user, target) => {
-                user.hp = Math.max(0, user.hp - user.statusEffects.find(e => e.name === "Bleed").damage);
-                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> takes ${user.statusEffects.find(e => e.name === "Bleed").damage} from <span class="status-bleed">Bleed 🩸</span>!`);
+            async (user, target, status) => {
+                user.hp = Math.max(0, user.hp - status.damage);
+                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> takes ${status.damage} from <span class="status-bleed">Bleed 🩸</span>!`);
                 await sleep(3000);
+                updateBattleUI();
+                if (checkForDeath()) return true;
                 return false;
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-beast">Bite</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage${heal > 0 ? `, healing ${heal} HP` : ""}, inflicting <span class="status-bleed">Bleed 🩸</span>!`);
         await sleep(3000);
-        return target.hp <= 0;
+        updateBattleUI();
+        if (checkForDeath()) return true;
+        return false;
     }
 
     async nightTerrorJutsu(user, target) {
@@ -385,15 +427,18 @@ class Skills {
                 return true;
             }));
         target.statusEffects.push(new StatusEffect("Doom", 5, 1, true, false, false, 
-            async (user, target) => {
-                user.hp = Math.max(0, user.hp - user.statusEffects.find(e => e.name === "Doom").damage);
-                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> takes ${user.statusEffects.find(e => e.name === "Doom").damage} from <span class="status-doom">Doom 💀</span>!`);
+            async (user, target, status) => {
+                user.hp = Math.max(0, user.hp - status.damage);
+                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> takes ${status.damage} from <span class="status-doom">Doom 💀</span>!`);
                 await sleep(3000);
+                updateBattleUI();
+                if (checkForDeath()) return true;
                 return false;
             }));
         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> casts <span class="output-text-genjutsu">Night Terror Jutsu</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span>, inflicting <span class="status-numb">Numb ⚡️</span> and <span class="status-doom">Doom 💀</span>!`);
         await sleep(3000);
-        return target.hp <= 0;
+        updateBattleUI();
+        return false;
     }
 }
 
@@ -848,8 +893,8 @@ const game = {
     tutorialState: null
 };
 
-async function awardReward(winner, enemy) {
-    if (game.battleType === "training") {
+async function awardReward(winner, loser) {
+    if (game.battleType === "training" && (winner === player || (winner === "both" && loser === "both"))) {
         player.xp += 1;
         logBattle(`<span class="output-text-player">${player.name}</span> gained 1 EXP!`);
         await sleep(3000);
@@ -876,21 +921,25 @@ function checkForDeath() {
     let loser = null;
 
     if (game.player.hp <= 0 && game.target.hp <= 0) {
-        // Handle simultaneous KO (treat as player loss for simplicity)
-        winner = game.target;
-        loser = game.player;
+        winner = "both";
+        loser = "both";
+        logBattle(`<span class="output-text-player">${game.player.name}</span> and <span class="output-text-enemy">${game.target.name}</span> are both defeated! Both win!`);
     } else if (game.player.hp <= 0) {
         winner = game.target;
         loser = game.player;
+        logBattle(`<span class="output-text-player">${game.player.name}</span> is defeated! <span class="output-text-enemy">${game.target.name}</span> wins!`);
     } else if (game.target.hp <= 0) {
         winner = game.player;
         loser = game.target;
+        logBattle(`<span class="output-text-enemy">${game.target.name}</span> is defeated! <span class="output-text-player">${game.player.name}</span> wins!`);
     }
 
-    if (winner && loser) {
-        logBattle(`<span class="output-text-${loser === player ? 'player' : 'enemy'}">${loser.name}</span> is defeated! <span class="output-text-${winner === player ? 'player' : 'enemy'}">${winner.name}</span> wins!`);
-        awardReward(winner, loser);
-        endBattle();
+    if (winner) {
+        setTimeout(async () => {
+            await sleep(3000);
+            await awardReward(winner, loser);
+            await endBattle();
+        }, 0);
         return true;
     }
     return false;
@@ -1042,7 +1091,7 @@ async function takeTurn() {
         let skipTurn = false;
         for (let status of game.user.statusEffects) {
             if (status.startOfTurn && status.startOfTurnFunction) {
-                if (await status.startOfTurnFunction(game.user, game.target)) {
+                if (await status.startOfTurnFunction(game.user, game.target, status)) {
                     skipTurn = true;
                 }
             }
@@ -1078,13 +1127,12 @@ async function skillAction() {
         logBattle(`<span class="output-text-${game.user === player ? 'player' : 'enemy'}">${game.user.name}</span> uses ${jutsu.name}!`);
         await sleep(3000);
 
-        // Process active status effects (e.g., READY, ShadowCloneEffect) before the chosen jutsu
         for (let status of game.user.statusEffects) {
-            if (status.active && status.activeFunction && !status.new) {
+            if (status.active && status.activeFunction) {
                 await status.activeFunction(game.user, game.target);
                 if (checkForDeath()) return;
             }
-            status.new = false; // Mark status as processed for this turn
+            status.new = false;
         }
 
         if (jutsu.support) {
