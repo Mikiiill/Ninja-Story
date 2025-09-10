@@ -309,7 +309,7 @@ class Skills {
         user.statusEffects.push(new StatusEffect("READY", 1, 0, false, true, false, null, 
             async (user, target) => {
                 let barrageSkill = this.findSkill("Barrage");
-                if (barrageSkill) {
+                if (barrageSkill && target.hp > 0) {
                     logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> unleashes a Barrage due to <span class="status-ready">READY 💪</span>!`);
                     await sleep(3000);
                     await barrageSkill.skillFunction(user, target);
@@ -1060,17 +1060,20 @@ async function skillAction() {
         logBattle(`<span class="output-text-${game.user === player ? 'player' : 'enemy'}">${game.user.name}</span> uses ${jutsu.name}!`);
         await sleep(3000);
 
+        // Process active status effects (e.g., READY, ShadowCloneEffect) before the chosen jutsu
+        for (let status of game.user.statusEffects) {
+            if (status.active && status.activeFunction && !status.new) {
+                await status.activeFunction(game.user, game.target);
+                if (checkForDeath()) return;
+            }
+            status.new = false; // Mark status as processed for this turn
+        }
+
         if (jutsu.support) {
             await jutsu.skillFunction(game.user, game.target);
             if (checkForDeath()) return;
             await endTurn();
             return;
-        }
-
-        for (let status of game.user.statusEffects) {
-            if (status.active && status.activeFunction) {
-                await status.activeFunction(game.user, game.target);
-            }
         }
 
         let endTurnFlag = false;
