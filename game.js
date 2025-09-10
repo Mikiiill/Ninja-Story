@@ -1018,7 +1018,7 @@ async function startEventFight() {
         return;
     }
     game.battleType = "event";
-    queueOutput("<span class='output-text-neutral'>Event fight started!</span>");
+    queueOutput("<span class='output-text-neutral'>Event fight started!/</span>");
     const opponent = generateEnemy();
     logBattle(`Generated enemy: ${opponent.name}, Jutsu: ${opponent.activeJutsu.map(j => j.name).join(", ")}`);
     await startBattle(player, opponent);
@@ -1099,19 +1099,29 @@ async function takeTurn() {
         logBattle(`✧✧ <strong><span class="output-text-${game.user === player ? 'player' : 'enemy'}">${game.user.name}'s Turn</span></strong> ✧✧`);
         await sleep(1000);
         let skipTurn = false;
+        let battleEnded = false; // New flag to break loop
         for (let status of game.user.statusEffects) {
             if (status.startOfTurn && status.startOfTurnFunction) {
                 if (await status.startOfTurnFunction(game.user, game.target, status)) {
                     skipTurn = true;
                 }
                 if (checkForDeath()) {
-                    return;
+                    battleEnded = true;
+                    break;
                 }
-                if (!inBattle) return;
+                if (!inBattle) {
+                    battleEnded = true;
+                    break;
+                }
             }
+            if (battleEnded) break;
             status.duration--;
-            if (!inBattle) return;
+            if (!inBattle) {
+                battleEnded = true;
+                break;
+            }
         }
+        if (battleEnded) return;
         game.user.statusEffects = game.user.statusEffects.filter(status => status.duration > 0);
         updateBattleUI();
         if (checkForDeath()) return;
