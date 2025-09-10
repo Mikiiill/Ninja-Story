@@ -290,7 +290,7 @@ class Skills {
                 await sleep(3000);
                 await nextSkill.skillFunction(user, target);
             }
-            user.statusEffects = user.statusEffects.filter(e => e.name !== "DynamicEntryProc");
+            user.statusEffects = user.statusEffects.filter(e => e.name === "DynamicEntryProc");
         }
         return target.hp <= 0;
     }
@@ -304,12 +304,12 @@ class Skills {
             async (user, target) => {
                 logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> is stunned by <span class="status-numb">Numb ⚡️</span> and skips their turn!`);
                 await sleep(3000);
-                user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
+                user.statusEffects = user.statusEffects.filter(e => e.name === "Numb");
                 return true;
             }));
         // Apply READY to user, but only if not already present
         if (!user.statusEffects.some(e => e.name === "READY")) {
-            user.statusEffects.push(new StatusEffect("READY", 1, 0, false, true, false, null, 
+            user.statusEffects.push(new StatusEffect("READY", 2, 0, false, true, false, null, 
                 async (user, target) => {
                     if (target.hp > 0) {
                         logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> unleashes a Barrage due to <span class="status-ready">READY 💪</span>!`);
@@ -870,9 +870,24 @@ async function awardReward(winner, enemy) {
 }
 
 function checkForDeath() {
-    if (player.hp <= 0 || (game.target && game.target.hp <= 0)) {
-        const winner = player.hp <= 0 ? game.target : player;
-        const loser = player.hp <= 0 ? player : game.target;
+    if (!game.player || !game.target) return false;
+    
+    let winner = null;
+    let loser = null;
+
+    if (game.player.hp <= 0 && game.target.hp <= 0) {
+        // Handle simultaneous KO (treat as player loss for simplicity)
+        winner = game.target;
+        loser = game.player;
+    } else if (game.player.hp <= 0) {
+        winner = game.target;
+        loser = game.player;
+    } else if (game.target.hp <= 0) {
+        winner = game.player;
+        loser = game.target;
+    }
+
+    if (winner && loser) {
         logBattle(`<span class="output-text-${loser === player ? 'player' : 'enemy'}">${loser.name}</span> is defeated! <span class="output-text-${winner === player ? 'player' : 'enemy'}">${winner.name}</span> wins!`);
         awardReward(winner, loser);
         endBattle();
@@ -1065,11 +1080,11 @@ async function skillAction() {
 
         // Process active status effects (e.g., READY, ShadowCloneEffect) before the chosen jutsu
         for (let status of game.user.statusEffects) {
-            if (status.active && status.activeFunction) {
+            if (status.active && status.activeFunction && !status.new) {
                 await status.activeFunction(game.user, game.target);
-                status.new = false; // Mark status as processed after running
                 if (checkForDeath()) return;
             }
+            status.new = false; // Mark status as processed for this turn
         }
 
         if (jutsu.support) {
