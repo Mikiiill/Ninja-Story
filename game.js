@@ -295,32 +295,36 @@ class Skills {
         return target.hp <= 0;
     }
 
-    async falconDrop(user, target) {
-        let damage = 2;
-        user.hp = Math.max(0, Math.min(user.maxHp, user.hp - 2));
-        target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
-        target.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
-            async (user, target) => {
-                logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> is stunned by <span class="status-numb">Numb ⚡️</span> and skips their turn!`);
-                await sleep(3000);
-                user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
-                return true;
-            }));
+// Inside Skills class (replace only the falconDrop method)
+async falconDrop(user, target) {
+    let damage = 2;
+    user.hp = Math.max(0, Math.min(user.maxHp, user.hp - 2));
+    target.hp = Math.max(0, Math.min(target.maxHp, target.hp - damage));
+    // Apply Numb to target
+    target.statusEffects.push(new StatusEffect("Numb", 1, 0, true, false, false, 
+        async (user, target) => {
+            logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> is stunned by <span class="status-numb">Numb ⚡️</span> and skips their turn!`);
+            await sleep(3000);
+            user.statusEffects = user.statusEffects.filter(e => e.name !== "Numb");
+            return true;
+        }));
+    // Apply READY to user, but only if not already present
+    if (!user.statusEffects.some(e => e.name === "READY")) {
         user.statusEffects.push(new StatusEffect("READY", 1, 0, false, true, false, null, 
             async (user, target) => {
-                let barrageSkill = this.findSkill("Barrage");
-                if (barrageSkill && target.hp > 0) {
+                if (target.hp > 0) {
                     logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> unleashes a Barrage due to <span class="status-ready">READY 💪</span>!`);
                     await sleep(3000);
-                    await barrageSkill.skillFunction(user, target);
+                    await this.barrage(user, target);
                 }
                 user.statusEffects = user.statusEffects.filter(e => e.name !== "READY");
                 return false;
             }));
-        logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-neutral">Falcon Drop</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, stunning target and taking 2 damage! <span class="status-ready">READY 💪</span> applied!`);
-        await sleep(3000);
-        return target.hp <= 0;
     }
+    logBattle(`<span class="output-text-${user === player ? 'player' : 'enemy'}">${user.name}</span> uses <span class="output-text-neutral">Falcon Drop</span> on <span class="output-text-${target === player ? 'player' : 'enemy'}">${target.name}</span> for ${damage} damage, stunning target and taking 2 damage! <span class="status-ready">READY 💪</span> applied!`);
+    await sleep(3000);
+    return target.hp <= 0;
+}
 
     async rockSmashJutsu(user, target) {
         let damage = 6;
