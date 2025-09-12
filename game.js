@@ -1040,11 +1040,11 @@ async function startArenaFight() {
 async function endBattle(winner, loser) {
     if (game.battleEnded) return;
     game.battleEnded = true;
-    inBattle = false;
+    inBattle = false;  // Reset early to unblock menus/UI
     game.user = null;
     game.target = null;
     await sleep(3000);
-    await awardReward(winner, loser);
+    await awardReward(winner, loser);  // Now safe to open Jutsu select if triggered
     game.player = player;
     game.opponent = null;
     const battleScreen = document.getElementById("battle-screen");
