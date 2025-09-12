@@ -758,7 +758,7 @@ function upgradeFightingStyle(style) {
         if (game.tutorialState && game.tutorialState.phase === "rankUp") {
             game.tutorialState.phase = "jutsuSelection";
             game.tutorialState.jutsuSelectionsRemaining = 4;
-            logBattle(`<span class="tutorial-message">Rank Up complete! Now select two starting Jutsu.</span>`, true);
+            logBattle(`<span class="tutorial-message">Rank Up complete! Now select 4 starting Jutsu.</span>`, true);
             setTimeout(openJutsuSelect, 1000);
         }
     } else {
