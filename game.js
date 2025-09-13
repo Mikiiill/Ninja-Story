@@ -882,12 +882,25 @@ function ArriveVillage(village) {
     updateJutsuDisplay();
     updateBattleUI();
     logBattle(`<span class="output-text-neutral">Arrived at ${village}! inBattle: ${inBattle}</span>`);
+    
+    // Simplified: Just check EXP threshold
+    if (player.xp >= 10) {
+        player.xp = 0;
+        logBattle(`<span class="output-text-neutral">${player.name} has enough EXP to learn a new Jutsu!</span>`);
+        setTimeout(() => {
+            openJutsuSelect();
+        }, 1000);  // Short delay for smooth flow after arrival log
+    }
+    
     const villageName = document.getElementById("village-name");
     if (villageName) {
         villageName.textContent = village;
     } else {
         logBattle("Error: village-name not found");
     }
+    
+    // Reset battle type after processing
+    game.battleType = null;
 }
 
 // Battle System
@@ -913,12 +926,6 @@ async function awardReward(winner, loser) {
             playerXp.textContent = player.xp;
         } else {
             logBattle("Error: player-xp not found");
-        }
-        if (player.xp >= 10) {
-            player.xp = 0;
-            logBattle(`<span class="output-text-neutral">${player.name} has enough EXP to learn a new Jutsu!</span>`);
-            await sleep(3000);
-            openJutsuSelect();
         }
     }
     updateJutsuDisplay();
