@@ -917,7 +917,7 @@ const game = {
 };
 
 async function awardReward(winner, loser) {
-    if (game.battleType === "training" && (winner === player || (winner === "both" && loser === "both"))) {
+    if (game.battleType === "training") {
         player.xp += 1;
         logBattle(`<span class="output-text-player">${player.name}</span> gained 1 EXP!`);
         await sleep(3000);
